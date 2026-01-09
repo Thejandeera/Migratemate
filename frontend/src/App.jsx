@@ -2,7 +2,9 @@ import React from 'react'
 
 const App = () => {
   return (
-    <div>Migratemate</div>
+    <h1 class="text-3xl font-bold underline">
+      MIGRATEMATE
+    </h1>
   )
 }
 
