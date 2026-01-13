@@ -29,7 +29,7 @@ const Login = () => {
             });
             const data = await response.json();
             if (response.ok && data.success) {
-                return data.data; // This is the user object
+                return data.data;
             } else {
                 throw new Error(data.message || 'Failed to fetch profile');
             }
@@ -45,7 +45,7 @@ const Login = () => {
         setError('');
 
         try {
-            // 1. Login Request
+
             const response = await fetch('http://localhost:8080/api/users/login', {
                 method: 'POST',
                 headers: {
@@ -59,14 +59,14 @@ const Login = () => {
             if (response.ok && data.success) {
                 const { token, refreshToken, user } = data.data;
 
-                // 2. Save Initial Auth Data
+
                 setAuthData({
                     token,
                     refreshToken,
                     id: user ? user.id : null
                 }, rememberMe);
 
-                // 3. Fetch Full Profile
+
                 let profileData = user;
                 try {
                     profileData = await fetchUserProfile(token, refreshToken);
@@ -74,10 +74,9 @@ const Login = () => {
                     console.warn("Could not fetch full profile, using login data", profileErr);
                 }
 
-                // 4. Save User Data
                 setUserData(profileData);
 
-                // 5. Navigate
+
                 navigate('/dashboard');
             } else {
                 setError(data.message || 'Invalid email or password');
@@ -97,7 +96,7 @@ const Login = () => {
             <div className="flex items-center justify-center min-h-screen pt-20 px-4 sm:px-6 lg:px-8">
                 <div className="max-w-md w-full space-y-8 bg-white p-10 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.05)] relative">
 
-                    {/* Back to Home Button - Centered above on mobile, positioned left on desktop */}
+
                     <Link to="/" className="absolute -top-12 left-0 flex items-center gap-2 text-gray-600 hover:text-[#22C55E] transition-colors font-medium">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                         Back to Home

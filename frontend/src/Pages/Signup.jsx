@@ -147,13 +147,13 @@ const Signup = () => {
 
             <div className="flex items-center justify-center min-h-screen pt-20 px-4 sm:px-6 lg:px-8">
                 <div className="w-full max-w-2xl relative">
-                    {/* Back to Home Button */}
+
                     <Link to="/" className="absolute -top-12 left-0 flex items-center gap-2 text-gray-600 hover:text-[#22C55E] transition-colors font-medium">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                         Back to Home
                     </Link>
 
-                    {/* Progress Bar */}
+
                     <div className="mb-8">
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-xl font-bold text-gray-800">Identity Verification</h2>
