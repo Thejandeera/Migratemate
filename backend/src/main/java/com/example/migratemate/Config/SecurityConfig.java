@@ -1,7 +1,7 @@
 package com.example.migratemate.Config;
 
-
 import com.example.migratemate.Config.JwtAuthenticationFilter;
+import com.example.migratemate.UserManagement.Service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,10 +37,15 @@ public class SecurityConfig {
     @Value("${frontend.url}")
     private String frontendUrl;
 
+    private final UserService userService;
+
+    public SecurityConfig(UserService userService) {
+        this.userService = userService;
+    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
-                                                   JwtAuthenticationFilter jwtAuthenticationFilter,
-                                                   UserDetailsService userDetailsService) throws Exception {
+                                                   JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -48,11 +53,12 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authz -> authz
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(
-                                "/api/**"
+                                "/api/users/register",
+                                "/api/users/login"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
-                .authenticationProvider(authenticationProvider(userDetailsService))
+                .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(new FlutterCorsFilter(), UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(unauthorizedEntryPoint()));
@@ -97,23 +103,12 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationProvider authenticationProvider(UserDetailsService userDetailsService) {
+    public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService);
+        authProvider.setUserDetailsService(userService); // Use UserService which implements UserDetailsService
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }
-
-
-    @Bean
-    public UserDetailsService userDetailsService() {
-        return username -> org.springframework.security.core.userdetails.User
-                .withUsername(username)
-                .password("") // password not needed for JWT
-                .authorities("USER")
-                .build();
-    }
-
 
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
