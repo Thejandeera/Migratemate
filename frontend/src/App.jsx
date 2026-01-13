@@ -1,10 +1,14 @@
 import React from 'react'
+import { Routes, Route } from 'react-router-dom'
+import Signup from './Pages/Signup'
+import Login from './Pages/Login'
 
 const App = () => {
   return (
-    <h1 class="text-3xl font-bold underline">
-      MIGRATEMATE
-    </h1>
+    <Routes>
+      <Route path="/" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
+    </Routes>
   )
 }
 
