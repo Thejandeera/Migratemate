@@ -58,3 +58,10 @@ jobs:
         run: |
           docker tag migratemate:latest ${{ secrets.DOCKER_USERNAME }}/migratemate:latest
           docker push ${{ secrets.DOCKER_USERNAME }}/migratemate:latest
+
+      # 8. Trigger Render Deploy
+      - name: Trigger Render Deploy
+        run: |
+          curl -X POST https://api.render.com/v1/services/srv-d5jacure5dus739nk25g/deploys \
+          -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+          -H "Content-Type: application/json"
