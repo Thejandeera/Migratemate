@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { clearAuthData, isAuthenticated } from '../utils/auth';
 
 const Navbar = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const [scrolled, setScrolled] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
 
@@ -15,21 +16,23 @@ const Navbar = () => {
             }
         };
 
-        const user = localStorage.getItem('user');
-        setIsLoggedIn(!!user);
+        const checkAuth = () => {
+            setIsLoggedIn(isAuthenticated());
+        };
 
+        // Check auth on mount and when location changes (login/logout events)
+        checkAuth();
         document.addEventListener('scroll', handleScroll);
+
         return () => {
             document.removeEventListener('scroll', handleScroll);
         };
-    }, [scrolled]);
+    }, [scrolled, location]);
 
     const handleLogout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
+        clearAuthData();
         setIsLoggedIn(false);
-        navigate('/login');
+        navigate('/');
     }
 
     return (
@@ -81,10 +84,6 @@ const Navbar = () => {
                             <>
                                 <Link to="/login" className="text-sm font-bold text-gray-700 hover:text-[#22C55E]">
                                     Sign In
-                                </Link>
-                                <Link to="/dashboard" className="hidden sm:flex items-center gap-2 px-4 py-2 bg-[#22C55E] text-white rounded-lg text-sm font-semibold hover:bg-[#16A34A] transition shadow-md hover:shadow-lg">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
-                                    Dashboard
                                 </Link>
                             </>
                         )}
