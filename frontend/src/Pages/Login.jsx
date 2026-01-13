@@ -20,7 +20,7 @@ const Login = () => {
 
     const fetchUserProfile = async (token, refreshToken) => {
         try {
-            const response = await fetch('http://localhost:8080/api/users/profile', {
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/users/profile`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -46,7 +46,7 @@ const Login = () => {
 
         try {
 
-            const response = await fetch('http://localhost:8080/api/users/login', {
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/users/login`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
