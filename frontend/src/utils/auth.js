@@ -7,6 +7,19 @@ const EXPIRATION_DAYS = 3;
 
 export const setAuthData = (data, rememberMe) => {
     const storage = rememberMe ? localStorage : sessionStorage;
+    const otherStorage = rememberMe ? sessionStorage : localStorage;
+
+    // Clear data from the other storage to ensure strict separation
+    otherStorage.removeItem(`${STORAGE_KEY_PREFIX}auth`);
+    otherStorage.removeItem('userData');
+    if (!rememberMe) {
+        localStorage.removeItem(`${STORAGE_KEY_PREFIX}auth`);
+        localStorage.removeItem('userData');
+    } else {
+        sessionStorage.removeItem(`${STORAGE_KEY_PREFIX}auth`);
+        sessionStorage.removeItem('userData');
+    }
+
     const timestamp = new Date().getTime();
 
     // Store core auth data
@@ -25,17 +38,15 @@ export const setAuthData = (data, rememberMe) => {
 };
 
 export const setUserData = (userData) => {
-    // We need to know where the auth data is to store user data in the same place
-    // OR we can just check where the auth data exists.
-    // For simplicity, let's try to find active storage or default to session.
-
+    // Find active storage based on where auth data is
     let storage = sessionStorage;
     const localAuth = localStorage.getItem(`${STORAGE_KEY_PREFIX}auth`);
+
     if (localAuth) {
         storage = localStorage;
     }
 
-    storage.setItem(`${STORAGE_KEY_PREFIX}user`, JSON.stringify(userData));
+    storage.setItem('userData', JSON.stringify(userData));
 };
 
 export const getAuthData = () => {
@@ -71,9 +82,9 @@ export const getAuthData = () => {
 };
 
 export const getUserData = () => {
-    let userString = sessionStorage.getItem(`${STORAGE_KEY_PREFIX}user`);
+    let userString = sessionStorage.getItem('userData');
     if (!userString) {
-        userString = localStorage.getItem(`${STORAGE_KEY_PREFIX}user`);
+        userString = localStorage.getItem('userData');
     }
 
     if (!userString) return {};
@@ -87,12 +98,9 @@ export const getUserData = () => {
 
 export const isAuthenticated = () => {
     const authData = getAuthData();
-    // Also check the specific 'authorized' flag in session if required, 
-    // but the presence of valid token is usually enough. 
-    // However, user requested 'authorized' in session storage.
-    // Let's ensure if we have valid Auth Data from local, we sync the session flag.
 
     if (authData) {
+        // Sync authorized flag for session
         if (!sessionStorage.getItem('authorized')) {
             sessionStorage.setItem('authorized', 'true');
         }
@@ -103,8 +111,8 @@ export const isAuthenticated = () => {
 
 export const clearAuthData = () => {
     localStorage.removeItem(`${STORAGE_KEY_PREFIX}auth`);
-    localStorage.removeItem(`${STORAGE_KEY_PREFIX}user`);
+    localStorage.removeItem('userData');
     sessionStorage.removeItem(`${STORAGE_KEY_PREFIX}auth`);
-    sessionStorage.removeItem(`${STORAGE_KEY_PREFIX}user`);
+    sessionStorage.removeItem('userData');
     sessionStorage.removeItem('authorized');
 };
