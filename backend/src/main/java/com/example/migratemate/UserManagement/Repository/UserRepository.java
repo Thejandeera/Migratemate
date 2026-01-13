@@ -1,0 +1,19 @@
+package com.example.migratemate.UserManagement.Repository;
+
+
+
+import com.example.migratemate.UserManagement.Entity.User;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
+
+@Repository
+public interface UserRepository extends MongoRepository<User, String> {
+
+    Optional<User> findByEmail(String email);
+
+    Boolean existsByEmail(String email);
+
+    Optional<User> findByEmailAndIsVerified(String email, Boolean isVerified);
+}
