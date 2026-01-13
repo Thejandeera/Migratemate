@@ -1,20 +1,18 @@
 package com.example.migratemate.UserManagement.Service;
 
-
-
 import com.example.migratemate.Config.JwtService;
 import com.example.migratemate.UserManagement.Dto.*;
 import com.example.migratemate.UserManagement.Entity.User;
 import com.example.migratemate.UserManagement.Repository.UserRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,7 +21,6 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class UserService implements UserDetailsService {
 
@@ -32,6 +29,18 @@ public class UserService implements UserDetailsService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final CloudinaryService cloudinaryService;
+
+    public UserService(UserRepository userRepository,
+            PasswordEncoder passwordEncoder,
+            JwtService jwtService,
+            @Lazy AuthenticationManager authenticationManager,
+            CloudinaryService cloudinaryService) {
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
+        this.authenticationManager = authenticationManager;
+        this.cloudinaryService = cloudinaryService;
+    }
 
     /**
      * Register a new user
@@ -108,9 +117,7 @@ public class UserService implements UserDetailsService {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getEmail(),
-                        request.getPassword()
-                )
-        );
+                        request.getPassword()));
 
         // Find user
         User user = userRepository.findByEmail(request.getEmail())
@@ -235,8 +242,8 @@ public class UserService implements UserDetailsService {
      */
     @Transactional
     public UserResponse updateProfileMultipart(String email, UpdateProfileRequest request,
-                                               MultipartFile avatar, MultipartFile passport,
-                                               MultipartFile selfie) throws IOException {
+            MultipartFile avatar, MultipartFile passport,
+            MultipartFile selfie) throws IOException {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 

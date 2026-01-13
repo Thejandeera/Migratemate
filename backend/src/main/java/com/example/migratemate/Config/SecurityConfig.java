@@ -37,15 +37,12 @@ public class SecurityConfig {
     @Value("${frontend.url}")
     private String frontendUrl;
 
-    private final UserService userService;
-
-    public SecurityConfig(UserService userService) {
-        this.userService = userService;
-    }
+    // Removed UserService constructor injection to break circular dependency
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
-                                                   JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
+            JwtAuthenticationFilter jwtAuthenticationFilter,
+            AuthenticationProvider authenticationProvider) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -54,11 +51,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(
                                 "/api/users/register",
-                                "/api/users/login"
-                        ).permitAll()
-                        .anyRequest().authenticated()
-                )
-                .authenticationProvider(authenticationProvider())
+                                "/api/users/login")
+                        .permitAll()
+                        .anyRequest().authenticated())
+                .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(new FlutterCorsFilter(), UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(unauthorizedEntryPoint()));
@@ -70,7 +66,8 @@ public class SecurityConfig {
         return (request, response, authException) -> {
             response.setContentType("application/json");
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter().write("{ \"error\": \"Unauthorized\", \"message\": \"Full authentication required\" }");
+            response.getWriter()
+                    .write("{ \"error\": \"Unauthorized\", \"message\": \"Full authentication required\" }");
         };
     }
 
@@ -83,8 +80,7 @@ public class SecurityConfig {
         List<String> allowedOrigins = List.of(
                 frontendUrl,
                 "http://localhost:5173",
-                "http://localhost:3000"
-        );
+                "http://localhost:3000");
         config.setAllowedOrigins(allowedOrigins);
 
         config.setAllowedHeaders(List.of("*"));
@@ -103,9 +99,9 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationProvider authenticationProvider() {
+    public AuthenticationProvider authenticationProvider(UserDetailsService userDetailsService) {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userService); // Use UserService which implements UserDetailsService
+        authProvider.setUserDetailsService(userDetailsService); // Inject UserDetailsService here
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }
@@ -123,8 +119,8 @@ public class SecurityConfig {
 
         @Override
         protected void doFilterInternal(HttpServletRequest request,
-                                        HttpServletResponse response,
-                                        jakarta.servlet.FilterChain filterChain)
+                HttpServletResponse response,
+                jakarta.servlet.FilterChain filterChain)
                 throws jakarta.servlet.ServletException, IOException {
 
             String appHeader = request.getHeader(FLUTTER_APP_HEADER);
@@ -143,11 +139,9 @@ public class SecurityConfig {
             boolean isFlutterApp = EXPECTED_HEADER_VALUE.equals(appHeader);
 
             // Check if it's a Flutter HTTP client based on User-Agent
-            boolean isFlutterUserAgent = userAgent != null && (
-                    userAgent.contains("Dart/") ||
-                            userAgent.contains("Flutter") ||
-                            userAgent.toLowerCase().contains("dart")
-            );
+            boolean isFlutterUserAgent = userAgent != null && (userAgent.contains("Dart/") ||
+                    userAgent.contains("Flutter") ||
+                    userAgent.toLowerCase().contains("dart"));
 
             // Allow Flutter requests
             if (isFlutterApp || isFlutterUserAgent) {
