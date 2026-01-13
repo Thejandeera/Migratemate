@@ -1,9 +1,21 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import { getUserData, isAuthenticated } from '../utils/auth';
 
 const Dashboard = () => {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        if (!isAuthenticated()) {
+            navigate('/login');
+        }
+    }, [navigate]);
+
+    const user = getUserData();
+
+    if (!isAuthenticated()) return null;
 
     return (
         <div className="min-h-screen bg-gray-50">
