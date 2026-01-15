@@ -3,6 +3,50 @@ import Navbar from '../components/Navbar';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getAuthData } from '../utils/auth';
 
+// Component for Hover Zoom Effect
+const ZoomableImage = ({ src, alt, className }) => {
+    const [isHovered, setIsHovered] = useState(false);
+
+    // If no src, return placeholder
+    if (!src) return <div className={`bg-gray-200 flex items-center justify-center text-gray-400 text-xs ${className}`}>No Image</div>;
+
+    return (
+        <div
+            className="relative"
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+        >
+            <img
+                src={src}
+                alt={alt}
+                className={`${className} object-cover cursor-pointer transition-opacity duration-200 ${isHovered ? 'opacity-0' : 'opacity-100'}`}
+            />
+
+            {/* For table "undock" feel, maybe absolute is better but fixed ensures it escapes overflow:hidden of table */}
+            {isHovered && (
+                <motion.div
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="fixed z-[9999]"
+                    style={{
+                        top: '50%',
+                        left: '50%',
+                        x: '-50%',
+                        y: '-50%',
+                        width: 'auto',
+                        maxWidth: '90vw',
+                        maxHeight: '90vh',
+                        pointerEvents: 'none'
+                    }}
+                >
+                    <img src={src} alt={alt} className="max-w-[500px] max-h-[500px] object-contain rounded-lg shadow-2xl bg-white border-4 border-white" />
+                </motion.div>
+            )}
+        </div>
+    );
+};
+
+
 const ViewUsers = () => {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -11,6 +55,7 @@ const ViewUsers = () => {
     const [showDocumentModal, setShowDocumentModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [verifyingId, setVerifyingId] = useState(null); // Track which user is being verified
+    const [deletingId, setDeletingId] = useState(null);
     const [notification, setNotification] = useState({ show: false, message: '', type: '' });
 
     // Helper to get token
@@ -59,16 +104,49 @@ const ViewUsers = () => {
         setShowEditModal(true);
     };
 
+    const handleDeleteUser = async (userId) => {
+        if (!window.confirm("Are you sure you want to delete this user? This action cannot be undone.")) return;
+
+        setDeletingId(userId);
+        try {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${userId}/delete`, {
+                method: 'DELETE',
+                headers: getHeaders()
+            });
+            const data = await response.json();
+            if (data.success) {
+                setUsers(users.filter(u => u.id !== userId));
+                showNotification('User deleted successfully', 'success');
+            } else {
+                showNotification(data.message || 'Delete failed', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            showNotification('Failed to delete user', 'error');
+        } finally {
+            setDeletingId(null);
+        }
+    };
+
     const handleToggleVerification = async (user) => {
-        if (verifyingId) return; // Prevent double clicks
+        if (verifyingId) return;
         setVerifyingId(user.id);
         try {
+            // Note: Ensure the current status is correctly inverted
             const newStatus = !user.isVerified;
-            // Note: Verify exact parameter name expected by backend: isVerified
+            console.log(`Toggling verification for ${user.email} from ${user.isVerified} to ${newStatus}`);
+
             const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${user.id}/verify?isVerified=${newStatus}`, {
                 method: 'PATCH',
                 headers: getHeaders()
             });
+
+            // Check if response is ok before parsing JSON to catch non-JSON errors (like 404 HTML pages)
+            if (!response.ok) {
+                const text = await response.text();
+                throw new Error(`Server responded with ${response.status}: ${text}`);
+            }
+
             const data = await response.json();
             if (data.success) {
                 setUsers(users.map(u => u.id === user.id ? { ...u, isVerified: newStatus } : u));
@@ -77,8 +155,8 @@ const ViewUsers = () => {
                 showNotification(data.message || 'Action failed', 'error');
             }
         } catch (err) {
-            console.error(err);
-            showNotification('Failed to update status', 'error');
+            console.error('Verification Error:', err);
+            showNotification(`Failed to update status: ${err.message}`, 'error');
         } finally {
             setVerifyingId(null);
         }
@@ -133,7 +211,7 @@ const ViewUsers = () => {
                     </div>
 
                     {notification.show && (
-                        <div className={`fixed top-24 right-4 p-4 rounded-lg shadow-lg z-50 text-white ${notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'}`}>
+                        <div className={`fixed top-24 right-4 p-4 rounded-lg shadow-lg z-[200] text-white ${notification.type === 'success' ? 'bg-green-500' : 'bg-red-500'}`}>
                             {notification.message}
                         </div>
                     )}
@@ -165,7 +243,7 @@ const ViewUsers = () => {
                                                 <td className="px-6 py-4 whitespace-nowrap">
                                                     <div className="flex items-center">
                                                         <div className="flex-shrink-0 h-10 w-10">
-                                                            <img className="h-10 w-10 rounded-full object-cover" src={user.avatarUrl || 'https://via.placeholder.com/40'} alt="" />
+                                                            <ZoomableImage src={user.avatarUrl} alt="Avatar" className="h-10 w-10 rounded-full" />
                                                         </div>
                                                         <div className="ml-4">
                                                             <div className="text-sm font-medium text-gray-900">{user.fullName || 'No Name'}</div>
@@ -193,7 +271,14 @@ const ViewUsers = () => {
                                                         disabled={verifyingId === user.id}
                                                         className={`${user.isVerified ? 'text-orange-600 hover:text-orange-900' : 'text-green-600 hover:text-green-900'} ${verifyingId === user.id ? 'opacity-50 cursor-not-allowed' : ''}`}
                                                     >
-                                                        {verifyingId === user.id ? 'Processing...' : (user.isVerified ? 'Revoke' : 'Verify')}
+                                                        {verifyingId === user.id ? '...' : (user.isVerified ? 'Revoke' : 'Verify')}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteUser(user.id)}
+                                                        disabled={deletingId === user.id}
+                                                        className={`text-red-600 hover:text-red-900 ${deletingId === user.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                    >
+                                                        {deletingId === user.id ? '...' : 'Delete'}
                                                     </button>
                                                 </td>
                                             </tr>
@@ -227,6 +312,9 @@ const ViewUsers = () => {
                                                 </h3>
                                                 <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
                                                     <div>
+                                                        <div className="flex justify-center mb-6">
+                                                            <ZoomableImage src={selectedUser.avatarUrl} alt="Avatar" className="h-32 w-32 rounded-full border-4 border-gray-100 shadow-sm" />
+                                                        </div>
                                                         <h4 className="font-semibold text-gray-700 mb-2">Profile Details</h4>
                                                         <p><strong>Name:</strong> {selectedUser.fullName}</p>
                                                         <p><strong>Email:</strong> {selectedUser.email}</p>
@@ -241,23 +329,23 @@ const ViewUsers = () => {
                                                         <div className="space-y-4">
                                                             <div>
                                                                 <p className="text-sm text-gray-500 mb-1">Passport/ID</p>
-                                                                {selectedUser.passportImageUrl ? (
-                                                                    <a href={selectedUser.passportImageUrl} target="_blank" rel="noopener noreferrer">
-                                                                        <img src={selectedUser.passportImageUrl} alt="Passport" className="w-full h-40 object-cover rounded border hover:opacity-75 transition" />
-                                                                    </a>
-                                                                ) : (
-                                                                    <div className="w-full h-40 bg-gray-100 flex items-center justify-center rounded border text-gray-400">No Document</div>
-                                                                )}
+                                                                <div className="h-40 w-full relative">
+                                                                    {selectedUser.passportImageUrl ? (
+                                                                        <ZoomableImage src={selectedUser.passportImageUrl} alt="Passport" className="w-full h-40 object-cover rounded border shadow-sm" />
+                                                                    ) : (
+                                                                        <div className="w-full h-40 bg-gray-100 flex items-center justify-center rounded border text-gray-400">No Document</div>
+                                                                    )}
+                                                                </div>
                                                             </div>
                                                             <div>
                                                                 <p className="text-sm text-gray-500 mb-1">Selfie Verification</p>
-                                                                {selectedUser.selfieImageUrl ? (
-                                                                    <a href={selectedUser.selfieImageUrl} target="_blank" rel="noopener noreferrer">
-                                                                        <img src={selectedUser.selfieImageUrl} alt="Selfie" className="w-full h-40 object-cover rounded border hover:opacity-75 transition" />
-                                                                    </a>
-                                                                ) : (
-                                                                    <div className="w-full h-40 bg-gray-100 flex items-center justify-center rounded border text-gray-400">No Selfie</div>
-                                                                )}
+                                                                <div className="h-40 w-full relative">
+                                                                    {selectedUser.selfieImageUrl ? (
+                                                                        <ZoomableImage src={selectedUser.selfieImageUrl} alt="Selfie" className="w-full h-40 object-cover rounded border shadow-sm" />
+                                                                    ) : (
+                                                                        <div className="w-full h-40 bg-gray-100 flex items-center justify-center rounded border text-gray-400">No Selfie</div>
+                                                                    )}
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -276,7 +364,7 @@ const ViewUsers = () => {
                     )}
                 </AnimatePresence>
 
-                {/* Edit User Modal */}
+                {/* Edit Modal content remains the same, just keeping structure */}
                 <AnimatePresence>
                     {showEditModal && selectedUser && (
                         <div className="fixed inset-0 z-[100] overflow-y-auto" role="dialog" aria-modal="true">

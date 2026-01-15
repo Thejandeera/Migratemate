@@ -1,5 +1,7 @@
 package com.example.migratemate.UserManagement.Service;
 
+import com.example.migratemate.AdminManagement.Entity.Admin;
+import com.example.migratemate.AdminManagement.Repository.AdminRepository;
 import com.example.migratemate.Config.JwtService;
 import com.example.migratemate.UserManagement.Dto.*;
 import com.example.migratemate.UserManagement.Entity.User;
@@ -12,6 +14,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -19,23 +22,27 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.Optional;
 
 @Service
 @Slf4j
 public class UserService implements UserDetailsService {
 
     private final UserRepository userRepository;
+    private final AdminRepository adminRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final CloudinaryService cloudinaryService;
 
     public UserService(UserRepository userRepository,
+            AdminRepository adminRepository,
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
             @Lazy AuthenticationManager authenticationManager,
             CloudinaryService cloudinaryService) {
         this.userRepository = userRepository;
+        this.adminRepository = adminRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
@@ -404,19 +411,42 @@ public class UserService implements UserDetailsService {
         log.info("User account deleted: {}", email);
     }
 
+    @Transactional
+    public void deleteUser(String userId) {
+        if (!userRepository.existsById(userId)) {
+            throw new UsernameNotFoundException("User not found");
+        }
+        userRepository.deleteById(userId);
+    }
+
     /**
      * Load user by username (email) for Spring Security
      */
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+        // Try to find regular user
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            return org.springframework.security.core.userdetails.User.builder()
+                    .username(user.getEmail())
+                    .password(user.getPassword())
+                    .authorities(Collections.emptyList())
+                    .build();
+        }
 
-        return org.springframework.security.core.userdetails.User.builder()
-                .username(user.getEmail())
-                .password(user.getPassword())
-                .authorities(Collections.emptyList())
-                .build();
+        // Try to find admin
+        Optional<Admin> adminOpt = adminRepository.findByEmail(email);
+        if (adminOpt.isPresent()) {
+            Admin admin = adminOpt.get();
+            return org.springframework.security.core.userdetails.User.builder()
+                    .username(admin.getEmail())
+                    .password(admin.getPassword())
+                    .authorities(Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN")))
+                    .build();
+        }
+
+        throw new UsernameNotFoundException("User not found with email: " + email);
     }
 
     /**
