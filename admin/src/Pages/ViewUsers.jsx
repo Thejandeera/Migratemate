@@ -10,6 +10,7 @@ const ViewUsers = () => {
     const [selectedUser, setSelectedUser] = useState(null);
     const [showDocumentModal, setShowDocumentModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
+    const [verifyingId, setVerifyingId] = useState(null); // Track which user is being verified
     const [notification, setNotification] = useState({ show: false, message: '', type: '' });
 
     // Helper to get token
@@ -23,6 +24,7 @@ const ViewUsers = () => {
 
     const fetchUsers = async () => {
         setLoading(true);
+        setError(null);
         try {
             // Note: Updated to backend endpoint for all users
             const response = await fetch(`${import.meta.env.VITE_API_URL}/users/all`, {
@@ -32,10 +34,10 @@ const ViewUsers = () => {
             if (data.success) {
                 setUsers(data.data);
             } else {
-                setError(data.message);
+                setError(data.message || "Failed to fetch users");
             }
         } catch (err) {
-            setError('Failed to fetch users');
+            setError('Failed to fetch users. Ensure you are logged in and the server is running.');
             console.error(err);
         } finally {
             setLoading(false);
@@ -52,13 +54,17 @@ const ViewUsers = () => {
     };
 
     const handleEditUser = (user) => {
-        setSelectedUser(user);
+        // Create a copy to allow editing without mutating list immediately
+        setSelectedUser({ ...user });
         setShowEditModal(true);
     };
 
     const handleToggleVerification = async (user) => {
+        if (verifyingId) return; // Prevent double clicks
+        setVerifyingId(user.id);
         try {
             const newStatus = !user.isVerified;
+            // Note: Verify exact parameter name expected by backend: isVerified
             const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${user.id}/verify?isVerified=${newStatus}`, {
                 method: 'PATCH',
                 headers: getHeaders()
@@ -68,10 +74,13 @@ const ViewUsers = () => {
                 setUsers(users.map(u => u.id === user.id ? { ...u, isVerified: newStatus } : u));
                 showNotification(`User ${newStatus ? 'verified' : 'unverified'} successfully`, 'success');
             } else {
-                showNotification(data.message, 'error');
+                showNotification(data.message || 'Action failed', 'error');
             }
         } catch (err) {
+            console.error(err);
             showNotification('Failed to update status', 'error');
+        } finally {
+            setVerifyingId(null);
         }
     };
 
@@ -84,10 +93,12 @@ const ViewUsers = () => {
                 body: JSON.stringify({
                     firstName: selectedUser.firstName,
                     lastName: selectedUser.lastName,
-                    email: selectedUser.email, // Email usually not editable, but providing just in case backend ignores or handles
+                    email: selectedUser.email,
                     phone: selectedUser.phone,
                     location: selectedUser.location,
-                    // Add other fields as necessary based on UpdateProfileRequest
+                    bio: selectedUser.bio,
+                    countryOfOrigin: selectedUser.countryOfOrigin,
+                    destinationCountry: selectedUser.destinationCountry
                 })
             });
             const data = await response.json();
@@ -96,9 +107,10 @@ const ViewUsers = () => {
                 setShowEditModal(false);
                 showNotification('User updated successfully', 'success');
             } else {
-                showNotification(data.message, 'error');
+                showNotification(data.message || 'Update failed', 'error');
             }
         } catch (err) {
+            console.error(err);
             showNotification('Failed to update user', 'error');
         }
     };
@@ -178,9 +190,10 @@ const ViewUsers = () => {
                                                     <button onClick={() => handleEditUser(user)} className="text-blue-600 hover:text-blue-900">Edit</button>
                                                     <button
                                                         onClick={() => handleToggleVerification(user)}
-                                                        className={`${user.isVerified ? 'text-orange-600 hover:text-orange-900' : 'text-green-600 hover:text-green-900'}`}
+                                                        disabled={verifyingId === user.id}
+                                                        className={`${user.isVerified ? 'text-orange-600 hover:text-orange-900' : 'text-green-600 hover:text-green-900'} ${verifyingId === user.id ? 'opacity-50 cursor-not-allowed' : ''}`}
                                                     >
-                                                        {user.isVerified ? 'Revoke' : 'Verify'}
+                                                        {verifyingId === user.id ? 'Processing...' : (user.isVerified ? 'Revoke' : 'Verify')}
                                                     </button>
                                                 </td>
                                             </tr>
@@ -195,7 +208,7 @@ const ViewUsers = () => {
                 {/* Document/Profile View Modal */}
                 <AnimatePresence>
                     {showDocumentModal && selectedUser && (
-                        <div className="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+                        <div className="fixed inset-0 z-[100] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
                             <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
                                 <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setShowDocumentModal(false)}></div>
                                 <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
@@ -203,7 +216,8 @@ const ViewUsers = () => {
                                     initial={{ opacity: 0, scale: 0.95 }}
                                     animate={{ opacity: 1, scale: 1 }}
                                     exit={{ opacity: 0, scale: 0.95 }}
-                                    className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full relative"
                                 >
                                     <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                                         <div className="sm:flex sm:items-start">
@@ -265,7 +279,7 @@ const ViewUsers = () => {
                 {/* Edit User Modal */}
                 <AnimatePresence>
                     {showEditModal && selectedUser && (
-                        <div className="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true">
+                        <div className="fixed inset-0 z-[100] overflow-y-auto" role="dialog" aria-modal="true">
                             <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
                                 <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onClick={() => setShowEditModal(false)}></div>
                                 <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
@@ -273,7 +287,8 @@ const ViewUsers = () => {
                                     initial={{ opacity: 0, scale: 0.95 }}
                                     animate={{ opacity: 1, scale: 1 }}
                                     exit={{ opacity: 0, scale: 0.95 }}
-                                    className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl sm:w-full relative"
                                 >
                                     <form onSubmit={handleUpdateUser}>
                                         <div className="bg-white px-4 pt-5 pb-4 sm:p-6">
@@ -317,7 +332,33 @@ const ViewUsers = () => {
                                                         className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
                                                     />
                                                 </div>
-
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700">Bio</label>
+                                                    <textarea
+                                                        value={selectedUser.bio || ''}
+                                                        onChange={(e) => setSelectedUser({ ...selectedUser, bio: e.target.value })}
+                                                        rows="3"
+                                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                                                    ></textarea>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700">Country of Origin</label>
+                                                    <input
+                                                        type="text"
+                                                        value={selectedUser.countryOfOrigin || ''}
+                                                        onChange={(e) => setSelectedUser({ ...selectedUser, countryOfOrigin: e.target.value })}
+                                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700">Destination Country</label>
+                                                    <input
+                                                        type="text"
+                                                        value={selectedUser.destinationCountry || ''}
+                                                        onChange={(e) => setSelectedUser({ ...selectedUser, destinationCountry: e.target.value })}
+                                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
                                         <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
