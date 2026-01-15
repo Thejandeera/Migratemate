@@ -1,34 +1,71 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React from 'react'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import Dashboard from './Pages/Dashboard'
+import SignIn from './Pages/SignIn'
+import ViewUsers from './Pages/ViewUsers'
+import { isAuthenticated } from './utils/auth'
 
-function App() {
-  const [count, setCount] = useState(0)
+const ProtectedRoute = ({ children }) => {
+  if (!isAuthenticated()) {
+    return <Navigate to="/" replace />;
+  }
+  return children;
+};
 
+const PublicOnlyRoute = ({ children }) => {
+  if (isAuthenticated()) {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return children;
+};
+
+const App = () => {
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <Routes>
+      <Route path="/" element={
+        <PublicOnlyRoute>
+          <SignIn />
+        </PublicOnlyRoute>
+      } />
+
+      <Route path="/dashboard" element={
+        <ProtectedRoute>
+          <Dashboard />
+        </ProtectedRoute>
+      } />
+
+      <Route path="/users" element={
+        <ProtectedRoute>
+          <ViewUsers />
+        </ProtectedRoute>
+      } />
+
+      <Route path="/reports" element={
+        <ProtectedRoute>
+          <div className="p-20 pt-24">Reports Page (Placeholder)</div>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/settings" element={
+        <ProtectedRoute>
+          <div className="p-20 pt-24">Settings Page (Placeholder)</div>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/logs" element={
+        <ProtectedRoute>
+          <div className="p-20 pt-24">Logs Page (Placeholder)</div>
+        </ProtectedRoute>
+      } />
+
+      <Route path="/notifications" element={
+        <ProtectedRoute>
+          <div className="p-20 pt-24">Notifications Page (Placeholder)</div>
+        </ProtectedRoute>
+      } />
+
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   )
 }
 
