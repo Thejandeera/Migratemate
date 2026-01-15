@@ -157,6 +157,51 @@ public class UserService implements UserDetailsService {
         return mapToUserResponse(user);
     }
 
+    // --- Admin Features ---
+
+    public java.util.List<UserResponse> getAllUsers() {
+        return userRepository.findAll().stream()
+                .map(this::mapToUserResponse)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    @Transactional
+    public UserResponse toggleUserVerification(String userId, Boolean isVerified) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        user.setIsVerified(isVerified);
+        user.updateTimestamp();
+        userRepository.save(user);
+        return mapToUserResponse(user);
+    }
+
+    @Transactional
+    public UserResponse updateUserByAdmin(String userId, UpdateProfileRequest request) throws IOException {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+
+        if (request.getFirstName() != null)
+            user.setFirstName(request.getFirstName());
+        if (request.getLastName() != null)
+            user.setLastName(request.getLastName());
+        if (request.getBio() != null)
+            user.setBio(request.getBio());
+        if (request.getLocation() != null)
+            user.setLocation(request.getLocation());
+        if (request.getPhone() != null)
+            user.setPhone(request.getPhone());
+        if (request.getCountryOfOrigin() != null)
+            user.setCountryOfOrigin(request.getCountryOfOrigin());
+        if (request.getDestinationCountry() != null)
+            user.setDestinationCountry(request.getDestinationCountry());
+
+        user.generateFullName();
+        user.updateTimestamp();
+
+        userRepository.save(user);
+        return mapToUserResponse(user);
+    }
+
     /**
      * Update user profile
      */
