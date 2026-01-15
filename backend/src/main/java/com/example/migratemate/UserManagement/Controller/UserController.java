@@ -1,6 +1,5 @@
 package com.example.migratemate.UserManagement.Controller;
 
-
 import com.example.migratemate.UserManagement.Dto.*;
 import com.example.migratemate.UserManagement.Service.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -258,5 +257,74 @@ public class UserController {
             throw new IllegalStateException("User not authenticated");
         }
         return authentication.getName();
+    }
+    // --- Admin Endpoints ---
+
+    /**
+     * Get all users (Admin)
+     */
+    @GetMapping("/all")
+    public ResponseEntity<ApiResponse<java.util.List<UserResponse>>> getAllUsers() {
+        try {
+            java.util.List<UserResponse> users = userService.getAllUsers();
+            return ResponseEntity.ok(ApiResponse.<java.util.List<UserResponse>>builder()
+                    .success(true)
+                    .message("All users retrieved successfully")
+                    .data(users)
+                    .build());
+        } catch (Exception e) {
+            log.error("Failed to fetch all users", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<java.util.List<UserResponse>>builder()
+                            .success(false)
+                            .message("Failed to fetch users")
+                            .build());
+        }
+    }
+
+    /**
+     * Toggle user verification (Admin)
+     */
+    @PatchMapping("/{userId}/verify")
+    public ResponseEntity<ApiResponse<UserResponse>> toggleVerification(
+            @PathVariable String userId,
+            @RequestParam Boolean isVerified) {
+        try {
+            UserResponse user = userService.toggleUserVerification(userId, isVerified);
+            return ResponseEntity.ok(ApiResponse.<UserResponse>builder()
+                    .success(true)
+                    .message("User verification updated")
+                    .data(user)
+                    .build());
+        } catch (Exception e) {
+            log.error("Failed to update verification", e);
+            return ResponseEntity.badRequest().body(ApiResponse.<UserResponse>builder()
+                    .success(false)
+                    .message(e.getMessage())
+                    .build());
+        }
+    }
+
+    /**
+     * Update any user (Admin)
+     */
+    @PutMapping("/{userId}/admin-update")
+    public ResponseEntity<ApiResponse<UserResponse>> updateUserByAdmin(
+            @PathVariable String userId,
+            @RequestBody UpdateProfileRequest request) {
+        try {
+            UserResponse user = userService.updateUserByAdmin(userId, request);
+            return ResponseEntity.ok(ApiResponse.<UserResponse>builder()
+                    .success(true)
+                    .message("User updated successfully")
+                    .data(user)
+                    .build());
+        } catch (Exception e) {
+            log.error("Failed to update user", e);
+            return ResponseEntity.badRequest().body(ApiResponse.<UserResponse>builder()
+                    .success(false)
+                    .message(e.getMessage())
+                    .build());
+        }
     }
 }
