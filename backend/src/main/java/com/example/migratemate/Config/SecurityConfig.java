@@ -51,7 +51,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(
                                 "/api/users/register",
-                                "/api/users/login")
+                                "/api/users/login",
+                                "/api/admin/**")
                         .permitAll()
                         .anyRequest().authenticated())
                 .authenticationProvider(authenticationProvider)
@@ -80,6 +81,7 @@ public class SecurityConfig {
         List<String> allowedOrigins = List.of(
                 frontendUrl,
                 "http://localhost:5173",
+                "http://localhost:5174",
                 "http://localhost:3000");
         config.setAllowedOrigins(allowedOrigins);
 

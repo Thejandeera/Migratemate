@@ -37,18 +37,22 @@ const Navbar = () => {
     const handleLogout = () => {
         clearAuthData();
         setIsLoggedIn(false);
-        navigate('/login');
+        navigate('/');
     }
+
+    // Hide navbar on login page if desired, but user didn't ask to hide it. 
+    // Usually admin panels have a simpler login page without the main nav, 
+    // but the request implies "navbar ... in dashboard".
+    // I will include it everywhere but ensure it is fixed.
 
     return (
         <nav
-            className={`fixed w-full z-50 transition-all duration-300 ${scrolled || mobileMenuOpen ? 'bg-white shadow-md py-4' : 'bg-[#F0FDF4] py-6'
-                }`}
+            className={`fixed top-0 left-0 right-0 w-full z-50 transition-all duration-300 bg-white border-b border-gray-200 shadow-sm`}
         >
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center h-16">
 
-                    <Link to="/" className="flex items-center gap-2 z-50">
+                    <Link to="/dashboard" className="flex items-center gap-2 z-50">
                         <div className="bg-[#22C55E] p-2 rounded-lg">
                             <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
@@ -59,13 +63,15 @@ const Navbar = () => {
                         </span>
                     </Link>
 
-                    <div className="hidden md:flex items-center space-x-8">
-                        <Link to="/users" className="text-sm font-medium text-gray-500 hover:text-gray-900">View Users</Link>
-                        <Link to="/reports" className="text-sm font-medium text-gray-500 hover:text-gray-900">Reports</Link>
-                        <Link to="/settings" className="text-sm font-medium text-gray-500 hover:text-gray-900">Settings</Link>
-                        <Link to="/logs" className="text-sm font-medium text-gray-500 hover:text-gray-900">Logs</Link>
-                        <Link to="/notifications" className="text-sm font-medium text-gray-500 hover:text-gray-900">Notifications</Link>
-                    </div>
+                    {isLoggedIn && (
+                        <div className="hidden md:flex items-center space-x-8">
+                            <Link to="/users" className="text-sm font-medium text-gray-500 hover:text-gray-900">View Users</Link>
+                            <Link to="/reports" className="text-sm font-medium text-gray-500 hover:text-gray-900">Reports</Link>
+                            <Link to="/settings" className="text-sm font-medium text-gray-500 hover:text-gray-900">Settings</Link>
+                            <Link to="/logs" className="text-sm font-medium text-gray-500 hover:text-gray-900">Logs</Link>
+                            <Link to="/notifications" className="text-sm font-medium text-gray-500 hover:text-gray-900">Notifications</Link>
+                        </div>
+                    )}
 
                     <div className="hidden md:flex items-center gap-4">
                         {isLoggedIn ? (
@@ -73,7 +79,7 @@ const Navbar = () => {
                                 Sign Out
                             </button>
                         ) : (
-                            <Link to="/login" className="px-4 py-2 bg-[#22C55E] text-white rounded-lg text-sm font-semibold hover:bg-[#16A34A] transition">
+                            <Link to="/" className="px-4 py-2 bg-[#22C55E] text-white rounded-lg text-sm font-semibold hover:bg-[#16A34A] transition">
                                 Sign In
                             </Link>
                         )}
@@ -103,11 +109,15 @@ const Navbar = () => {
                         className="md:hidden bg-white border-t border-gray-100 overflow-hidden"
                     >
                         <div className="px-4 pt-2 pb-6 space-y-2 shadow-inner">
-                            <Link to="/users" className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">View Users</Link>
-                            <Link to="/reports" className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">Reports</Link>
-                            <Link to="/settings" className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">Settings</Link>
-                            <Link to="/logs" className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">Logs</Link>
-                            <Link to="/notifications" className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">Notifications</Link>
+                            {isLoggedIn && (
+                                <>
+                                    <Link to="/users" className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">View Users</Link>
+                                    <Link to="/reports" className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">Reports</Link>
+                                    <Link to="/settings" className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">Settings</Link>
+                                    <Link to="/logs" className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">Logs</Link>
+                                    <Link to="/notifications" className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">Notifications</Link>
+                                </>
+                            )}
 
                             <div className="border-t border-gray-100 pt-4 mt-4">
                                 {isLoggedIn ? (
@@ -115,7 +125,7 @@ const Navbar = () => {
                                         Sign Out
                                     </button>
                                 ) : (
-                                    <Link to="/login" className="block w-full text-center px-4 py-2 bg-[#22C55E] text-white rounded-lg text-base font-semibold hover:bg-[#16A34A] mb-3">
+                                    <Link to="/" className="block w-full text-center px-4 py-2 bg-[#22C55E] text-white rounded-lg text-base font-semibold hover:bg-[#16A34A] mb-3">
                                         Sign In
                                     </Link>
                                 )}

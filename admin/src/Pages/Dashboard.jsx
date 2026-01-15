@@ -5,7 +5,8 @@ const Dashboard = () => {
     return (
         <div className="min-h-screen bg-gray-50">
             <Navbar />
-            <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 mt-20">
+            {/* Added pt-24 to account for fixed navbar */}
+            <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 pt-24">
                 <div className="px-4 py-6 sm:px-0">
                     <h1 className="text-3xl font-bold text-gray-900 mb-6">Admin Dashboard</h1>
                     <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
