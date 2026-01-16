@@ -8,7 +8,7 @@ const ZoomableImage = ({ src, alt, className }) => {
     const [isHovered, setIsHovered] = useState(false);
 
     if (!src) return (
-        <div className={`bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-gray-400 text-xs ${className}`}>
+        <div className={`bg-gray-100 flex items-center justify-center text-gray-400 text-xs ${className}`}>
             No Image
         </div>
     );
@@ -44,7 +44,7 @@ const ZoomableImage = ({ src, alt, className }) => {
                     <img
                         src={src}
                         alt={alt}
-                        className="w-auto h-auto max-w-full max-h-full object-contain rounded-xl shadow-2xl bg-white dark:bg-gray-900 border-4 border-white dark:border-gray-800"
+                        className="w-auto h-auto max-w-full max-h-full object-contain rounded-xl shadow-2xl bg-white border-4 border-white"
                     />
                 </motion.div>
             )}
@@ -211,7 +211,7 @@ const ViewUsers = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+        <div className="min-h-screen bg-gray-50">
             <Navbar />
 
             {/* Notification */}
@@ -222,8 +222,8 @@ const ViewUsers = () => {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -50 }}
                         className={`fixed top-20 right-4 left-4 md:left-auto md:right-6 p-4 rounded-xl shadow-2xl z-[200] text-white backdrop-blur-sm ${notification.type === 'success'
-                                ? 'bg-gradient-to-r from-green-500 to-emerald-600'
-                                : 'bg-gradient-to-r from-red-500 to-pink-600'
+                            ? 'bg-gradient-to-r from-green-500 to-emerald-600'
+                            : 'bg-gradient-to-r from-red-500 to-pink-600'
                             }`}
                     >
                         <div className="flex items-center justify-between">
@@ -244,10 +244,10 @@ const ViewUsers = () => {
                 <div className="mb-8">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                         <div>
-                            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-2">
+                            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
                                 User Management
                             </h1>
-                            <p className="text-gray-600 dark:text-gray-300">
+                            <p className="text-gray-600">
                                 Manage and monitor all registered users
                             </p>
                         </div>
@@ -265,7 +265,7 @@ const ViewUsers = () => {
                     </div>
 
                     {/* Filters Section */}
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-4 mb-6">
+                    <div className="bg-white rounded-2xl shadow-lg p-4 mb-6 border border-gray-100">
                         <div className="flex flex-col md:flex-row gap-4">
                             <div className="flex-1">
                                 <div className="relative">
@@ -277,7 +277,7 @@ const ViewUsers = () => {
                                         placeholder="Search users by name, email, or phone..."
                                         value={searchTerm}
                                         onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
+                                        className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all text-gray-900 placeholder-gray-400"
                                     />
                                 </div>
                             </div>
@@ -285,7 +285,7 @@ const ViewUsers = () => {
                                 <select
                                     value={filterRole}
                                     onChange={(e) => setFilterRole(e.target.value)}
-                                    className="px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+                                    className="px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none text-gray-900"
                                 >
                                     <option value="all">All Roles</option>
                                     <option value="helper">Helpers</option>
@@ -300,10 +300,10 @@ const ViewUsers = () => {
                 {loading ? (
                     <div className="flex flex-col items-center justify-center p-12">
                         <div className="animate-spin rounded-full h-16 w-16 border-4 border-green-500 border-t-transparent mb-4"></div>
-                        <p className="text-gray-600 dark:text-gray-300">Loading users...</p>
+                        <p className="text-gray-600">Loading users...</p>
                     </div>
                 ) : error ? (
-                    <div className="bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-900/20 dark:to-pink-900/20 text-red-700 dark:text-red-300 p-6 rounded-2xl border border-red-200 dark:border-red-800">
+                    <div className="bg-red-50 text-red-700 p-6 rounded-2xl border border-red-200">
                         <div className="flex items-center gap-3">
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -312,37 +312,37 @@ const ViewUsers = () => {
                         </div>
                     </div>
                 ) : (
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden">
+                    <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
                         <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                                <thead className="bg-gray-50 dark:bg-gray-700">
+                            <table className="min-w-full divide-y divide-gray-200">
+                                <thead className="bg-gray-50">
                                     <tr>
-                                        <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                             <div className="flex items-center gap-2">
                                                 <span>User</span>
                                             </div>
                                         </th>
-                                        <th className="hidden md:table-cell px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        <th className="hidden md:table-cell px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                             Contact
                                         </th>
-                                        <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                             Status
                                         </th>
-                                        <th className="hidden sm:table-cell px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        <th className="hidden sm:table-cell px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                             Role
                                         </th>
-                                        <th className="px-4 sm:px-6 py-3 text-right text-xs font-semibold text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        <th className="px-4 sm:px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                             Actions
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                                <tbody className="bg-white divide-y divide-gray-200">
                                     {filteredUsers.map((user) => (
                                         <motion.tr
                                             key={user.id}
                                             initial={{ opacity: 0, y: 20 }}
                                             animate={{ opacity: 1, y: 0 }}
-                                            className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                                            className="hover:bg-gray-50 transition-colors"
                                         >
                                             <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center">
@@ -350,27 +350,27 @@ const ViewUsers = () => {
                                                         <ZoomableImage
                                                             src={user.avatarUrl}
                                                             alt="Avatar"
-                                                            className="h-12 w-12 rounded-full border-2 border-white dark:border-gray-700 shadow"
+                                                            className="h-12 w-12 rounded-full border-2 border-white shadow"
                                                         />
                                                     </div>
                                                     <div className="ml-3 sm:ml-4">
-                                                        <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                                                        <div className="text-sm font-semibold text-gray-900">
                                                             {user.fullName || 'No Name'}
                                                         </div>
-                                                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                                                        <div className="text-xs text-gray-500">
                                                             Joined {new Date(user.createdAt).toLocaleDateString()}
                                                         </div>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td className="hidden md:table-cell px-4 sm:px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-gray-900 dark:text-white">{user.email}</div>
-                                                <div className="text-xs text-gray-500 dark:text-gray-400">{user.phone || 'No phone'}</div>
+                                                <div className="text-sm text-gray-900">{user.email}</div>
+                                                <div className="text-xs text-gray-500">{user.phone || 'No phone'}</div>
                                             </td>
                                             <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
                                                 <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${user.isVerified
-                                                    ? 'bg-gradient-to-r from-green-100 to-emerald-100 dark:from-green-900/30 dark:to-emerald-900/30 text-green-800 dark:text-green-300'
-                                                    : 'bg-gradient-to-r from-red-100 to-pink-100 dark:from-red-900/30 dark:to-pink-900/30 text-red-800 dark:text-red-300'}`}>
+                                                    ? 'bg-green-100 text-green-800'
+                                                    : 'bg-red-100 text-red-800'}`}>
                                                     {user.isVerified ? (
                                                         <span className="flex items-center gap-1">
                                                             <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
@@ -384,8 +384,8 @@ const ViewUsers = () => {
                                             <td className="hidden sm:table-cell px-4 sm:px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center gap-2">
                                                     <span className={`px-3 py-1 text-xs font-medium rounded-full ${user.isHelper
-                                                        ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300'
-                                                        : 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300'}`}>
+                                                        ? 'bg-purple-100 text-purple-800'
+                                                        : 'bg-blue-100 text-blue-800'}`}>
                                                         {user.isHelper ? 'Helper' : 'User'}
                                                     </span>
                                                 </div>
@@ -394,7 +394,7 @@ const ViewUsers = () => {
                                                 <div className="flex justify-end flex-wrap gap-2">
                                                     <button
                                                         onClick={() => handleViewProfile(user)}
-                                                        className="p-2 text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-all"
+                                                        className="p-2 text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
                                                         title="View Profile"
                                                     >
                                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -404,7 +404,7 @@ const ViewUsers = () => {
                                                     </button>
                                                     <button
                                                         onClick={() => handleEditUser(user)}
-                                                        className="p-2 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-all"
+                                                        className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
                                                         title="Edit User"
                                                     >
                                                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -415,8 +415,8 @@ const ViewUsers = () => {
                                                         onClick={() => handleToggleVerification(user)}
                                                         disabled={verifyingId === user.id}
                                                         className={`p-2 rounded-lg transition-all ${user.isVerified
-                                                            ? 'text-orange-600 hover:text-orange-700 hover:bg-orange-50 dark:hover:bg-orange-900/30'
-                                                            : 'text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/30'} ${verifyingId === user.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                            ? 'text-orange-600 hover:text-orange-700 hover:bg-orange-50'
+                                                            : 'text-green-600 hover:text-green-700 hover:bg-green-50'} ${verifyingId === user.id ? 'opacity-50 cursor-not-allowed' : ''}`}
                                                         title={user.isVerified ? 'Revoke Verification' : 'Verify User'}
                                                     >
                                                         {verifyingId === user.id ? (
@@ -434,7 +434,7 @@ const ViewUsers = () => {
                                                     <button
                                                         onClick={() => handleDeleteUser(user.id)}
                                                         disabled={deletingId === user.id}
-                                                        className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-all ${deletingId === user.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                        className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all ${deletingId === user.id ? 'opacity-50 cursor-not-allowed' : ''}`}
                                                         title="Delete User"
                                                     >
                                                         {deletingId === user.id ? (
@@ -457,7 +457,7 @@ const ViewUsers = () => {
                                     <svg className="w-16 h-16 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    <p className="mt-4 text-gray-500 dark:text-gray-400">
+                                    <p className="mt-4 text-gray-500">
                                         {searchTerm || filterRole !== 'all'
                                             ? 'No users match your search criteria'
                                             : 'No users found'}
@@ -485,16 +485,16 @@ const ViewUsers = () => {
                                     animate={{ opacity: 1, scale: 1, y: 0 }}
                                     exit={{ opacity: 0, scale: 0.95, y: 20 }}
                                     onClick={(e) => e.stopPropagation()}
-                                    className="inline-block w-full max-w-4xl bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden relative"
+                                    className="inline-block w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden relative"
                                 >
                                     <div className="p-4 sm:p-6">
                                         <div className="flex justify-between items-center mb-6">
-                                            <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+                                            <h3 className="text-xl sm:text-2xl font-bold text-gray-900">
                                                 User Profile & Documents
                                             </h3>
                                             <button
                                                 onClick={() => setShowDocumentModal(false)}
-                                                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                                                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                                             >
                                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -509,16 +509,16 @@ const ViewUsers = () => {
                                                     <ZoomableImage
                                                         src={selectedUser.avatarUrl}
                                                         alt="Avatar"
-                                                        className="h-40 w-40 rounded-full border-4 border-white dark:border-gray-700 shadow-xl"
+                                                        className="h-40 w-40 rounded-full border-4 border-white shadow-xl"
                                                     />
-                                                    <h4 className="mt-4 text-lg font-semibold text-gray-900 dark:text-white">
+                                                    <h4 className="mt-4 text-lg font-semibold text-gray-900">
                                                         {selectedUser.fullName}
                                                     </h4>
-                                                    <p className="text-gray-600 dark:text-gray-300">{selectedUser.email}</p>
+                                                    <p className="text-gray-600">{selectedUser.email}</p>
                                                 </div>
 
-                                                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 sm:p-6">
-                                                    <h4 className="font-semibold text-gray-900 dark:text-white mb-4 text-lg">
+                                                <div className="bg-gray-50 rounded-xl p-4 sm:p-6">
+                                                    <h4 className="font-semibold text-gray-900 mb-4 text-lg">
                                                         Profile Details
                                                     </h4>
                                                     <div className="space-y-3">
@@ -526,7 +526,7 @@ const ViewUsers = () => {
                                                             <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                                                             </svg>
-                                                            <span className="text-gray-700 dark:text-gray-300">
+                                                            <span className="text-gray-700">
                                                                 {selectedUser.phone || 'N/A'}
                                                             </span>
                                                         </div>
@@ -535,7 +535,7 @@ const ViewUsers = () => {
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                                             </svg>
-                                                            <span className="text-gray-700 dark:text-gray-300">
+                                                            <span className="text-gray-700">
                                                                 {selectedUser.location || 'N/A'}
                                                             </span>
                                                         </div>
@@ -543,15 +543,15 @@ const ViewUsers = () => {
                                                             <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                             </svg>
-                                                            <span className="text-gray-700 dark:text-gray-300">
+                                                            <span className="text-gray-700">
                                                                 {selectedUser.countryOfOrigin || 'N/A'}
                                                             </span>
                                                         </div>
                                                     </div>
 
                                                     <div className="mt-4">
-                                                        <h5 className="font-medium text-gray-900 dark:text-white mb-2">Bio</h5>
-                                                        <p className="text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 p-3 rounded-lg">
+                                                        <h5 className="font-medium text-gray-900 mb-2">Bio</h5>
+                                                        <p className="text-gray-600 bg-white p-3 rounded-lg border border-gray-100">
                                                             {selectedUser.bio || 'No bio provided'}
                                                         </p>
                                                     </div>
@@ -560,16 +560,16 @@ const ViewUsers = () => {
 
                                             {/* Documents Section */}
                                             <div className="space-y-6">
-                                                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-xl p-4 sm:p-6">
-                                                    <h4 className="font-semibold text-gray-900 dark:text-white mb-4 text-lg">
+                                                <div className="bg-gray-50 rounded-xl p-4 sm:p-6">
+                                                    <h4 className="font-semibold text-gray-900 mb-4 text-lg">
                                                         Verification Documents
                                                     </h4>
                                                     <div className="space-y-6">
                                                         <div>
-                                                            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                                                            <p className="text-sm font-medium text-gray-700 mb-3">
                                                                 Passport / ID Document
                                                             </p>
-                                                            <div className="h-48 w-full rounded-xl overflow-hidden border-2 border-gray-200 dark:border-gray-700">
+                                                            <div className="h-48 w-full rounded-xl overflow-hidden border-2 border-gray-200">
                                                                 {selectedUser.passportImageUrl ? (
                                                                     <ZoomableImage
                                                                         src={selectedUser.passportImageUrl}
@@ -577,7 +577,7 @@ const ViewUsers = () => {
                                                                         className="w-full h-full object-cover"
                                                                     />
                                                                 ) : (
-                                                                    <div className="w-full h-full bg-gray-100 dark:bg-gray-800 flex flex-col items-center justify-center text-gray-400">
+                                                                    <div className="w-full h-full bg-gray-100 flex flex-col items-center justify-center text-gray-400">
                                                                         <svg className="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                                                         </svg>
@@ -587,10 +587,10 @@ const ViewUsers = () => {
                                                             </div>
                                                         </div>
                                                         <div>
-                                                            <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                                                            <p className="text-sm font-medium text-gray-700 mb-3">
                                                                 Selfie Verification
                                                             </p>
-                                                            <div className="h-48 w-full rounded-xl overflow-hidden border-2 border-gray-200 dark:border-gray-700">
+                                                            <div className="h-48 w-full rounded-xl overflow-hidden border-2 border-gray-200">
                                                                 {selectedUser.selfieImageUrl ? (
                                                                     <ZoomableImage
                                                                         src={selectedUser.selfieImageUrl}
@@ -598,7 +598,7 @@ const ViewUsers = () => {
                                                                         className="w-full h-full object-cover"
                                                                     />
                                                                 ) : (
-                                                                    <div className="w-full h-full bg-gray-100 dark:bg-gray-800 flex flex-col items-center justify-center text-gray-400">
+                                                                    <div className="w-full h-full bg-gray-100 flex flex-col items-center justify-center text-gray-400">
                                                                         <svg className="w-12 h-12 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                                         </svg>
@@ -634,18 +634,18 @@ const ViewUsers = () => {
                                     animate={{ opacity: 1, scale: 1, y: 0 }}
                                     exit={{ opacity: 0, scale: 0.95, y: 20 }}
                                     onClick={(e) => e.stopPropagation()}
-                                    className="inline-block w-full max-w-xl bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden relative"
+                                    className="inline-block w-full max-w-xl bg-white rounded-2xl shadow-2xl overflow-hidden relative"
                                 >
                                     <form onSubmit={handleUpdateUser}>
                                         <div className="p-4 sm:p-6">
                                             <div className="flex justify-between items-center mb-6">
-                                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                                                <h3 className="text-xl font-bold text-gray-900">
                                                     Edit User Details
                                                 </h3>
                                                 <button
                                                     type="button"
                                                     onClick={() => setShowEditModal(false)}
-                                                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                                                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                                                 >
                                                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -655,86 +655,86 @@ const ViewUsers = () => {
 
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
                                                         First Name
                                                     </label>
                                                     <input
                                                         type="text"
                                                         value={selectedUser.firstName || ''}
                                                         onChange={(e) => setSelectedUser({ ...selectedUser, firstName: e.target.value })}
-                                                        className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
+                                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
                                                         Last Name
                                                     </label>
                                                     <input
                                                         type="text"
                                                         value={selectedUser.lastName || ''}
                                                         onChange={(e) => setSelectedUser({ ...selectedUser, lastName: e.target.value })}
-                                                        className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
+                                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
                                                     />
                                                 </div>
                                                 <div className="sm:col-span-2">
-                                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
                                                         Phone
                                                     </label>
                                                     <input
                                                         type="text"
                                                         value={selectedUser.phone || ''}
                                                         onChange={(e) => setSelectedUser({ ...selectedUser, phone: e.target.value })}
-                                                        className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
+                                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
                                                     />
                                                 </div>
                                                 <div className="sm:col-span-2">
-                                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
                                                         Location
                                                     </label>
                                                     <input
                                                         type="text"
                                                         value={selectedUser.location || ''}
                                                         onChange={(e) => setSelectedUser({ ...selectedUser, location: e.target.value })}
-                                                        className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
+                                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
                                                     />
                                                 </div>
                                                 <div className="sm:col-span-2">
-                                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
                                                         Bio
                                                     </label>
                                                     <textarea
                                                         value={selectedUser.bio || ''}
                                                         onChange={(e) => setSelectedUser({ ...selectedUser, bio: e.target.value })}
                                                         rows="3"
-                                                        className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all resize-none"
+                                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all resize-none"
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
                                                         Country of Origin
                                                     </label>
                                                     <input
                                                         type="text"
                                                         value={selectedUser.countryOfOrigin || ''}
                                                         onChange={(e) => setSelectedUser({ ...selectedUser, countryOfOrigin: e.target.value })}
-                                                        className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
+                                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
                                                     />
                                                 </div>
                                                 <div>
-                                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
                                                         Destination Country
                                                     </label>
                                                     <input
                                                         type="text"
                                                         value={selectedUser.destinationCountry || ''}
                                                         onChange={(e) => setSelectedUser({ ...selectedUser, destinationCountry: e.target.value })}
-                                                        className="w-full px-4 py-3 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
+                                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
                                                     />
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <div className="bg-gray-50 dark:bg-gray-700/50 px-4 sm:px-6 py-4 flex flex-col sm:flex-row-reverse gap-3">
+                                        <div className="bg-gray-50 px-4 sm:px-6 py-4 flex flex-col sm:flex-row-reverse gap-3">
                                             <button
                                                 type="submit"
                                                 className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:shadow-lg transition-all duration-300 font-medium text-sm w-full sm:w-auto"
@@ -744,7 +744,7 @@ const ViewUsers = () => {
                                             <button
                                                 type="button"
                                                 onClick={() => setShowEditModal(false)}
-                                                className="px-6 py-3 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-all duration-300 font-medium text-sm w-full sm:w-auto"
+                                                className="px-6 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-300 font-medium text-sm w-full sm:w-auto"
                                             >
                                                 Cancel
                                             </button>
