@@ -87,4 +87,6 @@ public class User {
     public void updateTimestamp() {
         this.updatedAt = LocalDateTime.now();
     }
+
+
 }

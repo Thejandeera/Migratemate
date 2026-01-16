@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
@@ -278,6 +279,34 @@ public class UserController {
                     .body(ApiResponse.<java.util.List<UserResponse>>builder()
                             .success(false)
                             .message("Failed to fetch users")
+                            .build());
+        }
+    }
+
+    /**
+     * Delete user by ID (Admin)
+     */
+    @DeleteMapping("/{userId}")
+    public ResponseEntity<ApiResponse<Void>> deleteUserById(@PathVariable String userId) {
+        try {
+            userService.deleteUserById(userId);
+            return ResponseEntity.ok(ApiResponse.<Void>builder()
+                    .success(true)
+                    .message("User deleted successfully")
+                    .build());
+        } catch (RuntimeException e) {
+            log.error("Failed to delete user: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.<Void>builder()
+                            .success(false)
+                            .message(e.getMessage())
+                            .build());
+        } catch (Exception e) {
+            log.error("Failed to delete user: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<Void>builder()
+                            .success(false)
+                            .message("Failed to delete user: " + e.getMessage())
                             .build());
         }
     }
