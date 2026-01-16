@@ -51,10 +51,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers(
                                 "/api/users/register",
-                                "/api/users/login",
-                                "/api/admin/**")
-                        .permitAll()
-                        .anyRequest().authenticated())
+                                "/api/users/login"
+                        ).permitAll()
+                        .requestMatchers("/api/users/**").authenticated()  // This covers DELETE /api/users/{userId}
+                        .anyRequest().authenticated()
+                )
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(new FlutterCorsFilter(), UsernamePasswordAuthenticationFilter.class)

@@ -1,5 +1,6 @@
 package com.example.migratemate.UserManagement.Service;
 
+import com.cloudinary.provisioning.Account;
 import com.example.migratemate.AdminManagement.Entity.Admin;
 import com.example.migratemate.AdminManagement.Repository.AdminRepository;
 import com.example.migratemate.Config.JwtService;
@@ -476,5 +477,13 @@ public class UserService implements UserDetailsService {
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .build();
+    }
+
+    public void deleteUserById(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+
+        userRepository.delete(user);
+        log.info("User deleted by ID: {}", userId);
     }
 }

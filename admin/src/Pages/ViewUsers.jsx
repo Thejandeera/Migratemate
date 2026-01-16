@@ -109,7 +109,7 @@ const ViewUsers = () => {
 
         setDeletingId(userId);
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${userId}/delete`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${userId}`, {
                 method: 'DELETE',
                 headers: getHeaders()
             });
