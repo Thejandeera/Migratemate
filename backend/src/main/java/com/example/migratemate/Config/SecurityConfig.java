@@ -1,7 +1,6 @@
 package com.example.migratemate.Config;
 
 import com.example.migratemate.Config.JwtAuthenticationFilter;
-import com.example.migratemate.UserManagement.Service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,7 +24,6 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
 
 import java.util.List;
 import java.io.IOException;
@@ -37,29 +35,34 @@ public class SecurityConfig {
     @Value("${frontend.url}")
     private String frontendUrl;
 
-    // Removed UserService constructor injection to break circular dependency
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
-            JwtAuthenticationFilter jwtAuthenticationFilter,
-            AuthenticationProvider authenticationProvider) throws Exception {
+                                                   JwtAuthenticationFilter jwtAuthenticationFilter,
+                                                   AuthenticationProvider authenticationProvider) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
+                        // CORS preflight requests
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        // Public endpoints - no authentication required
                         .requestMatchers(
                                 "/api/users/register",
-                                "/api/users/login"
+                                "/api/users/login",
+                                "/api/admin/register",
+                                "/api/admin/login"
                         ).permitAll()
-                        .requestMatchers("/api/users/**").authenticated()  // This covers DELETE /api/users/{userId}
+
+                        // Everything else requires authentication
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(new FlutterCorsFilter(), UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(unauthorizedEntryPoint()));
+
         return http.build();
     }
 
@@ -68,8 +71,12 @@ public class SecurityConfig {
         return (request, response, authException) -> {
             response.setContentType("application/json");
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.getWriter()
-                    .write("{ \"error\": \"Unauthorized\", \"message\": \"Full authentication required\" }");
+            String path = request.getRequestURI();
+            String message = String.format(
+                    "{ \"error\": \"Unauthorized\", \"message\": \"Full authentication required\", \"path\": \"%s\" }",
+                    path
+            );
+            response.getWriter().write(message);
         };
     }
 
@@ -87,7 +94,7 @@ public class SecurityConfig {
         config.setAllowedOrigins(allowedOrigins);
 
         config.setAllowedHeaders(List.of("*"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 
         System.out.println("🔐 Allowed CORS origins: " + allowedOrigins);
 
@@ -104,7 +111,7 @@ public class SecurityConfig {
     @Bean
     public AuthenticationProvider authenticationProvider(UserDetailsService userDetailsService) {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService); // Inject UserDetailsService here
+        authProvider.setUserDetailsService(userDetailsService);
         authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }
@@ -122,8 +129,8 @@ public class SecurityConfig {
 
         @Override
         protected void doFilterInternal(HttpServletRequest request,
-                HttpServletResponse response,
-                jakarta.servlet.FilterChain filterChain)
+                                        HttpServletResponse response,
+                                        jakarta.servlet.FilterChain filterChain)
                 throws jakarta.servlet.ServletException, IOException {
 
             String appHeader = request.getHeader(FLUTTER_APP_HEADER);
@@ -149,7 +156,7 @@ public class SecurityConfig {
             // Allow Flutter requests
             if (isFlutterApp || isFlutterUserAgent) {
                 response.setHeader("Access-Control-Allow-Origin", "*");
-                response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+                response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
                 response.setHeader("Access-Control-Allow-Headers",
                         "Authorization, Content-Type, Accept, X-Requested-With, X-Requested-From, X-App-Version");
                 response.setHeader("Access-Control-Max-Age", "3600");
