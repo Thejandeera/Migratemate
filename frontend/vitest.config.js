@@ -8,7 +8,7 @@ export default defineConfig({
     test: {
         globals: true,
         environment: 'jsdom',
-        setupFiles: [],
+        setupFiles: ['../test-cases/setupTests.js'],
         include: ['../test-cases/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
         alias: {
             '@': path.resolve(__dirname, './src'),
@@ -16,6 +16,7 @@ export default defineConfig({
             'react-dom': path.resolve(__dirname, './node_modules/react-dom'),
             'react-router-dom': path.resolve(__dirname, './node_modules/react-router-dom'),
             '@testing-library/react': path.resolve(__dirname, './node_modules/@testing-library/react'),
+            '@testing-library/jest-dom': path.resolve(__dirname, './node_modules/@testing-library/jest-dom'),
         },
     },
     server: {
