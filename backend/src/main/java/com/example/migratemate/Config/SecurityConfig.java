@@ -1,32 +1,20 @@
 package com.example.migratemate.Config;
 
-import com.example.migratemate.Config.JwtAuthenticationFilter;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.util.List;
-import java.io.IOException;
 
 @Configuration
 @EnableWebSecurity
@@ -35,150 +23,53 @@ public class SecurityConfig {
     @Value("${frontend.url}")
     private String frontendUrl;
 
+    // From application.properties
+    @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}")
+    private String issuerUri;
+
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http,
-                                                   JwtAuthenticationFilter jwtAuthenticationFilter,
-                                                   AuthenticationProvider authenticationProvider) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
+                // Stateless session (JWT)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
                 .authorizeHttpRequests(authz -> authz
-                        // CORS preflight requests
+                        // Allow Preflight OPTIONS
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // Public endpoints - no authentication required
-                        .requestMatchers(
-                                "/api/users/register",
-                                "/api/users/login",
-                                "/api/admin/register",
-                                "/api/admin/login"
-                        ).permitAll()
+                        // Allow Public Endpoints (Sync is public because it carries the token)
+                        .requestMatchers("/api/users/auth/sync").authenticated()
+                        .requestMatchers("/error").permitAll()
 
-                        // Everything else requires authentication
+                        // All other endpoints require valid Asgardeo Token
                         .anyRequest().authenticated()
                 )
-                .authenticationProvider(authenticationProvider)
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterBefore(new FlutterCorsFilter(), UsernamePasswordAuthenticationFilter.class)
-                .exceptionHandling(ex -> ex.authenticationEntryPoint(unauthorizedEntryPoint()));
+
+                // Native OAuth2 Resource Server configuration
+                .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt -> jwt.decoder(
+                        org.springframework.security.oauth2.jwt.JwtDecoders.fromIssuerLocation(issuerUri)
+                )));
 
         return http.build();
-    }
-
-    @Bean
-    public AuthenticationEntryPoint unauthorizedEntryPoint() {
-        return (request, response, authException) -> {
-            response.setContentType("application/json");
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            String path = request.getRequestURI();
-            String message = String.format(
-                    "{ \"error\": \"Unauthorized\", \"message\": \"Full authentication required\", \"path\": \"%s\" }",
-                    path
-            );
-            response.getWriter().write(message);
-        };
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
-
-        // Web frontend origins
-        List<String> allowedOrigins = List.of(
+        config.setAllowedOrigins(List.of(
                 frontendUrl,
                 "http://localhost:5173",
-                "http://localhost:5174",
-                "http://localhost:3000");
-        config.setAllowedOrigins(allowedOrigins);
-
+                "http://localhost:3000"
+        ));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
-
-        System.out.println("🔐 Allowed CORS origins: " + allowedOrigins);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public AuthenticationProvider authenticationProvider(UserDetailsService userDetailsService) {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder());
-        return authProvider;
-    }
-
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
-    }
-
-    // Flutter-specific CORS filter
-    public static class FlutterCorsFilter extends OncePerRequestFilter {
-
-        private static final String FLUTTER_APP_HEADER = "X-Requested-From";
-        private static final String EXPECTED_HEADER_VALUE = "VibeWrite-Flutter-App";
-
-        @Override
-        protected void doFilterInternal(HttpServletRequest request,
-                                        HttpServletResponse response,
-                                        jakarta.servlet.FilterChain filterChain)
-                throws jakarta.servlet.ServletException, IOException {
-
-            String appHeader = request.getHeader(FLUTTER_APP_HEADER);
-            String userAgent = request.getHeader("User-Agent");
-            String origin = request.getHeader("Origin");
-            String method = request.getMethod();
-
-            System.out.println("🔍 Request Analysis:");
-            System.out.println("Method: " + method);
-            System.out.println("Path: " + request.getRequestURI());
-            System.out.println("X-Requested-From: " + appHeader);
-            System.out.println("User-Agent: " + userAgent);
-            System.out.println("Origin: " + origin);
-
-            // Check if request is from Flutter app
-            boolean isFlutterApp = EXPECTED_HEADER_VALUE.equals(appHeader);
-
-            // Check if it's a Flutter HTTP client based on User-Agent
-            boolean isFlutterUserAgent = userAgent != null && (userAgent.contains("Dart/") ||
-                    userAgent.contains("Flutter") ||
-                    userAgent.toLowerCase().contains("dart"));
-
-            // Allow Flutter requests
-            if (isFlutterApp || isFlutterUserAgent) {
-                response.setHeader("Access-Control-Allow-Origin", "*");
-                response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
-                response.setHeader("Access-Control-Allow-Headers",
-                        "Authorization, Content-Type, Accept, X-Requested-With, X-Requested-From, X-App-Version");
-                response.setHeader("Access-Control-Max-Age", "3600");
-
-                if (isFlutterApp) {
-                    System.out.println("✅ VibeWrite Flutter app request allowed (custom header)");
-                } else {
-                    System.out.println("✅ Flutter request allowed (user-agent detection)");
-                }
-
-                // Handle preflight OPTIONS request
-                if ("OPTIONS".equals(method)) {
-                    response.setStatus(HttpServletResponse.SC_OK);
-                    return;
-                }
-            }
-            // For web requests, let the default CORS configuration handle it
-            else if (origin != null) {
-                System.out.println("🌐 Web request - using default CORS configuration");
-            }
-
-            filterChain.doFilter(request, response);
-        }
     }
 }

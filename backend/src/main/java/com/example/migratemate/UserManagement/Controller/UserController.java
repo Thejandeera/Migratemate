@@ -7,9 +7,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -25,69 +24,44 @@ public class UserController {
     private final ObjectMapper objectMapper;
 
     /**
-     * Register a new user (JSON with Base64 images)
+     * [INTEGRATION] Sync User from Asgardeo
+     * This is called immediately after frontend login to ensure the user exists in MongoDB.
      */
-    @PostMapping("/register")
-    public ResponseEntity<ApiResponse<AuthResponse>> register(@RequestBody RegisterRequest request) {
+    @PostMapping("/auth/sync")
+    public ResponseEntity<ApiResponse<UserResponse>> syncUser(@AuthenticationPrincipal Jwt jwt) {
         try {
-            AuthResponse response = userService.register(request);
-            return ResponseEntity.ok(ApiResponse.<AuthResponse>builder()
+            // Extract claims from Asgardeo Token
+            String email = jwt.getClaimAsString("email");
+            String firstName = jwt.getClaimAsString("given_name");
+            String lastName = jwt.getClaimAsString("family_name");
+
+            // Handle potential nulls
+            if (firstName == null) firstName = "User";
+            if (lastName == null) lastName = "";
+
+            UserResponse user = userService.syncUserFromToken(email, firstName, lastName);
+
+            return ResponseEntity.ok(ApiResponse.<UserResponse>builder()
                     .success(true)
-                    .message("User registered successfully")
-                    .data(response)
+                    .message("User synced successfully")
+                    .data(user)
                     .build());
-        } catch (IllegalArgumentException e) {
-            log.error("Registration failed: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(ApiResponse.<AuthResponse>builder()
+        } catch (Exception e) {
+            log.error("Sync failed: {}", e.getMessage());
+            return ResponseEntity.badRequest().body(ApiResponse.<UserResponse>builder()
                     .success(false)
-                    .message(e.getMessage())
+                    .message("Sync failed: " + e.getMessage())
                     .build());
-        } catch (IOException e) {
-            log.error("Image upload failed during registration", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.<AuthResponse>builder()
-                            .success(false)
-                            .message("Failed to upload images: " + e.getMessage())
-                            .build());
-        } catch (Exception e) {
-            log.error("Unexpected error during registration", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.<AuthResponse>builder()
-                            .success(false)
-                            .message("Registration failed: " + e.getMessage())
-                            .build());
         }
     }
 
     /**
-     * Login user
-     */
-    @PostMapping("/login")
-    public ResponseEntity<ApiResponse<AuthResponse>> login(@RequestBody LoginRequest request) {
-        try {
-            AuthResponse response = userService.login(request);
-            return ResponseEntity.ok(ApiResponse.<AuthResponse>builder()
-                    .success(true)
-                    .message("Login successful")
-                    .data(response)
-                    .build());
-        } catch (Exception e) {
-            log.error("Login failed: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(ApiResponse.<AuthResponse>builder()
-                            .success(false)
-                            .message("Invalid email or password")
-                            .build());
-        }
-    }
-
-    /**
-     * Get current user profile
+     * Get current user profile (Secured via JWT)
      */
     @GetMapping("/profile")
-    public ResponseEntity<ApiResponse<UserResponse>> getProfile() {
+    public ResponseEntity<ApiResponse<UserResponse>> getProfile(@AuthenticationPrincipal Jwt jwt) {
         try {
-            String email = getCurrentUserEmail();
+            String email = jwt.getClaimAsString("email");
             UserResponse user = userService.getUserProfile(email);
             return ResponseEntity.ok(ApiResponse.<UserResponse>builder()
                     .success(true)
@@ -105,7 +79,7 @@ public class UserController {
     }
 
     /**
-     * Get user profile by ID
+     * Get user profile by ID (Public/Shared)
      */
     @GetMapping("/{userId}")
     public ResponseEntity<ApiResponse<UserResponse>> getUserById(@PathVariable String userId) {
@@ -127,13 +101,14 @@ public class UserController {
     }
 
     /**
-     * Update user profile (JSON with Base64 images)
+     * Update user profile (JSON body)
      */
     @PutMapping("/profile")
     public ResponseEntity<ApiResponse<UserResponse>> updateProfile(
+            @AuthenticationPrincipal Jwt jwt,
             @RequestBody UpdateProfileRequest request) {
         try {
-            String email = getCurrentUserEmail();
+            String email = jwt.getClaimAsString("email");
             UserResponse user = userService.updateProfile(email, request);
             return ResponseEntity.ok(ApiResponse.<UserResponse>builder()
                     .success(true)
@@ -158,16 +133,17 @@ public class UserController {
     }
 
     /**
-     * Update user profile with multipart form data
+     * Update user profile with multipart form data (Images + Data)
      */
     @PutMapping(value = "/profile/multipart", consumes = "multipart/form-data")
     public ResponseEntity<ApiResponse<UserResponse>> updateProfileMultipart(
+            @AuthenticationPrincipal Jwt jwt,
             @RequestPart(value = "data", required = false) String dataJson,
             @RequestPart(value = "avatar", required = false) MultipartFile avatar,
             @RequestPart(value = "passport", required = false) MultipartFile passport,
             @RequestPart(value = "selfie", required = false) MultipartFile selfie) {
         try {
-            String email = getCurrentUserEmail();
+            String email = jwt.getClaimAsString("email");
 
             // Parse JSON data
             UpdateProfileRequest request = new UpdateProfileRequest();
@@ -199,41 +175,12 @@ public class UserController {
     }
 
     /**
-     * Change password
-     */
-    @PutMapping("/password")
-    public ResponseEntity<ApiResponse<Void>> changePassword(
-            @RequestBody ChangePasswordRequest request) {
-        try {
-            String email = getCurrentUserEmail();
-            userService.changePassword(email, request);
-            return ResponseEntity.ok(ApiResponse.<Void>builder()
-                    .success(true)
-                    .message("Password changed successfully")
-                    .build());
-        } catch (IllegalArgumentException e) {
-            log.error("Password change failed: {}", e.getMessage());
-            return ResponseEntity.badRequest().body(ApiResponse.<Void>builder()
-                    .success(false)
-                    .message(e.getMessage())
-                    .build());
-        } catch (Exception e) {
-            log.error("Failed to change password: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.<Void>builder()
-                            .success(false)
-                            .message("Failed to change password: " + e.getMessage())
-                            .build());
-        }
-    }
-
-    /**
      * Delete user account
      */
     @DeleteMapping("/account")
-    public ResponseEntity<ApiResponse<Void>> deleteAccount() {
+    public ResponseEntity<ApiResponse<Void>> deleteAccount(@AuthenticationPrincipal Jwt jwt) {
         try {
-            String email = getCurrentUserEmail();
+            String email = jwt.getClaimAsString("email");
             userService.deleteAccount(email);
             return ResponseEntity.ok(ApiResponse.<Void>builder()
                     .success(true)
@@ -249,17 +196,7 @@ public class UserController {
         }
     }
 
-    /**
-     * Get current authenticated user's email
-     */
-    private String getCurrentUserEmail() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new IllegalStateException("User not authenticated");
-        }
-        return authentication.getName();
-    }
-    // --- Admin Endpoints ---
+    // --- Admin Endpoints (Unchanged, assuming Admin Role is checked via SecurityConfig) ---
 
     /**
      * Get all users (Admin)

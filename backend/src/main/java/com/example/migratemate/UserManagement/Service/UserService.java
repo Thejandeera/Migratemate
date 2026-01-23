@@ -1,148 +1,57 @@
 package com.example.migratemate.UserManagement.Service;
 
-import com.cloudinary.provisioning.Account;
-import com.example.migratemate.AdminManagement.Entity.Admin;
-import com.example.migratemate.AdminManagement.Repository.AdminRepository;
-import com.example.migratemate.Config.JwtService;
 import com.example.migratemate.UserManagement.Dto.*;
 import com.example.migratemate.UserManagement.Entity.User;
 import com.example.migratemate.UserManagement.Repository.UserRepository;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 @Slf4j
-public class UserService implements UserDetailsService {
+public class UserService {
 
     private final UserRepository userRepository;
-    private final AdminRepository adminRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final JwtService jwtService;
-    private final AuthenticationManager authenticationManager;
     private final CloudinaryService cloudinaryService;
 
-    public UserService(UserRepository userRepository,
-            AdminRepository adminRepository,
-            PasswordEncoder passwordEncoder,
-            JwtService jwtService,
-            @Lazy AuthenticationManager authenticationManager,
-            CloudinaryService cloudinaryService) {
-        this.userRepository = userRepository;
-        this.adminRepository = adminRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtService = jwtService;
-        this.authenticationManager = authenticationManager;
-        this.cloudinaryService = cloudinaryService;
-    }
+    // NOTE: Removed PasswordEncoder, JwtService, AuthenticationManager as Asgardeo handles auth now.
 
     /**
-     * Register a new user
+     * [INTEGRATION] Sync Logic: Find existing user or create a new one based on Asgardeo Email.
      */
     @Transactional
-    public AuthResponse register(RegisterRequest request) throws IOException {
-        // Check if user already exists
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new IllegalArgumentException("Email already registered");
+    public UserResponse syncUserFromToken(String email, String firstName, String lastName) {
+        Optional<User> existingUser = userRepository.findByEmail(email);
+
+        if (existingUser.isPresent()) {
+            return mapToUserResponse(existingUser.get());
+        } else {
+            // User is new -> Create Skeleton Profile
+            User newUser = User.builder()
+                    .email(email)
+                    .firstName(firstName)
+                    .lastName(lastName)
+                    .fullName(firstName + (lastName.isEmpty() ? "" : " " + lastName))
+                    .isVerified(false) // Needs document upload later via /profile/multipart
+                    .isHelper(false)
+                    .rating(0.0)
+                    .totalReviews(0)
+                    .createdAt(LocalDateTime.now())
+                    .updatedAt(LocalDateTime.now())
+                    .build();
+
+            newUser = userRepository.save(newUser);
+            log.info("New user auto-provisioned from Asgardeo: {}", email);
+            return mapToUserResponse(newUser);
         }
-
-        // Upload images to Cloudinary
-        String avatarUrl = null;
-        String passportUrl = null;
-        String selfieUrl = null;
-
-        try {
-            if (request.getAvatarBase64() != null && !request.getAvatarBase64().isEmpty()) {
-                avatarUrl = cloudinaryService.uploadAvatar(request.getAvatarBase64());
-            }
-            if (request.getPassportImageBase64() != null && !request.getPassportImageBase64().isEmpty()) {
-                passportUrl = cloudinaryService.uploadPassport(request.getPassportImageBase64());
-            }
-            if (request.getSelfieImageBase64() != null && !request.getSelfieImageBase64().isEmpty()) {
-                selfieUrl = cloudinaryService.uploadSelfie(request.getSelfieImageBase64());
-            }
-        } catch (IOException e) {
-            log.error("Failed to upload images during registration", e);
-            throw new IOException("Failed to upload images: " + e.getMessage());
-        }
-
-        // Create user
-        User user = User.builder()
-                .email(request.getEmail())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .firstName(request.getFirstName())
-                .lastName(request.getLastName())
-                .phone(request.getPhone())
-                .countryOfOrigin(request.getCountryOfOrigin())
-                .destinationCountry(request.getDestinationCountry())
-                .avatarUrl(avatarUrl)
-                .passportImageUrl(passportUrl)
-                .selfieImageUrl(selfieUrl)
-                .isVerified(false)
-                .isHelper(false)
-                .rating(0.0)
-                .totalReviews(0)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
-
-        user.generateFullName();
-        user = userRepository.save(user);
-
-        log.info("User registered successfully: {}", user.getEmail());
-
-        // Generate tokens
-        UserDetails userDetails = loadUserByUsername(user.getEmail());
-        String token = jwtService.generateToken(userDetails);
-        String refreshToken = jwtService.generateRefreshToken(userDetails);
-
-        return AuthResponse.builder()
-                .token(token)
-                .refreshToken(refreshToken)
-                .user(mapToUserResponse(user))
-                .build();
-    }
-
-    /**
-     * Login user
-     */
-    public AuthResponse login(LoginRequest request) {
-        // Authenticate user
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()));
-
-        // Find user
-        User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-        // Generate tokens
-        UserDetails userDetails = loadUserByUsername(user.getEmail());
-        String token = jwtService.generateToken(userDetails);
-        String refreshToken = jwtService.generateRefreshToken(userDetails);
-
-        log.info("User logged in successfully: {}", user.getEmail());
-
-        return AuthResponse.builder()
-                .token(token)
-                .refreshToken(refreshToken)
-                .user(mapToUserResponse(user))
-                .build();
     }
 
     /**
@@ -151,7 +60,6 @@ public class UserService implements UserDetailsService {
     public UserResponse getUserProfile(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
         return mapToUserResponse(user);
     }
 
@@ -161,7 +69,6 @@ public class UserService implements UserDetailsService {
     public UserResponse getUserProfileById(String userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
         return mapToUserResponse(user);
     }
 
@@ -188,20 +95,13 @@ public class UserService implements UserDetailsService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
-        if (request.getFirstName() != null)
-            user.setFirstName(request.getFirstName());
-        if (request.getLastName() != null)
-            user.setLastName(request.getLastName());
-        if (request.getBio() != null)
-            user.setBio(request.getBio());
-        if (request.getLocation() != null)
-            user.setLocation(request.getLocation());
-        if (request.getPhone() != null)
-            user.setPhone(request.getPhone());
-        if (request.getCountryOfOrigin() != null)
-            user.setCountryOfOrigin(request.getCountryOfOrigin());
-        if (request.getDestinationCountry() != null)
-            user.setDestinationCountry(request.getDestinationCountry());
+        if (request.getFirstName() != null) user.setFirstName(request.getFirstName());
+        if (request.getLastName() != null) user.setLastName(request.getLastName());
+        if (request.getBio() != null) user.setBio(request.getBio());
+        if (request.getLocation() != null) user.setLocation(request.getLocation());
+        if (request.getPhone() != null) user.setPhone(request.getPhone());
+        if (request.getCountryOfOrigin() != null) user.setCountryOfOrigin(request.getCountryOfOrigin());
+        if (request.getDestinationCountry() != null) user.setDestinationCountry(request.getDestinationCountry());
 
         user.generateFullName();
         user.updateTimestamp();
@@ -219,74 +119,39 @@ public class UserService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         // Update basic fields
-        if (request.getFirstName() != null) {
-            user.setFirstName(request.getFirstName());
-        }
-        if (request.getLastName() != null) {
-            user.setLastName(request.getLastName());
-        }
-        if (request.getBio() != null) {
-            user.setBio(request.getBio());
-        }
-        if (request.getLocation() != null) {
-            user.setLocation(request.getLocation());
-        }
-        if (request.getPhone() != null) {
-            user.setPhone(request.getPhone());
-        }
-        if (request.getSkills() != null) {
-            user.setSkills(request.getSkills());
-        }
-        if (request.getLanguages() != null) {
-            user.setLanguages(request.getLanguages());
-        }
-        if (request.getCountryOfOrigin() != null) {
-            user.setCountryOfOrigin(request.getCountryOfOrigin());
-        }
-        if (request.getDestinationCountry() != null) {
-            user.setDestinationCountry(request.getDestinationCountry());
-        }
+        if (request.getFirstName() != null) user.setFirstName(request.getFirstName());
+        if (request.getLastName() != null) user.setLastName(request.getLastName());
+        if (request.getBio() != null) user.setBio(request.getBio());
+        if (request.getLocation() != null) user.setLocation(request.getLocation());
+        if (request.getPhone() != null) user.setPhone(request.getPhone());
+        if (request.getSkills() != null) user.setSkills(request.getSkills());
+        if (request.getLanguages() != null) user.setLanguages(request.getLanguages());
+        if (request.getCountryOfOrigin() != null) user.setCountryOfOrigin(request.getCountryOfOrigin());
+        if (request.getDestinationCountry() != null) user.setDestinationCountry(request.getDestinationCountry());
 
-        // Upload and update images if provided
+        // Handle Image Uploads via Base64 (Legacy support if needed, otherwise rely on multipart)
         try {
             if (request.getAvatarBase64() != null && !request.getAvatarBase64().isEmpty()) {
-                // Delete old avatar if exists
-                if (user.getAvatarUrl() != null) {
-                    cloudinaryService.deleteImage(user.getAvatarUrl());
-                }
-                String avatarUrl = cloudinaryService.uploadAvatar(request.getAvatarBase64());
-                user.setAvatarUrl(avatarUrl);
+                if (user.getAvatarUrl() != null) cloudinaryService.deleteImage(user.getAvatarUrl());
+                user.setAvatarUrl(cloudinaryService.uploadAvatar(request.getAvatarBase64()));
             }
-
             if (request.getPassportImageBase64() != null && !request.getPassportImageBase64().isEmpty()) {
-                // Delete old passport if exists
-                if (user.getPassportImageUrl() != null) {
-                    cloudinaryService.deleteImage(user.getPassportImageUrl());
-                }
-                String passportUrl = cloudinaryService.uploadPassport(request.getPassportImageBase64());
-                user.setPassportImageUrl(passportUrl);
+                if (user.getPassportImageUrl() != null) cloudinaryService.deleteImage(user.getPassportImageUrl());
+                user.setPassportImageUrl(cloudinaryService.uploadPassport(request.getPassportImageBase64()));
             }
-
             if (request.getSelfieImageBase64() != null && !request.getSelfieImageBase64().isEmpty()) {
-                // Delete old selfie if exists
-                if (user.getSelfieImageUrl() != null) {
-                    cloudinaryService.deleteImage(user.getSelfieImageUrl());
-                }
-                String selfieUrl = cloudinaryService.uploadSelfie(request.getSelfieImageBase64());
-                user.setSelfieImageUrl(selfieUrl);
+                if (user.getSelfieImageUrl() != null) cloudinaryService.deleteImage(user.getSelfieImageUrl());
+                user.setSelfieImageUrl(cloudinaryService.uploadSelfie(request.getSelfieImageBase64()));
             }
         } catch (IOException e) {
             log.error("Failed to upload images during profile update", e);
             throw new IOException("Failed to upload images: " + e.getMessage());
         }
 
-        // Update full name and timestamp
         user.generateFullName();
         user.updateTimestamp();
 
         user = userRepository.save(user);
-        log.info("User profile updated successfully: {}", user.getEmail());
-
         return mapToUserResponse(user);
     }
 
@@ -295,64 +160,37 @@ public class UserService implements UserDetailsService {
      */
     @Transactional
     public UserResponse updateProfileMultipart(String email, UpdateProfileRequest request,
-            MultipartFile avatar, MultipartFile passport,
-            MultipartFile selfie) throws IOException {
+                                               MultipartFile avatar, MultipartFile passport,
+                                               MultipartFile selfie) throws IOException {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         // Update basic fields
-        if (request.getFirstName() != null) {
-            user.setFirstName(request.getFirstName());
-        }
-        if (request.getLastName() != null) {
-            user.setLastName(request.getLastName());
-        }
-        if (request.getBio() != null) {
-            user.setBio(request.getBio());
-        }
-        if (request.getLocation() != null) {
-            user.setLocation(request.getLocation());
-        }
-        if (request.getPhone() != null) {
-            user.setPhone(request.getPhone());
-        }
-        if (request.getSkills() != null) {
-            user.setSkills(request.getSkills());
-        }
-        if (request.getLanguages() != null) {
-            user.setLanguages(request.getLanguages());
-        }
-        if (request.getCountryOfOrigin() != null) {
-            user.setCountryOfOrigin(request.getCountryOfOrigin());
-        }
-        if (request.getDestinationCountry() != null) {
-            user.setDestinationCountry(request.getDestinationCountry());
-        }
+        if (request.getFirstName() != null) user.setFirstName(request.getFirstName());
+        if (request.getLastName() != null) user.setLastName(request.getLastName());
+        if (request.getBio() != null) user.setBio(request.getBio());
+        if (request.getLocation() != null) user.setLocation(request.getLocation());
+        if (request.getPhone() != null) user.setPhone(request.getPhone());
+        if (request.getSkills() != null) user.setSkills(request.getSkills());
+        if (request.getLanguages() != null) user.setLanguages(request.getLanguages());
+        if (request.getCountryOfOrigin() != null) user.setCountryOfOrigin(request.getCountryOfOrigin());
+        if (request.getDestinationCountry() != null) user.setDestinationCountry(request.getDestinationCountry());
 
         // Upload and update images from multipart files
         try {
             if (avatar != null && !avatar.isEmpty()) {
-                if (user.getAvatarUrl() != null) {
-                    cloudinaryService.deleteImage(user.getAvatarUrl());
-                }
-                String avatarUrl = cloudinaryService.uploadAvatarMultipart(avatar);
-                user.setAvatarUrl(avatarUrl);
+                if (user.getAvatarUrl() != null) cloudinaryService.deleteImage(user.getAvatarUrl());
+                user.setAvatarUrl(cloudinaryService.uploadAvatarMultipart(avatar));
             }
 
             if (passport != null && !passport.isEmpty()) {
-                if (user.getPassportImageUrl() != null) {
-                    cloudinaryService.deleteImage(user.getPassportImageUrl());
-                }
-                String passportUrl = cloudinaryService.uploadPassportMultipart(passport);
-                user.setPassportImageUrl(passportUrl);
+                if (user.getPassportImageUrl() != null) cloudinaryService.deleteImage(user.getPassportImageUrl());
+                user.setPassportImageUrl(cloudinaryService.uploadPassportMultipart(passport));
             }
 
             if (selfie != null && !selfie.isEmpty()) {
-                if (user.getSelfieImageUrl() != null) {
-                    cloudinaryService.deleteImage(user.getSelfieImageUrl());
-                }
-                String selfieUrl = cloudinaryService.uploadSelfieMultipart(selfie);
-                user.setSelfieImageUrl(selfieUrl);
+                if (user.getSelfieImageUrl() != null) cloudinaryService.deleteImage(user.getSelfieImageUrl());
+                user.setSelfieImageUrl(cloudinaryService.uploadSelfieMultipart(selfie));
             }
         } catch (IOException e) {
             log.error("Failed to upload images during profile update", e);
@@ -369,27 +207,6 @@ public class UserService implements UserDetailsService {
     }
 
     /**
-     * Change user password
-     */
-    @Transactional
-    public void changePassword(String email, ChangePasswordRequest request) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
-        // Verify current password
-        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
-            throw new IllegalArgumentException("Current password is incorrect");
-        }
-
-        // Update password
-        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
-        user.updateTimestamp();
-
-        userRepository.save(user);
-        log.info("Password changed successfully for user: {}", user.getEmail());
-    }
-
-    /**
      * Delete user account
      */
     @Transactional
@@ -398,56 +215,22 @@ public class UserService implements UserDetailsService {
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
         // Delete images from Cloudinary
-        if (user.getAvatarUrl() != null) {
-            cloudinaryService.deleteImage(user.getAvatarUrl());
-        }
-        if (user.getPassportImageUrl() != null) {
-            cloudinaryService.deleteImage(user.getPassportImageUrl());
-        }
-        if (user.getSelfieImageUrl() != null) {
-            cloudinaryService.deleteImage(user.getSelfieImageUrl());
-        }
+        if (user.getAvatarUrl() != null) cloudinaryService.deleteImage(user.getAvatarUrl());
+        if (user.getPassportImageUrl() != null) cloudinaryService.deleteImage(user.getPassportImageUrl());
+        if (user.getSelfieImageUrl() != null) cloudinaryService.deleteImage(user.getSelfieImageUrl());
 
         userRepository.delete(user);
         log.info("User account deleted: {}", email);
     }
 
     @Transactional
-    public void deleteUser(String userId) {
-        if (!userRepository.existsById(userId)) {
-            throw new UsernameNotFoundException("User not found");
-        }
-        userRepository.deleteById(userId);
-    }
+    public void deleteUserById(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
 
-    /**
-     * Load user by username (email) for Spring Security
-     */
-    @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        // Try to find regular user
-        Optional<User> userOpt = userRepository.findByEmail(email);
-        if (userOpt.isPresent()) {
-            User user = userOpt.get();
-            return org.springframework.security.core.userdetails.User.builder()
-                    .username(user.getEmail())
-                    .password(user.getPassword())
-                    .authorities(Collections.emptyList())
-                    .build();
-        }
-
-        // Try to find admin
-        Optional<Admin> adminOpt = adminRepository.findByEmail(email);
-        if (adminOpt.isPresent()) {
-            Admin admin = adminOpt.get();
-            return org.springframework.security.core.userdetails.User.builder()
-                    .username(admin.getEmail())
-                    .password(admin.getPassword())
-                    .authorities(Collections.singletonList(new SimpleGrantedAuthority("ROLE_ADMIN")))
-                    .build();
-        }
-
-        throw new UsernameNotFoundException("User not found with email: " + email);
+        // Optional: Add logic to delete Cloudinary images here too if needed
+        userRepository.delete(user);
+        log.info("User deleted by ID: {}", userId);
     }
 
     /**
@@ -477,13 +260,5 @@ public class UserService implements UserDetailsService {
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .build();
-    }
-
-    public void deleteUserById(String userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
-
-        userRepository.delete(user);
-        log.info("User deleted by ID: {}", userId);
     }
 }
