@@ -145,6 +145,23 @@ const Navbar = () => {
         }
     };
 
+    const deleteAllNotifications = async () => {
+        if (!userData?.id) return;
+        try {
+            const storedToken = sessionStorage.getItem('token') || localStorage.getItem('token');
+            await fetch(`${API_URL}/notifications/user/${userData.id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${storedToken}`
+                }
+            });
+            setNotifications([]);
+            setUnreadCount(0);
+        } catch (error) {
+            console.error("Failed to delete all notifications", error);
+        }
+    };
+
     const handleLogout = () => {
         clearAuthData();
         setIsLoggedIn(false);
@@ -223,13 +240,25 @@ const Navbar = () => {
                                         >
                                             <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50/50">
                                                 <h3 className="font-semibold text-gray-900">Notifications</h3>
-                                                <button
-                                                    onClick={markAllAsRead}
-                                                    className="text-xs font-medium text-gray-500 hover:text-[#22C55E] flex items-center gap-1 transition-colors"
-                                                >
-                                                    <CheckCheck className="w-3.5 h-3.5" />
-                                                    Mark all read
-                                                </button>
+                                                <div className="flex items-center gap-3">
+                                                    <button
+                                                        onClick={markAllAsRead}
+                                                        className="text-xs font-medium text-gray-500 hover:text-[#22C55E] flex items-center gap-1 transition-colors"
+                                                        title="Mark all as read"
+                                                    >
+                                                        <CheckCheck className="w-3.5 h-3.5" />
+                                                        Read All
+                                                    </button>
+                                                    <div className="h-4 w-px bg-gray-300"></div>
+                                                    <button
+                                                        onClick={deleteAllNotifications}
+                                                        className="text-xs font-medium text-gray-500 hover:text-red-500 flex items-center gap-1 transition-colors"
+                                                        title="Delete all notifications"
+                                                    >
+                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                        Clear All
+                                                    </button>
+                                                </div>
                                             </div>
 
                                             <div className="max-h-[400px] overflow-y-auto scrollbar-hide">
@@ -242,14 +271,15 @@ const Navbar = () => {
                                                         {notifications.map((notification) => (
                                                             <div
                                                                 key={notification.id}
-                                                                className={`relative p-4 hover:bg-gray-50 transition-colors group cursor-pointer ${!notification.read ? 'bg-green-50/30' : ''}`}
+                                                                className={`relative p-4 hover:bg-gray-50 transition-colors group cursor-pointer ${!notification.read ? 'bg-green-50 border-l-4 border-green-500' : 'bg-white border-l-4 border-transparent'
+                                                                    }`}
                                                                 onClick={() => markAsRead(notification.id)}
                                                             >
                                                                 <div className="flex gap-3">
                                                                     <div className={`mt-1 p-2 rounded-lg h-fit ${notification.color === 'GREEN' ? 'bg-green-100 text-green-600' :
-                                                                            notification.color === 'RED' ? 'bg-red-100 text-red-600' :
-                                                                                notification.color === 'YELLOW' ? 'bg-yellow-100 text-yellow-600' :
-                                                                                    'bg-gray-100 text-gray-600'
+                                                                        notification.color === 'RED' ? 'bg-red-100 text-red-600' :
+                                                                            notification.color === 'YELLOW' ? 'bg-yellow-100 text-yellow-600' :
+                                                                                'bg-gray-100 text-gray-600'
                                                                         }`}>
                                                                         {getIcon(notification.color)}
                                                                     </div>
@@ -259,7 +289,7 @@ const Navbar = () => {
                                                                                 {notification.title}
                                                                             </h4>
                                                                             {!notification.read && (
-                                                                                <span className="w-2 h-2 rounded-full bg-[#22C55E] flex-shrink-0 mt-1.5"></span>
+                                                                                <span className="w-2 h-2 rounded-full bg-[#22C55E] flex-shrink-0 mt-1.5 shadow-[0_0_5px_rgba(34,197,94,0.6)]"></span>
                                                                             )}
                                                                         </div>
                                                                         <p className="text-xs text-gray-600 leading-relaxed line-clamp-2 mb-1.5">

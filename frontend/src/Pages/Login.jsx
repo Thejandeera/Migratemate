@@ -76,6 +76,28 @@ const Login = () => {
 
                 setUserData(profileData);
 
+                // Send Welcome Notification
+                try {
+                    const notifyResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/notifications`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            userId: user ? user.id : null,
+                            title: 'Login Successful',
+                            description: `Welcome back, ${profileData.firstName || 'User'}! You have successfully logged in.`,
+                            color: 'GREEN'
+                        })
+                    });
+                    if (!notifyResponse.ok) {
+                        console.error("Failed to send login notification");
+                    }
+                } catch (notifyErr) {
+                    console.error("Error sending login notification", notifyErr);
+                }
+
 
                 navigate('/dashboard');
             } else {
