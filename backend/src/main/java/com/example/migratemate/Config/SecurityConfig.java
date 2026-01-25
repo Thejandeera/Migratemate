@@ -37,8 +37,8 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
-                                                   JwtAuthenticationFilter jwtAuthenticationFilter,
-                                                   AuthenticationProvider authenticationProvider) throws Exception {
+            JwtAuthenticationFilter jwtAuthenticationFilter,
+            AuthenticationProvider authenticationProvider) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -52,12 +52,15 @@ public class SecurityConfig {
                                 "/api/users/register",
                                 "/api/users/login",
                                 "/api/admin/register",
-                                "/api/admin/login"
-                        ).permitAll()
+                                "/api/admin/login",
+                                "/api/notifications/**")
+                        .permitAll()
+
+                        // Notification endpoints (Explicitly authenticated)
+                        .requestMatchers("/api/notifications/**").authenticated()
 
                         // Everything else requires authentication
-                        .anyRequest().authenticated()
-                )
+                        .anyRequest().authenticated())
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(new FlutterCorsFilter(), UsernamePasswordAuthenticationFilter.class)
@@ -74,8 +77,7 @@ public class SecurityConfig {
             String path = request.getRequestURI();
             String message = String.format(
                     "{ \"error\": \"Unauthorized\", \"message\": \"Full authentication required\", \"path\": \"%s\" }",
-                    path
-            );
+                    path);
             response.getWriter().write(message);
         };
     }
@@ -129,8 +131,8 @@ public class SecurityConfig {
 
         @Override
         protected void doFilterInternal(HttpServletRequest request,
-                                        HttpServletResponse response,
-                                        jakarta.servlet.FilterChain filterChain)
+                HttpServletResponse response,
+                jakarta.servlet.FilterChain filterChain)
                 throws jakarta.servlet.ServletException, IOException {
 
             String appHeader = request.getHeader(FLUTTER_APP_HEADER);
