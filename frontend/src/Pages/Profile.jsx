@@ -60,20 +60,24 @@ const Profile = () => {
 
                     {/* Tabs Navigation */}
                     <div className="bg-gray-50/80 backdrop-blur-sm sticky top-20 z-10 border border-gray-100 rounded-2xl p-2 mb-8 shadow-sm">
-                        <div className="flex gap-1 overflow-x-auto scrollbar-hide pb-0 justify-center">
+                        <div className="flex gap-1 overflow-x-auto pb-2 justify-start md:justify-center touch-pan-x" role="tablist" aria-label="Account Settings Tabs">
                             {tabs.map((tab) => (
                                 <button
                                     key={tab.id}
+                                    role="tab"
+                                    aria-selected={activeTab === tab.id}
+                                    aria-controls={`panel-${tab.id}`}
+                                    id={`tab-${tab.id}`}
                                     onClick={() => setActiveTab(tab.id)}
                                     className={`
-                                        flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold whitespace-nowrap transition-all duration-200
+                                        flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold whitespace-nowrap transition-all duration-200 flex-shrink-0
                                         ${activeTab === tab.id
                                             ? 'bg-white text-gray-900 shadow-sm border border-gray-200/50'
                                             : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
                                         }
                                     `}
                                 >
-                                    <svg className={`w-4 h-4 ${activeTab === tab.id ? 'text-green-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg className={`w-4 h-4 ${activeTab === tab.id ? 'text-green-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={tab.icon} />
                                     </svg>
                                     {tab.label}
