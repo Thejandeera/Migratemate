@@ -180,6 +180,7 @@ public class UserService implements UserDetailsService {
         user.setIsVerified(isVerified);
         user.updateTimestamp();
         userRepository.save(user);
+
         return mapToUserResponse(user);
     }
 
@@ -207,6 +208,7 @@ public class UserService implements UserDetailsService {
         user.updateTimestamp();
 
         userRepository.save(user);
+
         return mapToUserResponse(user);
     }
 
