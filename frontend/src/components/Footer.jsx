@@ -62,9 +62,9 @@ const Footer = () => {
                 </div>
 
                 <div className="border-t border-gray-100 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-                    <p className="text-[10px] text-gray-400">© 2024 MigrateMate. All rights reserved.</p>
+                    <p className="text-[10px] text-gray-400">© 2026 MigrateMate. All rights reserved.</p>
                     <p className="text-[10px] text-gray-400 flex items-center gap-1">
-                        Made with <span className="text-red-400">❤</span> for migrants worldwide
+                        Made by  <span className="text-red-400"></span> Hell Fire Club
                     </p>
                 </div>
             </div>
