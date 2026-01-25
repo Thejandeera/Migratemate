@@ -1,47 +1,166 @@
-import React from 'react';
-import { getUserData } from '../../utils/auth';
+import React, { useState } from 'react';
+import { getUserData, setUserData } from '../../utils/auth';
+import { updateUserProfile, createNotification } from '../../utils/api';
+import { Check, X, Loader2, Camera } from 'lucide-react';
+import ProfilePictureUpload from './ProfilePictureUpload';
 
 const ProfileInfo = () => {
-    const user = getUserData();
+    const [user, setUser] = useState(getUserData());
+    const [isEditing, setIsEditing] = useState(false);
+    const [isUploadOpen, setIsUploadOpen] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
+
+    const [formData, setFormData] = useState({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        countryOfOrigin: user.countryOfOrigin || '',
+        destinationCountry: user.destinationCountry || ''
+    });
+
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    // Update local state when profile picture changes
+    const handlePictureUpdate = (updatedUser) => {
+        setUser(updatedUser);
+        setSuccess('Profile picture updated successfully!');
+        window.location.reload();
+    };
+
+    const handleSave = async () => {
+        setLoading(true);
+        setError('');
+        setSuccess('');
+
+        try {
+            const apiResponse = await updateUserProfile(formData);
+
+            if (apiResponse.success && apiResponse.data) {
+                // Update local storage
+                const updatedUser = { ...user, ...apiResponse.data };
+
+                setUserData(updatedUser);
+                setUser(updatedUser);
+                setSuccess('Profile updated successfully!');
+
+                // Trigger Frontend Notification
+                await createNotification(
+                    updatedUser.id,
+                    'Profile Updated',
+                    'Your profile details have been successfully updated.',
+                    'GREEN'
+                );
+
+                setIsEditing(false);
+                window.location.reload();
+            } else {
+                setError(apiResponse.message || 'Failed to update profile');
+            }
+        } catch (err) {
+            console.error(err);
+            setError(err.message || 'An error occurred while saving.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleCancel = () => {
+        setFormData({
+            firstName: user.firstName || '',
+            lastName: user.lastName || '',
+            email: user.email || '',
+            phone: user.phone || '',
+            countryOfOrigin: user.countryOfOrigin || '',
+            destinationCountry: user.destinationCountry || ''
+        });
+        setIsEditing(false);
+        setError('');
+        setSuccess('');
+    };
 
     return (
         <div className="space-y-6">
+            <ProfilePictureUpload
+                isOpen={isUploadOpen}
+                onClose={() => setIsUploadOpen(false)}
+                onUpdate={handlePictureUpdate}
+            />
+
             <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
                 <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
-                    <div className="relative">
-                        <div className="w-24 h-24 rounded-full bg-gray-200 overflow-hidden border-4 border-white shadow-md">
+                    <div className="relative group cursor-pointer" onClick={() => setIsUploadOpen(true)}>
+                        <div className="w-24 h-24 rounded-full bg-gray-200 overflow-hidden border-4 border-white shadow-md relative">
                             <img
                                 src={user.avatarUrl || `https://ui-avatars.com/api/?name=${user.firstName || 'User'}&background=random&size=128`}
                                 alt={user.firstName}
-                                className="w-full h-full object-cover"
+                                className="w-full h-full object-cover transition-opacity group-hover:opacity-75"
                             />
+                            <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Camera className="w-8 h-8 text-gray-800" />
+                            </div>
                         </div>
                         <button className="absolute bottom-0 right-0 p-1.5 bg-white rounded-full text-gray-600 shadow-md border border-gray-100 hover:text-green-600 transition-colors">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                            <Camera className="w-4 h-4" />
                         </button>
                     </div>
 
-                    <div className="flex-1">
-                        <h2 className="text-2xl font-bold text-gray-900 mb-1">{user.firstName} {user.lastName}</h2>
-                        <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500 mb-4">
-                            <span className="flex items-center gap-1">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-                                {user.email || 'email@example.com'}
-                            </span>
-                            <span className="flex items-center gap-1">
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                                {user.destinationCountry || 'Australia'}
-                            </span>
+                    <div className="flex-1 w-full">
+                        <div className="flex justify-between items-start">
+                            <div>
+                                <h2 className="text-2xl font-bold text-gray-900 mb-1">{user.firstName} {user.lastName}</h2>
+                                <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500 mb-4">
+                                    <span className="flex items-center gap-1">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                                        {user.email || 'email@example.com'}
+                                    </span>
+                                    <span className="flex items-center gap-1">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                                        {user.destinationCountry || 'Australia'}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {!isEditing ? (
+                                <div className="flex gap-3">
+                                    <button
+                                        onClick={() => setIsEditing(true)}
+                                        className="px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition shadow-sm"
+                                    >
+                                        Edit Profile
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={handleSave}
+                                        disabled={loading}
+                                        className="px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition shadow-sm flex items-center gap-2 disabled:opacity-70"
+                                    >
+                                        {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                                        Save
+                                    </button>
+                                    <button
+                                        onClick={handleCancel}
+                                        disabled={loading}
+                                        className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-50 transition flex items-center gap-2"
+                                    >
+                                        <X className="w-4 h-4" />
+                                        Cancel
+                                    </button>
+                                </div>
+                            )}
                         </div>
 
-                        <div className="flex gap-3">
-                            <button className="px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition shadow-sm">
-                                Edit Profile
-                            </button>
-                            <button className="px-4 py-2 bg-white border border-gray-300 text-gray-700 text-sm font-semibold rounded-lg hover:bg-gray-50 transition">
-                                Change Password
-                            </button>
-                        </div>
+                        {(error || success) && (
+                            <div className={`mt-4 p-3 rounded-lg text-sm ${error ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-green-50 text-green-600 border border-green-100'}`}>
+                                {error || success}
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -50,21 +169,90 @@ const ProfileInfo = () => {
                 <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Personal Information</h3>
                     <div className="space-y-4">
-                        <div>
-                            <label className="block text-xs font-medium text-gray-500 mb-1">Full Name</label>
-                            <div className="text-sm font-medium text-gray-900">{user.firstName} {user.lastName || ''}</div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-xs font-medium text-gray-500 mb-1">First Name</label>
+                                {isEditing ? (
+                                    <input
+                                        type="text"
+                                        name="firstName"
+                                        value={formData.firstName}
+                                        onChange={handleChange}
+                                        className="w-full p-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                                    />
+                                ) : (
+                                    <div className="text-sm font-medium text-gray-900">{user.firstName}</div>
+                                )}
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-gray-500 mb-1">Last Name</label>
+                                {isEditing ? (
+                                    <input
+                                        type="text"
+                                        name="lastName"
+                                        value={formData.lastName}
+                                        onChange={handleChange}
+                                        className="w-full p-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                                    />
+                                ) : (
+                                    <div className="text-sm font-medium text-gray-900">{user.lastName || '-'}</div>
+                                )}
+                            </div>
                         </div>
+
                         <div>
                             <label className="block text-xs font-medium text-gray-500 mb-1">Email Address</label>
-                            <div className="text-sm font-medium text-gray-900">{user.email}</div>
+                            <div className="text-sm font-medium text-gray-700 bg-gray-50 p-2 rounded-lg border border-gray-100">
+                                {user.email}
+                                <span className="ml-2 text-xs text-gray-400 italic">(Cannot be changed)</span>
+                            </div>
                         </div>
+
                         <div>
                             <label className="block text-xs font-medium text-gray-500 mb-1">Phone Number</label>
-                            <div className="text-sm font-medium text-gray-900">{user.phone || 'Not provided'}</div>
+                            {isEditing ? (
+                                <input
+                                    type="text"
+                                    name="phone"
+                                    value={formData.phone}
+                                    onChange={handleChange}
+                                    placeholder="+61 ..."
+                                    className="w-full p-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                                />
+                            ) : (
+                                <div className="text-sm font-medium text-gray-900">{user.phone || 'Not provided'}</div>
+                            )}
                         </div>
-                        <div>
-                            <label className="block text-xs font-medium text-gray-500 mb-1">Country of Origin</label>
-                            <div className="text-sm font-medium text-gray-900">{user.countryOfOrigin || 'Not provided'}</div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-xs font-medium text-gray-500 mb-1">Country of Origin</label>
+                                {isEditing ? (
+                                    <input
+                                        type="text"
+                                        name="countryOfOrigin"
+                                        value={formData.countryOfOrigin}
+                                        onChange={handleChange}
+                                        className="w-full p-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                                    />
+                                ) : (
+                                    <div className="text-sm font-medium text-gray-900">{user.countryOfOrigin || 'Not provided'}</div>
+                                )}
+                            </div>
+                            <div>
+                                <label className="block text-xs font-medium text-gray-500 mb-1">Destination Country</label>
+                                {isEditing ? (
+                                    <input
+                                        type="text"
+                                        name="destinationCountry"
+                                        value={formData.destinationCountry}
+                                        onChange={handleChange}
+                                        className="w-full p-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                                    />
+                                ) : (
+                                    <div className="text-sm font-medium text-gray-900">{user.destinationCountry || 'Not provided'}</div>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>

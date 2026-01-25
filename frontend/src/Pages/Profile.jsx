@@ -60,7 +60,7 @@ const Profile = () => {
 
                     {/* Tabs Navigation */}
                     <div className="bg-gray-50/80 backdrop-blur-sm sticky top-20 z-10 border border-gray-100 rounded-2xl p-2 mb-8 shadow-sm">
-                        <div className="flex gap-1 overflow-x-auto scrollbar-hide pb-0">
+                        <div className="flex gap-1 overflow-x-auto scrollbar-hide pb-0 justify-center">
                             {tabs.map((tab) => (
                                 <button
                                     key={tab.id}
