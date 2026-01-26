@@ -72,13 +72,20 @@ public class CommunityService {
                 community = communityRepository.save(community);
                 log.info("Community created: {} -> {}", request.getOriginCountry(), request.getDestinationCountry());
 
-                // Auto-join creator to the community
-                User creator = userRepository.findByEmail(creatorEmail)
-                                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                // Auto-join removed as per request
+                // User creator = userRepository.findByEmail(creatorEmail)
+                // .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                // joinCommunity(community.getId(), creator.getId());
 
-                joinCommunity(community.getId(), creator.getId());
+                // We can return response with no specific user context (userId=null) or handle
+                // logic differently
+                // Since the user is not joined, isMember=false, isModerator=false by default if
+                // we pass random string or null details
+                // mapToCommunityResponse(community, creator.getId()); <-- this relies on
+                // creatorId for "isMember" check.
 
-                return mapToCommunityResponse(community, creator.getId());
+                // Let's modify mapToCommunityResponse to handle null userId gracefully
+                return mapToCommunityResponse(community, null);
         }
 
         /**
@@ -285,17 +292,39 @@ public class CommunityService {
         }
 
         /**
+         * Delete a community
+         */
+        @Transactional
+        public void deleteCommunity(String communityId) {
+                Community community = communityRepository.findById(communityId)
+                                .orElseThrow(() -> new IllegalArgumentException("Community not found"));
+
+                // Delete all memberships
+                List<CommunityMembership> memberships = membershipRepository.findByCommunityId(communityId);
+                membershipRepository.deleteAll(memberships);
+
+                // Delete messages (optional, if you have a message service/repo we should
+                // delete them too)
+                // For now just deleting community entity
+                communityRepository.delete(community);
+                log.info("Community deleted: {}", communityId);
+        }
+
+        /**
          * Map Community entity to CommunityResponse DTO
          */
         private CommunityResponse mapToCommunityResponse(Community community, String userId) {
                 // Check if user is a member
-                boolean isMember = membershipRepository.findByUserIdAndCommunityId(userId, community.getId())
-                                .isPresent();
+                boolean isMember = false;
+                boolean isModerator = false;
 
-                // Check if user is a moderator
-                boolean isModerator = membershipRepository.findByUserIdAndCommunityId(userId, community.getId())
-                                .map(CommunityMembership::getIsModerator)
-                                .orElse(false);
+                if (userId != null) {
+                        isMember = membershipRepository.findByUserIdAndCommunityId(userId, community.getId())
+                                        .isPresent();
+                        isModerator = membershipRepository.findByUserIdAndCommunityId(userId, community.getId())
+                                        .map(CommunityMembership::getIsModerator)
+                                        .orElse(false);
+                }
 
                 return CommunityResponse.builder()
                                 .id(community.getId())

@@ -29,8 +29,9 @@ public class CommunityController {
     public ResponseEntity<ApiResponse<CommunityResponse>> createCommunity(
             @RequestBody CreateCommunityRequest request) {
         try {
-            String email = getCurrentUserEmail();
-            CommunityResponse community = communityService.createCommunity(request, email);
+            // No auth required for creation logic as requested (or just ignoring the user
+            // context)
+            CommunityResponse community = communityService.createCommunity(request, null);
             return ResponseEntity.ok(ApiResponse.<CommunityResponse>builder()
                     .success(true)
                     .message("Community created successfully")
@@ -55,6 +56,31 @@ public class CommunityController {
                     .body(ApiResponse.<CommunityResponse>builder()
                             .success(false)
                             .message("Failed to create community: " + e.getMessage())
+                            .build());
+        }
+    }
+
+    /**
+     * Delete a community
+     */
+    @DeleteMapping("/{communityId}")
+    public ResponseEntity<ApiResponse<Void>> deleteCommunity(@PathVariable String communityId) {
+        try {
+            communityService.deleteCommunity(communityId);
+            return ResponseEntity.ok(ApiResponse.<Void>builder()
+                    .success(true)
+                    .message("Community deleted successfully")
+                    .build());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.<Void>builder()
+                    .success(false)
+                    .message(e.getMessage())
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<Void>builder()
+                            .success(false)
+                            .message("Failed to delete community: " + e.getMessage())
                             .build());
         }
     }
