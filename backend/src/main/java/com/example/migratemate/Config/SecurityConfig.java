@@ -1,6 +1,5 @@
 package com.example.migratemate.Config;
 
-import com.example.migratemate.Config.JwtAuthenticationFilter;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
@@ -36,42 +35,48 @@ public class SecurityConfig {
     private String frontendUrl;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http,
+    public SecurityFilterChain securityFilterChain(
+            HttpSecurity http,
             JwtAuthenticationFilter jwtAuthenticationFilter,
             AuthenticationProvider authenticationProvider) throws Exception {
+
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
                 .authorizeHttpRequests(authz -> authz
-                        // CORS preflight requests
+
+                        // Allow all OPTIONS (CORS preflight)
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // Public endpoints - no authentication required
+                        // Public endpoints
                         .requestMatchers(
                                 "/api/users/register",
                                 "/api/users/login",
                                 "/api/admin/register",
                                 "/api/admin/login",
                                 "/api/communities/**",
-                                "/ws/**", // WebSocket endpoints
-                                "/topic/**", // WebSocket topic endpoints
-                                "/app/**", // WebSocket app endpoints
-                                "/queue/**", // WebSocket queue endpoints
-                                "/error" // Error endpoint
+                                "/ws/**",
+                                "/topic/**",
+                                "/app/**",
+                                "/queue/**",
+                                "/error"
                         ).permitAll()
-                                "/api/notifications/**")
-                        .permitAll()
 
-                        // Notification endpoints (Explicitly authenticated)
+                        // Authenticated endpoints
                         .requestMatchers("/api/notifications/**").authenticated()
 
-                        // Everything else requires authentication
-                        .anyRequest().authenticated())
+                        // Everything else
+                        .anyRequest().authenticated()
+                )
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(new FlutterCorsFilter(), UsernamePasswordAuthenticationFilter.class)
-                .exceptionHandling(ex -> ex.authenticationEntryPoint(unauthorizedEntryPoint()));
+                .exceptionHandling(ex ->
+                        ex.authenticationEntryPoint(unauthorizedEntryPoint())
+                );
 
         return http.build();
     }
@@ -84,7 +89,8 @@ public class SecurityConfig {
             String path = request.getRequestURI();
             String message = String.format(
                     "{ \"error\": \"Unauthorized\", \"message\": \"Full authentication required\", \"path\": \"%s\" }",
-                    path);
+                    path
+            );
             response.getWriter().write(message);
         };
     }
@@ -94,14 +100,14 @@ public class SecurityConfig {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowCredentials(true);
 
-        // Web frontend origins
         List<String> allowedOrigins = List.of(
                 frontendUrl,
                 "http://localhost:5173",
                 "http://localhost:5174",
-                "http://localhost:3000");
-        config.setAllowedOrigins(allowedOrigins);
+                "http://localhost:3000"
+        );
 
+        config.setAllowedOrigins(allowedOrigins);
         config.setAllowedHeaders(List.of("*"));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
 
@@ -126,7 +132,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+    public AuthenticationManager authenticationManager(
+            AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 
@@ -137,7 +144,8 @@ public class SecurityConfig {
         private static final String EXPECTED_HEADER_VALUE = "VibeWrite-Flutter-App";
 
         @Override
-        protected void doFilterInternal(HttpServletRequest request,
+        protected void doFilterInternal(
+                HttpServletRequest request,
                 HttpServletResponse response,
                 jakarta.servlet.FilterChain filterChain)
                 throws jakarta.servlet.ServletException, IOException {
@@ -154,37 +162,26 @@ public class SecurityConfig {
             System.out.println("User-Agent: " + userAgent);
             System.out.println("Origin: " + origin);
 
-            // Check if request is from Flutter app
             boolean isFlutterApp = EXPECTED_HEADER_VALUE.equals(appHeader);
 
-            // Check if it's a Flutter HTTP client based on User-Agent
-            boolean isFlutterUserAgent = userAgent != null && (userAgent.contains("Dart/") ||
-                    userAgent.contains("Flutter") ||
-                    userAgent.toLowerCase().contains("dart"));
+            boolean isFlutterUserAgent =
+                    userAgent != null &&
+                            (userAgent.contains("Dart/")
+                                    || userAgent.contains("Flutter")
+                                    || userAgent.toLowerCase().contains("dart"));
 
-            // Allow Flutter requests
             if (isFlutterApp || isFlutterUserAgent) {
                 response.setHeader("Access-Control-Allow-Origin", "*");
-                response.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
+                response.setHeader("Access-Control-Allow-Methods",
+                        "GET, POST, PUT, PATCH, DELETE, OPTIONS");
                 response.setHeader("Access-Control-Allow-Headers",
                         "Authorization, Content-Type, Accept, X-Requested-With, X-Requested-From, X-App-Version");
                 response.setHeader("Access-Control-Max-Age", "3600");
 
-                if (isFlutterApp) {
-                    System.out.println("✅ VibeWrite Flutter app request allowed (custom header)");
-                } else {
-                    System.out.println("✅ Flutter request allowed (user-agent detection)");
-                }
-
-                // Handle preflight OPTIONS request
                 if ("OPTIONS".equals(method)) {
                     response.setStatus(HttpServletResponse.SC_OK);
                     return;
                 }
-            }
-            // For web requests, let the default CORS configuration handle it
-            else if (origin != null) {
-                System.out.println("🌐 Web request - using default CORS configuration");
             }
 
             filterChain.doFilter(request, response);
