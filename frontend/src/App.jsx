@@ -5,6 +5,7 @@ import Login from './Pages/Login'
 import LandingPage from './Pages/LandingPage'
 import Dashboard from './Pages/Dashboard'
 import Profile from './Pages/Profile'
+import LiveARScanner from './components/Scanner/LiveARScanner'
 
 const App = () => {
   return (
@@ -14,6 +15,7 @@ const App = () => {
       <Route path="/signup" element={<Signup />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/profile" element={<Profile />} />
+      <Route path="/scanner" element={<LiveARScanner />} />
     </Routes>
   )
 }

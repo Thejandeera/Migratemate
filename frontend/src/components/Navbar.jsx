@@ -313,6 +313,7 @@ const Navbar = () => {
                         <Link to="/community" className="text-sm font-medium text-gray-500 hover:text-gray-900">Community</Link>
                         <Link to="/sos" className="text-sm font-medium text-gray-500 hover:text-gray-900">SOS</Link>
                         <Link to="/profile" className="text-sm font-medium text-gray-500 hover:text-gray-900">Profile</Link>
+                        <Link to="/scanner" className="text-sm font-medium text-gray-500 hover:text-gray-900">Scanner</Link>
                     </div>
 
                     <div className="hidden md:flex items-center gap-4">
@@ -408,6 +409,7 @@ const Navbar = () => {
                             <Link to="/community" className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">Community</Link>
                             <Link to="/sos" className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">SOS</Link>
                             <Link to="/profile" className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">Profile</Link>
+                            <Link to="/scanner" className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">Scanner</Link>
 
                             <div className="border-t border-gray-100 pt-4 mt-4">
                                 {isLoggedIn ? (
