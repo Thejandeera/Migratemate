@@ -43,9 +43,7 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authz -> authz
 
                         // Allow all OPTIONS (CORS preflight)
@@ -58,25 +56,23 @@ public class SecurityConfig {
                                 "/api/admin/register",
                                 "/api/admin/login",
                                 "/api/communities/**",
+                                "/api/ar/**",
                                 "/ws/**",
                                 "/topic/**",
                                 "/app/**",
                                 "/queue/**",
-                                "/error"
-                        ).permitAll()
+                                "/error")
+                        .permitAll()
 
                         // Authenticated endpoints
                         .requestMatchers("/api/notifications/**").authenticated()
 
                         // Everything else
-                        .anyRequest().authenticated()
-                )
+                        .anyRequest().authenticated())
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(new FlutterCorsFilter(), UsernamePasswordAuthenticationFilter.class)
-                .exceptionHandling(ex ->
-                        ex.authenticationEntryPoint(unauthorizedEntryPoint())
-                );
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(unauthorizedEntryPoint()));
 
         return http.build();
     }
@@ -89,8 +85,7 @@ public class SecurityConfig {
             String path = request.getRequestURI();
             String message = String.format(
                     "{ \"error\": \"Unauthorized\", \"message\": \"Full authentication required\", \"path\": \"%s\" }",
-                    path
-            );
+                    path);
             response.getWriter().write(message);
         };
     }
@@ -104,8 +99,7 @@ public class SecurityConfig {
                 frontendUrl,
                 "http://localhost:5173",
                 "http://localhost:5174",
-                "http://localhost:3000"
-        );
+                "http://localhost:3000");
 
         config.setAllowedOrigins(allowedOrigins);
         config.setAllowedHeaders(List.of("*"));
@@ -164,11 +158,10 @@ public class SecurityConfig {
 
             boolean isFlutterApp = EXPECTED_HEADER_VALUE.equals(appHeader);
 
-            boolean isFlutterUserAgent =
-                    userAgent != null &&
-                            (userAgent.contains("Dart/")
-                                    || userAgent.contains("Flutter")
-                                    || userAgent.toLowerCase().contains("dart"));
+            boolean isFlutterUserAgent = userAgent != null &&
+                    (userAgent.contains("Dart/")
+                            || userAgent.contains("Flutter")
+                            || userAgent.toLowerCase().contains("dart"));
 
             if (isFlutterApp || isFlutterUserAgent) {
                 response.setHeader("Access-Control-Allow-Origin", "*");
