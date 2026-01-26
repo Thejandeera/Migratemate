@@ -60,6 +60,8 @@ public class SecurityConfig {
                                 "/queue/**", // WebSocket queue endpoints
                                 "/error" // Error endpoint
                         ).permitAll()
+                                "/api/notifications/**")
+                        .permitAll()
 
                         // Notification endpoints (Explicitly authenticated)
                         .requestMatchers("/api/notifications/**").authenticated()

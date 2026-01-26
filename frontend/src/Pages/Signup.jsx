@@ -138,7 +138,22 @@ const Signup = () => {
         registerUser(formData);
     };
 
-    const nextStep = () => setStep(prev => Math.min(prev + 1, 3));
+    const nextStep = () => {
+        setError('');
+        if (step === 1) {
+            if (!formData.firstName || !formData.lastName || !formData.email || !formData.password || !formData.phone || !formData.countryOfOrigin || !formData.destinationCountry) {
+                setError("Please fill in all fields to continue.");
+                return;
+            }
+        }
+        if (step === 2) {
+            if (!formData.passportImageBase64 || !formData.avatarBase64) {
+                setError("Please upload both your Passport and Profile Picture.");
+                return;
+            }
+        }
+        setStep(prev => Math.min(prev + 1, 3));
+    };
     const prevStep = () => setStep(prev => Math.max(prev - 1, 1));
 
     return (
