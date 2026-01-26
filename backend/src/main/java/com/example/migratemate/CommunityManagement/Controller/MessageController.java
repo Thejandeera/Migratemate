@@ -29,8 +29,8 @@ public class MessageController {
     @PostMapping
     public ResponseEntity<ApiResponse<MessageResponse>> sendMessage(@RequestBody MessageRequest request) {
         try {
-            String email = getCurrentUserEmail();
-            MessageResponse message = messageService.sendMessage(request, email);
+            // String email = getCurrentUserEmail(); // No longer used
+            MessageResponse message = messageService.sendMessage(request);
             return ResponseEntity.ok(ApiResponse.<MessageResponse>builder()
                     .success(true)
                     .message("Message sent successfully")

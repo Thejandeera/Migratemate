@@ -43,6 +43,7 @@ public class WebSocketMessageController {
 
             // Create MessageRequest for persistence
             MessageRequest request = MessageRequest.builder()
+                    .senderId(sender.getId()) // Set senderId from authenticated user
                     .communityId(chatMessage.getCommunityId())
                     .recipientId(chatMessage.getRecipientId())
                     .content(chatMessage.getContent())
@@ -50,7 +51,7 @@ public class WebSocketMessageController {
                     .build();
 
             // Save message to database
-            MessageResponse savedMessage = messageService.sendMessage(request, principal.getName());
+            MessageResponse savedMessage = messageService.sendMessage(request);
 
             // Prepare WebSocket message
             ChatMessageDto broadcastMessage = ChatMessageDto.builder()
@@ -70,8 +71,7 @@ public class WebSocketMessageController {
             if (chatMessage.getCommunityId() != null) {
                 messagingTemplate.convertAndSend(
                         "/topic/community/" + chatMessage.getCommunityId(),
-                        broadcastMessage
-                );
+                        broadcastMessage);
                 log.info("Message broadcasted to community: {}", chatMessage.getCommunityId());
             }
 
@@ -80,8 +80,7 @@ public class WebSocketMessageController {
                 messagingTemplate.convertAndSendToUser(
                         chatMessage.getRecipientId(),
                         "/queue/messages",
-                        broadcastMessage
-                );
+                        broadcastMessage);
                 log.info("Direct message sent to user: {}", chatMessage.getRecipientId());
             }
 
@@ -97,8 +96,8 @@ public class WebSocketMessageController {
      */
     @MessageMapping("/chat.addUser")
     public void addUser(@Payload ChatMessageDto chatMessage,
-                        SimpMessageHeaderAccessor headerAccessor,
-                        Principal principal) {
+            SimpMessageHeaderAccessor headerAccessor,
+            Principal principal) {
         try {
             // Get user details
             User user = userRepository.findByEmail(principal.getName())
@@ -122,8 +121,7 @@ public class WebSocketMessageController {
             // Broadcast join notification
             messagingTemplate.convertAndSend(
                     "/topic/community/" + chatMessage.getCommunityId(),
-                    joinMessage
-            );
+                    joinMessage);
 
             log.info("User {} joined community {}", user.getFullName(), chatMessage.getCommunityId());
 
@@ -149,8 +147,7 @@ public class WebSocketMessageController {
             // Broadcast typing notification to community
             messagingTemplate.convertAndSend(
                     "/topic/community/" + notification.getCommunityId() + "/typing",
-                    notification
-            );
+                    notification);
 
             log.debug("Typing notification from: {} in community: {}",
                     user.getFullName(), notification.getCommunityId());
