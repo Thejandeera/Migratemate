@@ -61,6 +61,9 @@ public class SecurityConfig {
                                 "/error" // Error endpoint
                         ).permitAll()
 
+                        // Notification endpoints (Explicitly authenticated)
+                        .requestMatchers("/api/notifications/**").authenticated()
+
                         // Everything else requires authentication
                         .anyRequest().authenticated())
                 .authenticationProvider(authenticationProvider)
