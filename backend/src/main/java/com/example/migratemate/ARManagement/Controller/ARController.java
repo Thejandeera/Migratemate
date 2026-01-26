@@ -10,7 +10,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/ar")
-@CrossOrigin(origins = "http://localhost:5173") // Allow frontend
+@CrossOrigin(origins = "${frontend.url}") // Allow frontend from properties
 public class ARController {
 
     @Autowired
