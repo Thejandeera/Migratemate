@@ -52,7 +52,11 @@ public class SecurityConfig {
                                 "/api/users/register",
                                 "/api/users/login",
                                 "/api/admin/register",
-                                "/api/admin/login"
+                                "/api/admin/login",
+                                "/ws/**",              // WebSocket endpoints
+                                "/topic/**",           // WebSocket topic endpoints
+                                "/app/**",             // WebSocket app endpoints
+                                "/queue/**"            // WebSocket queue endpoints
                         ).permitAll()
 
                         // Everything else requires authentication
