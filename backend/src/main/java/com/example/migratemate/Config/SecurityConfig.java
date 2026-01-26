@@ -53,6 +53,13 @@ public class SecurityConfig {
                                 "/api/users/login",
                                 "/api/admin/register",
                                 "/api/admin/login",
+                                "/api/communities/**",
+                                "/ws/**", // WebSocket endpoints
+                                "/topic/**", // WebSocket topic endpoints
+                                "/app/**", // WebSocket app endpoints
+                                "/queue/**", // WebSocket queue endpoints
+                                "/error" // Error endpoint
+                        ).permitAll()
                                 "/api/notifications/**")
                         .permitAll()
 
