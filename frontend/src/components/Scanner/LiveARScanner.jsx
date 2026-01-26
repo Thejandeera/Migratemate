@@ -2,10 +2,13 @@ import React, { useRef, useState, useEffect } from "react";
 // Import dependencies
 import * as tf from "@tensorflow/tfjs";
 import * as cocoSsd from "@tensorflow-models/coco-ssd";
+import "@tensorflow/tfjs-backend-webgl";
+import "@tensorflow/tfjs-backend-cpu";
 import Webcam from "react-webcam";
 import Navbar from "../Navbar";
 import Footer from "../Footer";
-import { Upload, Camera, Search, X, Image as ImageIcon, Loader2 } from "lucide-react";
+import { Upload, Camera, Search, X, Image as ImageIcon, Loader2, MapPin, Info } from "lucide-react";
+import { API_URL } from "../../utils/api"; // Ensure API_URL is imported
 
 const LiveARScanner = () => {
     const webcamRef = useRef(null);
@@ -13,29 +16,34 @@ const LiveARScanner = () => {
     const imageRef = useRef(null);
 
     const [model, setModel] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(true); // Model loading
+    const [analyzing, setAnalyzing] = useState(false); // Backend analysis loading
     const [mode, setMode] = useState("camera"); // 'camera' or 'upload'
     const [selectedImage, setSelectedImage] = useState(null);
-    const [detections, setDetections] = useState([]);
+    const [detections, setDetections] = useState([]); // For Camera
+    const [arResult, setArResult] = useState(null); // For Upload (Backend Result)
 
-    // 1. Load the AI Model
+    // 1. Load the AI Model (For Camera Mode)
     useEffect(() => {
         const loadModel = async () => {
             try {
+                // Ensure backend is ready
+                await tf.setBackend('webgl').catch(() => tf.setBackend('cpu'));
                 await tf.ready();
+
                 const loadedModel = await cocoSsd.load();
                 setModel(loadedModel);
                 setLoading(false);
                 console.log("AI Model Loaded");
             } catch (err) {
-                console.log("Failed to load model", err);
+                console.error("Failed to load model or backend", err);
                 setLoading(false);
             }
         };
         loadModel();
     }, []);
 
-    // 2. Camera Detection Loop
+    // 2. Camera Detection Loop (Client-Side)
     const runCocoCamera = async () => {
         if (
             mode === "camera" &&
@@ -59,7 +67,7 @@ const LiveARScanner = () => {
 
                 try {
                     const predictions = await model.detect(video);
-                    setDetections(predictions); // Update detections state
+                    setDetections(predictions);
                     const ctx = canvasRef.current.getContext("2d");
                     if (ctx) {
                         drawRect(predictions, ctx);
@@ -71,72 +79,57 @@ const LiveARScanner = () => {
         }
     };
 
-    // Run camera detection interval
     useEffect(() => {
         let interval;
         if (mode === "camera" && model && !loading) {
             interval = setInterval(() => {
                 runCocoCamera();
-            }, 100); // 100ms is enough for smoothness and better performance
+            }, 100);
         }
         return () => {
             if (interval) clearInterval(interval);
         };
     }, [mode, model, loading]);
 
-    // 3. Image Detection Logic
-    const handleImageUpload = (e) => {
+    // 3. Image Upload & Backend Analysis
+    const handleImageUpload = async (e) => {
         const file = e.target.files[0];
         if (file) {
             const imageUrl = URL.createObjectURL(file);
             setSelectedImage(imageUrl);
-            setDetections([]); // Clear previous detections
+            setDetections([]); // Clear camera detections
+            setArResult(null); // Clear previous results
+            setAnalyzing(true); // Start loading
 
-            // Allow image to load before detecting
-            setTimeout(() => detectImage(imageUrl), 100);
-        }
-    };
+            // Create FormData for backend
+            const formData = new FormData();
+            formData.append("image", file);
 
-    const detectImage = async (imageUrl) => {
-        if (model && imageRef.current) {
             try {
-                const img = imageRef.current;
+                // Call Backend API
+                const response = await fetch(`${API_URL}/ar/analyze`, {
+                    method: "POST",
+                    body: formData,
+                    // Note: Content-Type header is set automatically for FormData
+                });
 
-                // Wait for image to load naturally if needed, but setTimeout helps
-                if (img.complete) {
-                    runDetectOnImage(img);
+                if (response.ok) {
+                    const data = await response.json();
+                    setArResult(data);
                 } else {
-                    img.onload = () => runDetectOnImage(img);
+                    console.error("Backend analysis failed");
+                    setArResult({ description: "Failed to analyze image. Please try again." });
                 }
-            } catch (err) {
-                console.error("Image detection failed", err);
+            } catch (error) {
+                console.error("Error uploading image:", error);
+                setArResult({ description: "Network error. Please ensure backend is running." });
+            } finally {
+                setAnalyzing(false);
             }
         }
     };
 
-    const runDetectOnImage = async (img) => {
-        // Set canvas dimensions to match image
-        const width = img.width;
-        const height = img.height;
-
-        // Limit max processing size for performance if needed, but full res is fine for now
-        // Logic for responsive scaling in view is handled by CSS, but canvas needs exact match
-
-        if (canvasRef.current) {
-            canvasRef.current.width = width;
-            canvasRef.current.height = height;
-
-            const predictions = await model.detect(img);
-            setDetections(predictions);
-
-            const ctx = canvasRef.current.getContext("2d");
-            if (ctx) {
-                drawRect(predictions, ctx);
-            }
-        }
-    }
-
-    // 4. Drawing Function
+    // 4. Drawing Function (Only for Camera Mode)
     const drawRect = (detections, ctx) => {
         ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
@@ -144,8 +137,7 @@ const LiveARScanner = () => {
             const [x, y, width, height] = prediction['bbox'];
             const text = prediction['class'];
 
-            // Theme Colors
-            const color = '#22C55E'; // Green
+            const color = '#22C55E';
             const textColor = '#FFFFFF';
 
             ctx.strokeStyle = color;
@@ -153,36 +145,25 @@ const LiveARScanner = () => {
             ctx.lineWidth = 4;
             ctx.lineJoin = "round";
 
-            // Draw Rectangle
             ctx.beginPath();
             ctx.rect(x, y, width, height);
             ctx.stroke();
 
-            // Draw Label Background
             const textWidth = ctx.measureText(text.toUpperCase()).width;
             const textHeight = 24;
 
             ctx.fillStyle = color;
             ctx.fillRect(x, y - textHeight, textWidth + 10, textHeight);
 
-            // Draw Text
             ctx.fillStyle = textColor;
             ctx.fillText(text.toUpperCase(), x + 5, y - 6);
         });
     };
 
-    // Helper for Search
-    const googleSearch = (query) => {
-        window.open(`https://www.google.com/search?q=${query}`, '_blank');
-    };
-
     const clearImage = () => {
         setSelectedImage(null);
-        setDetections([]);
-        if (canvasRef.current) {
-            const ctx = canvasRef.current.getContext("2d");
-            ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-        }
+        setArResult(null);
+        setAnalyzing(false);
     };
 
     return (
@@ -191,23 +172,21 @@ const LiveARScanner = () => {
 
             <div className="flex-grow flex flex-col items-center pt-24 pb-12 px-4 sm:px-6">
 
-                {/* Header Section */}
                 <div className="text-center max-w-2xl mx-auto mb-8">
                     <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
-                        MigrateMate <span className="text-[#22C55E]">Scanner</span>
+                        MigrateMate <span className="text-[#22C55E]">Lens</span>
                     </h1>
                     <p className="text-gray-600 text-lg">
-                        Instantly identify objects using your camera or upload an image.
+                        Identify landmarks, places, and objects instantly.
                     </p>
                 </div>
 
-                {/* Mode Switcher */}
                 <div className="bg-gray-100 p-1 rounded-xl flex gap-1 mb-8 shadow-sm">
                     <button
                         onClick={() => setMode("camera")}
                         className={`px-6 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all duration-200 ${mode === "camera"
-                                ? "bg-white text-[#22C55E] shadow-sm"
-                                : "text-gray-500 hover:text-gray-900"
+                            ? "bg-white text-[#22C55E] shadow-sm"
+                            : "text-gray-500 hover:text-gray-900"
                             }`}
                     >
                         <Camera className="w-4 h-4" />
@@ -216,8 +195,8 @@ const LiveARScanner = () => {
                     <button
                         onClick={() => setMode("upload")}
                         className={`px-6 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all duration-200 ${mode === "upload"
-                                ? "bg-white text-[#22C55E] shadow-sm"
-                                : "text-gray-500 hover:text-gray-900"
+                            ? "bg-white text-[#22C55E] shadow-sm"
+                            : "text-gray-500 hover:text-gray-900"
                             }`}
                     >
                         <Upload className="w-4 h-4" />
@@ -225,135 +204,165 @@ const LiveARScanner = () => {
                     </button>
                 </div>
 
-                {/* Loading State */}
-                {loading ? (
-                    <div className="flex flex-col items-center justify-center p-12 bg-gray-50 rounded-2xl border-2 border-dashed border-gray-200">
-                        <Loader2 className="w-10 h-10 text-[#22C55E] animate-spin mb-4" />
-                        <p className="text-gray-500 font-medium">Loading AI Models...</p>
+                <div className="w-full max-w-5xl flex flex-col lg:flex-row gap-8 items-start justify-center">
+
+                    {/* Viewport */}
+                    <div className="relative w-full max-w-xl bg-black rounded-2xl overflow-hidden shadow-2xl ring-4 ring-gray-100 aspect-[3/4] sm:aspect-[4/3] flex items-center justify-center">
+
+                        {/* CAMERA MODE */}
+                        {mode === "camera" && (
+                            <>
+                                {loading && (
+                                    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-white bg-black/80">
+                                        <Loader2 className="w-10 h-10 animate-spin mb-4 text-[#22C55E]" />
+                                        <p>Loading Camera AI...</p>
+                                    </div>
+                                )}
+                                <Webcam
+                                    ref={webcamRef}
+                                    muted={true}
+                                    screenshotFormat="image/jpeg"
+                                    videoConstraints={{ facingMode: "environment" }}
+                                    className="absolute w-full h-full object-cover"
+                                />
+                                <canvas
+                                    ref={canvasRef}
+                                    className="absolute top-0 left-0 w-full h-full z-10 pointer-events-none"
+                                />
+                            </>
+                        )}
+
+                        {/* UPLOAD MODE */}
+                        {mode === "upload" && (
+                            <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 text-gray-400 relative">
+                                {analyzing && (
+                                    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-white bg-black/60 backdrop-blur-sm">
+                                        <Loader2 className="w-12 h-12 animate-spin mb-4 text-[#22C55E]" />
+                                        <p className="font-semibold text-lg">Analyzing Image...</p>
+                                        <p className="text-sm text-gray-200">Identifying places & specialities</p>
+                                    </div>
+                                )}
+
+                                {selectedImage ? (
+                                    <>
+                                        <img
+                                            src={selectedImage}
+                                            alt="Uploaded analysis"
+                                            className="absolute w-full h-full object-contain bg-black"
+                                        />
+                                        <button
+                                            onClick={clearImage}
+                                            className="absolute top-4 right-4 bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg z-20 transition"
+                                            title="Clear Image"
+                                        >
+                                            <X className="w-5 h-5" />
+                                        </button>
+                                    </>
+                                ) : (
+                                    <div className="text-center p-8">
+                                        <label className="cursor-pointer group flex flex-col items-center">
+                                            <div className="w-16 h-16 bg-white rounded-full shadow-md flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                                                <ImageIcon className="w-8 h-8 text-[#22C55E]" />
+                                            </div>
+                                            <h3 className="text-lg font-semibold text-gray-900 mb-1">Click to Upload</h3>
+                                            <p className="text-sm text-gray-500 mb-6">Analyze landmarks & places</p>
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                className="hidden"
+                                                onChange={handleImageUpload}
+                                            />
+                                            <span className="px-5 py-2 bg-[#22C55E] text-white rounded-lg text-sm font-medium hover:bg-[#16A34A] transition">
+                                                Select Image
+                                            </span>
+                                        </label>
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
-                ) : (
-                    <div className="w-full max-w-4xl flex flex-col lg:flex-row gap-8 items-start justify-center">
 
-                        {/* Main Viewport */}
-                        <div className="relative w-full max-w-xl bg-black rounded-2xl overflow-hidden shadow-2xl ring-4 ring-gray-100 aspect-[3/4] sm:aspect-[4/3] flex items-center justify-center">
+                    {/* Results Panel */}
+                    <div className="w-full lg:w-96 flex-shrink-0 space-y-4">
 
-                            {/* CAMERA MODE */}
-                            {mode === "camera" && (
-                                <>
-                                    <Webcam
-                                        ref={webcamRef}
-                                        muted={true}
-                                        screenshotFormat="image/jpeg"
-                                        videoConstraints={{ facingMode: "environment" }}
-                                        className="absolute w-full h-full object-cover"
-                                    />
-                                    <canvas
-                                        ref={canvasRef}
-                                        className="absolute top-0 left-0 w-full h-full z-10 pointer-events-none"
-                                    />
-                                </>
-                            )}
-
-                            {/* UPLOAD MODE */}
-                            {mode === "upload" && (
-                                <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 text-gray-400 relative">
-                                    {selectedImage ? (
-                                        <>
-                                            <img
-                                                ref={imageRef}
-                                                src={selectedImage}
-                                                alt="Uploaded analysis"
-                                                className="absolute w-full h-full object-contain bg-black"
-                                            />
-                                            <canvas
-                                                ref={canvasRef}
-                                                className="absolute top-0 left-0 w-full h-full z-10 pointer-events-none object-contain"
-                                                // Note: canvas sizing for object-contain images requires complex mapping, 
-                                                // for simplicity in this responsive design we rely on drawing relative to image natural size 
-                                                // and CSS scaling both img and canvas identically.
-                                                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                                            />
-                                            <button
-                                                onClick={clearImage}
-                                                className="absolute top-4 right-4 bg-white/90 hover:bg-white text-gray-800 p-2 rounded-full shadow-lg z-20 transition"
-                                                title="Clear Image"
-                                            >
-                                                <X className="w-5 h-5" />
-                                            </button>
-                                        </>
-                                    ) : (
-                                        <div className="text-center p-8">
-                                            <label className="cursor-pointer group flex flex-col items-center">
-                                                <div className="w-16 h-16 bg-white rounded-full shadow-md flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                                                    <ImageIcon className="w-8 h-8 text-[#22C55E]" />
-                                                </div>
-                                                <h3 className="text-lg font-semibold text-gray-900 mb-1">Click to Upload</h3>
-                                                <p className="text-sm text-gray-500 mb-6">or drag and drop an image here</p>
-                                                <input
-                                                    type="file"
-                                                    accept="image/*"
-                                                    className="hidden"
-                                                    onChange={handleImageUpload}
-                                                />
-                                                <span className="px-5 py-2 bg-[#22C55E] text-white rounded-lg text-sm font-medium hover:bg-[#16A34A] transition">
-                                                    Select Image
-                                                </span>
-                                            </label>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Results Panel */}
-                        <div className="w-full lg:w-80 flex-shrink-0">
-                            <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden sticky top-24">
+                        {/* CAMERA RESULTS */}
+                        {mode === "camera" && detections.length > 0 && (
+                            <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
                                 <div className="p-4 border-b border-gray-100 bg-gray-50">
                                     <h3 className="font-bold text-gray-800 flex items-center gap-2">
                                         <Search className="w-4 h-4 text-[#22C55E]" />
-                                        Detected Objects
+                                        Visible Objects
                                     </h3>
                                 </div>
-
-                                <div className="p-4 max-h-[400px] overflow-y-auto">
-                                    {detections.length > 0 ? (
-                                        <div className="space-y-3">
-                                            {detections.map((det, index) => (
-                                                <div key={index} className="bg-white rounded-lg border border-gray-100 p-3 shadow-sm hover:shadow-md transition-shadow group">
-                                                    <div className="flex justify-between items-start mb-2">
-                                                        <span className="font-semibold text-gray-800 capitalize text-lg">
-                                                            {det.class}
-                                                        </span>
-                                                        <span className="text-xs font-mono text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">
-                                                            {Math.round(det.score * 100)}%
-                                                        </span>
-                                                    </div>
-                                                    <button
-                                                        onClick={() => googleSearch(det.class + " migration guide")}
-                                                        className="w-full mt-2 text-xs font-medium text-[#22C55E] border border-[#22C55E] rounded-md px-3 py-1.5 hover:bg-[#F0FDF4] flex items-center justify-center gap-1 transition-colors"
-                                                    >
-                                                        <Search className="w-3 h-3" />
-                                                        Search this object
-                                                    </button>
-                                                </div>
-                                            ))}
+                                <div className="p-4 max-h-[300px] overflow-y-auto space-y-2">
+                                    {detections.map((det, index) => (
+                                        <div key={index} className="flex justify-between items-center p-2 bg-gray-50 rounded-lg">
+                                            <span className="capitalize font-medium text-gray-700">{det.class}</span>
+                                            <span className="text-xs text-gray-400">{Math.round(det.score * 100)}% confidence</span>
                                         </div>
-                                    ) : (
-                                        <div className="text-center py-8 text-gray-400">
-                                            <p className="text-sm">No objects detected yet.</p>
-                                            <p className="text-xs mt-1">Point camera or upload an image.</p>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Legend / Tip */}
-                                <div className="p-3 bg-gray-50 border-t border-gray-100 text-[10px] text-gray-500 text-center">
-                                    Powered by TensorFlow.js & COCO-SSD
+                                    ))}
                                 </div>
                             </div>
-                        </div>
+                        )}
+
+                        {/* UPLOAD RESULTS (BACKEND AI) */}
+                        {mode === "upload" && arResult && (
+                            <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden animate-fade-in-up">
+                                <div className="p-4 border-b border-gray-100 bg-[#F0FDF4]">
+                                    <h3 className="font-bold text-gray-800 flex items-center gap-2">
+                                        <Search className="w-4 h-4 text-[#22C55E]" />
+                                        Analysis Result
+                                    </h3>
+                                </div>
+                                <div className="p-6">
+                                    {arResult.name && (
+                                        <div className="mb-4">
+                                            <h2 className="text-2xl font-bold text-gray-900 mb-1">{arResult.name}</h2>
+                                            {arResult.location && (
+                                                <div className="flex items-center gap-1 text-gray-500 text-sm">
+                                                    <MapPin className="w-4 h-4" />
+                                                    {arResult.location}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+
+                                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 mb-4">
+                                        <div className="flex items-start gap-2">
+                                            <Info className="w-5 h-5 text-[#22C55E] flex-shrink-0 mt-0.5" />
+                                            <p className="text-gray-700 leading-relaxed text-sm">
+                                                {arResult.description}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {arResult.name && (
+                                        <button
+                                            onClick={() => window.open(`https://www.google.com/search?q=${arResult.name} ${arResult.location || ''} travel guide`, '_blank')}
+                                            className="w-full py-3 bg-[#22C55E] text-white rounded-xl font-semibold hover:bg-[#16A34A] transition shadow-md flex items-center justify-center gap-2"
+                                        >
+                                            <Search className="w-4 h-4" />
+                                            Explore More
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Instructions / Empty State */}
+                        {mode === "upload" && !arResult && !analyzing && (
+                            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 text-center">
+                                <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                                    <Info className="w-6 h-6 text-blue-500" />
+                                </div>
+                                <h4 className="font-semibold text-gray-900 mb-1">AI Place Identifier</h4>
+                                <p className="text-sm text-gray-500">
+                                    Upload a photo of a landmark, building, or street scene to get detailed information about it.
+                                </p>
+                            </div>
+                        )}
                     </div>
-                )}
+                </div>
 
             </div>
 
