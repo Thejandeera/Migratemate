@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,289 +24,293 @@ import java.util.stream.Collectors;
 @Slf4j
 public class CommunityService {
 
-    private final CommunityRepository communityRepository;
-    private final CommunityMembershipRepository membershipRepository;
-    private final UserRepository userRepository;
-    private final CloudinaryService cloudinaryService;
+        private final CommunityRepository communityRepository;
+        private final CommunityMembershipRepository membershipRepository;
+        private final UserRepository userRepository;
+        private final CloudinaryService cloudinaryService;
 
-    /**
-     * Create a new community
-     */
-    @Transactional
-    public CommunityResponse createCommunity(CreateCommunityRequest request, String creatorEmail) throws IOException {
-        // Check if community already exists
-        communityRepository.findByOriginCountryAndDestinationCountry(
-                request.getOriginCountry(),
-                request.getDestinationCountry()
-        ).ifPresent(c -> {
-            throw new IllegalArgumentException("Community already exists for this route");
-        });
+        /**
+         * Create a new community
+         */
+        @Transactional
+        public CommunityResponse createCommunity(CreateCommunityRequest request, String creatorEmail)
+                        throws IOException {
+                // Check if community already exists
+                communityRepository.findByOriginCountryAndDestinationCountry(
+                                request.getOriginCountry(),
+                                request.getDestinationCountry()).ifPresent(c -> {
+                                        throw new IllegalArgumentException("Community already exists for this route");
+                                });
 
-        // Upload cover image if provided
-        String coverImageUrl = null;
-        if (request.getCoverImageBase64() != null && !request.getCoverImageBase64().isEmpty()) {
-            try {
-                coverImageUrl = cloudinaryService.uploadImageFromBase64(
-                        request.getCoverImageBase64(),
-                        "migratemate/communities"
-                );
-            } catch (IOException e) {
-                log.error("Failed to upload community cover image", e);
-                throw new IOException("Failed to upload cover image: " + e.getMessage());
-            }
+                // Upload cover image if provided
+                String coverImageUrl = null;
+                if (request.getCoverImageBase64() != null && !request.getCoverImageBase64().isEmpty()) {
+                        try {
+                                coverImageUrl = cloudinaryService.uploadImageFromBase64(
+                                                request.getCoverImageBase64(),
+                                                "migratemate/communities");
+                        } catch (IOException e) {
+                                log.error("Failed to upload community cover image", e);
+                                throw new IOException("Failed to upload cover image: " + e.getMessage());
+                        }
+                }
+
+                // Create community
+                Community community = Community.builder()
+                                .name(request.getName())
+                                .originCountry(request.getOriginCountry())
+                                .destinationCountry(request.getDestinationCountry())
+                                .description(request.getDescription())
+                                .rules(request.getRules())
+                                .coverImageUrl(coverImageUrl)
+                                .memberCount(0)
+                                .isActive(true)
+                                .createdAt(LocalDateTime.now())
+                                .updatedAt(LocalDateTime.now())
+                                .build();
+
+                community = communityRepository.save(community);
+                log.info("Community created: {} -> {}", request.getOriginCountry(), request.getDestinationCountry());
+
+                // Auto-join creator to the community
+                User creator = userRepository.findByEmail(creatorEmail)
+                                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+                joinCommunity(community.getId(), creator.getId());
+
+                return mapToCommunityResponse(community, creator.getId());
         }
 
-        // Create community
-        Community community = Community.builder()
-                .name(request.getName())
-                .originCountry(request.getOriginCountry())
-                .destinationCountry(request.getDestinationCountry())
-                .description(request.getDescription())
-                .rules(request.getRules())
-                .coverImageUrl(coverImageUrl)
-                .memberCount(0)
-                .isActive(true)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
+        /**
+         * Get all communities
+         */
+        public List<CommunityResponse> getAllCommunities(String userEmail) {
+                User user = userRepository.findByEmail(userEmail)
+                                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        community = communityRepository.save(community);
-        log.info("Community created: {} -> {}", request.getOriginCountry(), request.getDestinationCountry());
+                List<Community> communities = communityRepository.findByIsActiveTrue();
 
-        // Auto-join creator to the community
-        User creator = userRepository.findByEmail(creatorEmail)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                return communities.stream()
+                                .map(community -> mapToCommunityResponse(community, user.getId()))
+                                .collect(Collectors.toList());
+        }
 
-        joinCommunity(community.getId(), creatorEmail);
+        /**
+         * Get communities for current user (based on origin/destination)
+         */
+        public List<CommunityResponse> getUserCommunities(String userId) {
+                User user = userRepository.findById(userId)
+                                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        return mapToCommunityResponse(community, creator.getId());
-    }
+                // Find community matching user's migration route
+                List<Community> communities = new ArrayList<>(
+                                communityRepository.findByOriginCountryAndDestinationCountry(
+                                                user.getCountryOfOrigin(),
+                                                user.getDestinationCountry()).map(List::of).orElse(List.of()));
 
-    /**
-     * Get all communities
-     */
-    public List<CommunityResponse> getAllCommunities(String userEmail) {
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                // Also get communities user has joined
+                List<CommunityMembership> memberships = membershipRepository.findByUserId(user.getId());
+                List<String> communityIds = memberships.stream()
+                                .map(CommunityMembership::getCommunityId)
+                                .collect(Collectors.toList());
 
-        List<Community> communities = communityRepository.findByIsActiveTrue();
+                List<Community> joinedCommunities = communityRepository.findAllById(communityIds);
 
-        return communities.stream()
-                .map(community -> mapToCommunityResponse(community, user.getId()))
-                .collect(Collectors.toList());
-    }
+                // Combine and remove duplicates
+                communities.addAll(joinedCommunities);
+                communities = communities.stream().distinct().collect(Collectors.toList());
 
-    /**
-     * Get communities for current user (based on origin/destination)
-     */
-    public List<CommunityResponse> getUserCommunities(String userEmail) {
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                return communities.stream()
+                                .map(community -> mapToCommunityResponse(community, user.getId()))
+                                .collect(Collectors.toList());
+        }
 
-        // Find community matching user's migration route
-        List<Community> communities = communityRepository.findByOriginCountryAndDestinationCountry(
-                user.getCountryOfOrigin(),
-                user.getDestinationCountry()
-        ).map(List::of).orElse(List.of());
+        /**
+         * Get community by ID
+         */
+        public CommunityResponse getCommunityById(String communityId, String userEmail) {
+                User user = userRepository.findByEmail(userEmail)
+                                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        // Also get communities user has joined
-        List<CommunityMembership> memberships = membershipRepository.findByUserId(user.getId());
-        List<String> communityIds = memberships.stream()
-                .map(CommunityMembership::getCommunityId)
-                .collect(Collectors.toList());
+                Community community = communityRepository.findById(communityId)
+                                .orElseThrow(() -> new IllegalArgumentException("Community not found"));
 
-        List<Community> joinedCommunities = communityRepository.findAllById(communityIds);
+                return mapToCommunityResponse(community, user.getId());
+        }
 
-        // Combine and remove duplicates
-        communities.addAll(joinedCommunities);
-        communities = communities.stream().distinct().collect(Collectors.toList());
+        /**
+         * Get members of a community
+         */
+        public CommunityMemberResponse getCommunityMembers(String communityId, String userEmail) {
+                // Verify user exists
+                User user = userRepository.findByEmail(userEmail)
+                                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        return communities.stream()
-                .map(community -> mapToCommunityResponse(community, user.getId()))
-                .collect(Collectors.toList());
-    }
+                // Verify community exists
+                Community community = communityRepository.findById(communityId)
+                                .orElseThrow(() -> new IllegalArgumentException("Community not found"));
 
-    /**
-     * Get community by ID
-     */
-    public CommunityResponse getCommunityById(String communityId, String userEmail) {
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                // Get all memberships
+                List<CommunityMembership> memberships = membershipRepository.findByCommunityId(communityId);
 
-        Community community = communityRepository.findById(communityId)
-                .orElseThrow(() -> new IllegalArgumentException("Community not found"));
+                // Get user details for each member
+                List<String> memberUserIds = memberships.stream()
+                                .map(CommunityMembership::getUserId)
+                                .collect(Collectors.toList());
 
-        return mapToCommunityResponse(community, user.getId());
-    }
+                List<User> memberUsers = userRepository.findAllById(memberUserIds);
 
-    /**
-     * Get members of a community
-     */
-    public CommunityMemberResponse getCommunityMembers(String communityId, String userEmail) {
-        // Verify user exists
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                // Map to response
+                List<MemberResponse> members = memberships.stream()
+                                .map(membership -> {
+                                        User memberUser = memberUsers.stream()
+                                                        .filter(u -> u.getId().equals(membership.getUserId()))
+                                                        .findFirst()
+                                                        .orElse(null);
 
-        // Verify community exists
-        Community community = communityRepository.findById(communityId)
-                .orElseThrow(() -> new IllegalArgumentException("Community not found"));
+                                        if (memberUser == null)
+                                                return null;
 
-        // Get all memberships
-        List<CommunityMembership> memberships = membershipRepository.findByCommunityId(communityId);
+                                        return MemberResponse.builder()
+                                                        .userId(memberUser.getId())
+                                                        .fullName(memberUser.getFullName())
+                                                        .avatarUrl(memberUser.getAvatarUrl())
+                                                        .bio(memberUser.getBio())
+                                                        .location(memberUser.getLocation())
+                                                        .isVerified(memberUser.getIsVerified())
+                                                        .isHelper(memberUser.getIsHelper())
+                                                        .isModerator(membership.getIsModerator())
+                                                        .rating(memberUser.getRating())
+                                                        .joinedAt(membership.getJoinedAt())
+                                                        .lastActiveAt(membership.getLastActiveAt())
+                                                        .build();
+                                })
+                                .filter(member -> member != null)
+                                .collect(Collectors.toList());
 
-        // Get user details for each member
-        List<String> memberUserIds = memberships.stream()
-                .map(CommunityMembership::getUserId)
-                .collect(Collectors.toList());
+                return CommunityMemberResponse.builder()
+                                .community(mapToCommunityResponse(community, user.getId()))
+                                .members(members)
+                                .totalMembers(members.size())
+                                .build();
+        }
 
-        List<User> memberUsers = userRepository.findAllById(memberUserIds);
+        /**
+         * Join a community
+         */
+        @Transactional
+        public void joinCommunity(String communityId, String userId) {
+                User user = userRepository.findById(userId)
+                                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        // Map to response
-        List<MemberResponse> members = memberships.stream()
-                .map(membership -> {
-                    User memberUser = memberUsers.stream()
-                            .filter(u -> u.getId().equals(membership.getUserId()))
-                            .findFirst()
-                            .orElse(null);
+                Community community = communityRepository.findById(communityId)
+                                .orElseThrow(() -> new IllegalArgumentException("Community not found"));
 
-                    if (memberUser == null) return null;
+                // Check if already a member
+                membershipRepository.findByUserIdAndCommunityId(user.getId(), communityId)
+                                .ifPresent(m -> {
+                                        throw new IllegalArgumentException("Already a member of this community");
+                                });
 
-                    return MemberResponse.builder()
-                            .userId(memberUser.getId())
-                            .fullName(memberUser.getFullName())
-                            .avatarUrl(memberUser.getAvatarUrl())
-                            .bio(memberUser.getBio())
-                            .location(memberUser.getLocation())
-                            .isVerified(memberUser.getIsVerified())
-                            .isHelper(memberUser.getIsHelper())
-                            .isModerator(membership.getIsModerator())
-                            .rating(memberUser.getRating())
-                            .joinedAt(membership.getJoinedAt())
-                            .lastActiveAt(membership.getLastActiveAt())
-                            .build();
-                })
-                .filter(member -> member != null)
-                .collect(Collectors.toList());
+                // Create membership
+                CommunityMembership membership = CommunityMembership.builder()
+                                .userId(user.getId())
+                                .communityId(communityId)
+                                .isModerator(false)
+                                .isMuted(false)
+                                .joinedAt(LocalDateTime.now())
+                                .lastActiveAt(LocalDateTime.now())
+                                .build();
 
-        return CommunityMemberResponse.builder()
-                .community(mapToCommunityResponse(community, user.getId()))
-                .members(members)
-                .totalMembers(members.size())
-                .build();
-    }
+                membershipRepository.save(membership);
 
-    /**
-     * Join a community
-     */
-    @Transactional
-    public void joinCommunity(String communityId, String userEmail) {
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                // Increment member count
+                community.incrementMemberCount();
+                communityRepository.save(community);
 
-        Community community = communityRepository.findById(communityId)
-                .orElseThrow(() -> new IllegalArgumentException("Community not found"));
+                log.info("User {} joined community {}", user.getEmail(), community.getName());
+        }
 
-        // Check if already a member
-        membershipRepository.findByUserIdAndCommunityId(user.getId(), communityId)
-                .ifPresent(m -> {
-                    throw new IllegalArgumentException("Already a member of this community");
-                });
+        /**
+         * Leave a community
+         */
+        @Transactional
+        public void leaveCommunity(String communityId, String userId) {
+                User user = userRepository.findById(userId)
+                                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        // Create membership
-        CommunityMembership membership = CommunityMembership.builder()
-                .userId(user.getId())
-                .communityId(communityId)
-                .isModerator(false)
-                .isMuted(false)
-                .joinedAt(LocalDateTime.now())
-                .lastActiveAt(LocalDateTime.now())
-                .build();
+                Community community = communityRepository.findById(communityId)
+                                .orElseThrow(() -> new IllegalArgumentException("Community not found"));
 
-        membershipRepository.save(membership);
+                // Check if member
+                CommunityMembership membership = membershipRepository
+                                .findByUserIdAndCommunityId(user.getId(), communityId)
+                                .orElseThrow(() -> new IllegalArgumentException("Not a member of this community"));
 
-        // Increment member count
-        community.incrementMemberCount();
-        communityRepository.save(community);
+                // Delete membership
+                membershipRepository.delete(membership);
 
-        log.info("User {} joined community {}", user.getEmail(), community.getName());
-    }
+                // Decrement member count
+                community.decrementMemberCount();
+                communityRepository.save(community);
 
-    /**
-     * Leave a community
-     */
-    @Transactional
-    public void leaveCommunity(String communityId, String userEmail) {
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                log.info("User {} left community {}", user.getEmail(), community.getName());
+        }
 
-        Community community = communityRepository.findById(communityId)
-                .orElseThrow(() -> new IllegalArgumentException("Community not found"));
+        /**
+         * Auto-assign user to communities based on origin/destination
+         */
+        @Transactional
+        public void autoAssignUserToCommunities(String userEmail) {
+                User user = userRepository.findByEmail(userEmail)
+                                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        // Check if member
-        CommunityMembership membership = membershipRepository.findByUserIdAndCommunityId(user.getId(), communityId)
-                .orElseThrow(() -> new IllegalArgumentException("Not a member of this community"));
+                // Find matching community
+                communityRepository.findByOriginCountryAndDestinationCountry(
+                                user.getCountryOfOrigin(),
+                                user.getDestinationCountry()).ifPresent(community -> {
+                                        // Check if not already a member
+                                        if (membershipRepository
+                                                        .findByUserIdAndCommunityId(user.getId(), community.getId())
+                                                        .isEmpty()) {
+                                                try {
+                                                        joinCommunity(community.getId(), user.getId());
+                                                        log.info("Auto-assigned user {} to community {}", userEmail,
+                                                                        community.getName());
+                                                } catch (Exception e) {
+                                                        log.error("Failed to auto-assign user to community", e);
+                                                }
+                                        }
+                                });
+        }
 
-        // Delete membership
-        membershipRepository.delete(membership);
+        /**
+         * Map Community entity to CommunityResponse DTO
+         */
+        private CommunityResponse mapToCommunityResponse(Community community, String userId) {
+                // Check if user is a member
+                boolean isMember = membershipRepository.findByUserIdAndCommunityId(userId, community.getId())
+                                .isPresent();
 
-        // Decrement member count
-        community.decrementMemberCount();
-        communityRepository.save(community);
+                // Check if user is a moderator
+                boolean isModerator = membershipRepository.findByUserIdAndCommunityId(userId, community.getId())
+                                .map(CommunityMembership::getIsModerator)
+                                .orElse(false);
 
-        log.info("User {} left community {}", user.getEmail(), community.getName());
-    }
-
-    /**
-     * Auto-assign user to communities based on origin/destination
-     */
-    @Transactional
-    public void autoAssignUserToCommunities(String userEmail) {
-        User user = userRepository.findByEmail(userEmail)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-
-        // Find matching community
-        communityRepository.findByOriginCountryAndDestinationCountry(
-                user.getCountryOfOrigin(),
-                user.getDestinationCountry()
-        ).ifPresent(community -> {
-            // Check if not already a member
-            if (membershipRepository.findByUserIdAndCommunityId(user.getId(), community.getId()).isEmpty()) {
-                try {
-                    joinCommunity(community.getId(), userEmail);
-                    log.info("Auto-assigned user {} to community {}", userEmail, community.getName());
-                } catch (Exception e) {
-                    log.error("Failed to auto-assign user to community", e);
-                }
-            }
-        });
-    }
-
-    /**
-     * Map Community entity to CommunityResponse DTO
-     */
-    private CommunityResponse mapToCommunityResponse(Community community, String userId) {
-        // Check if user is a member
-        boolean isMember = membershipRepository.findByUserIdAndCommunityId(userId, community.getId()).isPresent();
-
-        // Check if user is a moderator
-        boolean isModerator = membershipRepository.findByUserIdAndCommunityId(userId, community.getId())
-                .map(CommunityMembership::getIsModerator)
-                .orElse(false);
-
-        return CommunityResponse.builder()
-                .id(community.getId())
-                .name(community.getName())
-                .originCountry(community.getOriginCountry())
-                .destinationCountry(community.getDestinationCountry())
-                .description(community.getDescription())
-                .rules(community.getRules())
-                .coverImageUrl(community.getCoverImageUrl())
-                .memberCount(community.getMemberCount())
-                .isActive(community.getIsActive())
-                .isMember(isMember)
-                .isModerator(isModerator)
-                .createdAt(community.getCreatedAt())
-                .updatedAt(community.getUpdatedAt())
-                .build();
-    }
+                return CommunityResponse.builder()
+                                .id(community.getId())
+                                .name(community.getName())
+                                .originCountry(community.getOriginCountry())
+                                .destinationCountry(community.getDestinationCountry())
+                                .description(community.getDescription())
+                                .rules(community.getRules())
+                                .coverImageUrl(community.getCoverImageUrl())
+                                .memberCount(community.getMemberCount())
+                                .isActive(community.getIsActive())
+                                .isMember(isMember)
+                                .isModerator(isModerator)
+                                .createdAt(community.getCreatedAt())
+                                .updatedAt(community.getUpdatedAt())
+                                .build();
+        }
 }

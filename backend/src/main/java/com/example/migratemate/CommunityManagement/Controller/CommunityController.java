@@ -85,11 +85,10 @@ public class CommunityController {
     /**
      * Get communities for current user
      */
-    @GetMapping("/my-communities")
-    public ResponseEntity<ApiResponse<List<CommunityResponse>>> getMyCommunities() {
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<ApiResponse<List<CommunityResponse>>> getMyCommunities(@PathVariable String userId) {
         try {
-            String email = getCurrentUserEmail();
-            List<CommunityResponse> communities = communityService.getUserCommunities(email);
+            List<CommunityResponse> communities = communityService.getUserCommunities(userId);
             return ResponseEntity.ok(ApiResponse.<List<CommunityResponse>>builder()
                     .success(true)
                     .message("Your communities retrieved successfully")
@@ -170,11 +169,11 @@ public class CommunityController {
     /**
      * Join a community
      */
-    @PostMapping("/{communityId}/join")
-    public ResponseEntity<ApiResponse<Void>> joinCommunity(@PathVariable String communityId) {
+    @PostMapping("/{communityId}/join/{userId}")
+    public ResponseEntity<ApiResponse<Void>> joinCommunity(@PathVariable String communityId,
+            @PathVariable String userId) {
         try {
-            String email = getCurrentUserEmail();
-            communityService.joinCommunity(communityId, email);
+            communityService.joinCommunity(communityId, userId);
             return ResponseEntity.ok(ApiResponse.<Void>builder()
                     .success(true)
                     .message("Successfully joined community")
@@ -198,11 +197,11 @@ public class CommunityController {
     /**
      * Leave a community
      */
-    @PostMapping("/{communityId}/leave")
-    public ResponseEntity<ApiResponse<Void>> leaveCommunity(@PathVariable String communityId) {
+    @PostMapping("/{communityId}/leave/{userId}")
+    public ResponseEntity<ApiResponse<Void>> leaveCommunity(@PathVariable String communityId,
+            @PathVariable String userId) {
         try {
-            String email = getCurrentUserEmail();
-            communityService.leaveCommunity(communityId, email);
+            communityService.leaveCommunity(communityId, userId);
             return ResponseEntity.ok(ApiResponse.<Void>builder()
                     .success(true)
                     .message("Successfully left community")

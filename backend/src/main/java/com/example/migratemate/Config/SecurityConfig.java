@@ -37,8 +37,8 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http,
-                                                   JwtAuthenticationFilter jwtAuthenticationFilter,
-                                                   AuthenticationProvider authenticationProvider) throws Exception {
+            JwtAuthenticationFilter jwtAuthenticationFilter,
+            AuthenticationProvider authenticationProvider) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -53,15 +53,16 @@ public class SecurityConfig {
                                 "/api/users/login",
                                 "/api/admin/register",
                                 "/api/admin/login",
-                                "/ws/**",              // WebSocket endpoints
-                                "/topic/**",           // WebSocket topic endpoints
-                                "/app/**",             // WebSocket app endpoints
-                                "/queue/**"            // WebSocket queue endpoints
+                                "/api/communities/**",
+                                "/ws/**", // WebSocket endpoints
+                                "/topic/**", // WebSocket topic endpoints
+                                "/app/**", // WebSocket app endpoints
+                                "/queue/**", // WebSocket queue endpoints
+                                "/error" // Error endpoint
                         ).permitAll()
 
                         // Everything else requires authentication
-                        .anyRequest().authenticated()
-                )
+                        .anyRequest().authenticated())
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(new FlutterCorsFilter(), UsernamePasswordAuthenticationFilter.class)
@@ -78,8 +79,7 @@ public class SecurityConfig {
             String path = request.getRequestURI();
             String message = String.format(
                     "{ \"error\": \"Unauthorized\", \"message\": \"Full authentication required\", \"path\": \"%s\" }",
-                    path
-            );
+                    path);
             response.getWriter().write(message);
         };
     }
@@ -133,8 +133,8 @@ public class SecurityConfig {
 
         @Override
         protected void doFilterInternal(HttpServletRequest request,
-                                        HttpServletResponse response,
-                                        jakarta.servlet.FilterChain filterChain)
+                HttpServletResponse response,
+                jakarta.servlet.FilterChain filterChain)
                 throws jakarta.servlet.ServletException, IOException {
 
             String appHeader = request.getHeader(FLUTTER_APP_HEADER);
