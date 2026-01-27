@@ -214,6 +214,16 @@ const LiveARScanner = () => {
 
     // 5. Fetch History
     const [history, setHistory] = useState([]);
+    const [expandedId, setExpandedId] = useState(null);
+    const [visibleCount, setVisibleCount] = useState(6);
+
+    const toggleExpand = (index) => {
+        setExpandedId(expandedId === index ? null : index);
+    };
+
+    const loadMore = () => {
+        setVisibleCount(prev => prev + 6);
+    };
 
     useEffect(() => {
         const fetchHistory = async () => {
@@ -424,24 +434,46 @@ const LiveARScanner = () => {
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {history.map((item, index) => (
-                                <div key={index} className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-lg border border-gray-100 transition-all duration-300 group cursor-default">
-                                    <div className="flex justify-between items-start mb-3">
-                                        <h3 className="font-bold text-gray-900 line-clamp-1 group-hover:text-green-600 transition-colors">{item.name || "Unknown"}</h3>
+                            {history.slice(0, visibleCount).map((item, index) => (
+                                <div key={index} className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-lg border border-gray-100 transition-all duration-300">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <h3 className="font-bold text-gray-900 text-lg line-clamp-1 group-hover:text-green-600 transition-colors">{item.name || "Unknown"}</h3>
                                         <span className="text-xs text-gray-400 whitespace-nowrap bg-gray-50 px-2 py-1 rounded-md">{new Date(item.timestamp).toLocaleDateString()}</span>
                                     </div>
+
                                     {item.location && (
                                         <div className="flex items-center gap-1.5 text-gray-500 text-xs mb-4">
                                             <MapPin className="w-3.5 h-3.5 text-gray-400" />
                                             <span className="line-clamp-1">{item.location}</span>
                                         </div>
                                     )}
-                                    <p className="text-gray-600 text-sm line-clamp-3 leading-relaxed">
-                                        {item.description}
-                                    </p>
+
+                                    <div className={`overflow-hidden transition-all duration-300 ease-in-out ${expandedId === index ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}`}>
+                                        <p className="text-gray-600 text-sm leading-relaxed border-t border-gray-100 pt-3">
+                                            {item.description}
+                                        </p>
+                                    </div>
+
+                                    <button
+                                        onClick={() => toggleExpand(index)}
+                                        className="mt-3 text-green-600 text-xs font-semibold hover:underline focus:outline-none flex items-center gap-1"
+                                    >
+                                        {expandedId === index ? "Show Less" : "View Details"}
+                                    </button>
                                 </div>
                             ))}
                         </div>
+
+                        {visibleCount < history.length && (
+                            <div className="mt-8 flex justify-center">
+                                <button
+                                    onClick={loadMore}
+                                    className="px-6 py-2.5 bg-white border border-gray-200 text-gray-700 font-semibold rounded-full shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-all text-sm"
+                                >
+                                    Load More Discoveries
+                                </button>
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
