@@ -1,6 +1,6 @@
 import React from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import Dashboard from './Pages/Dashboard'
+
 import SignIn from './Pages/SignIn'
 import ViewUsers from './Pages/ViewUsers'
 import { isAuthenticated } from './utils/auth'
@@ -14,7 +14,7 @@ const ProtectedRoute = ({ children }) => {
 
 const PublicOnlyRoute = ({ children }) => {
   if (isAuthenticated()) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/users" replace />;
   }
   return children;
 };
@@ -28,11 +28,7 @@ const App = () => {
         </PublicOnlyRoute>
       } />
 
-      <Route path="/dashboard" element={
-        <ProtectedRoute>
-          <Dashboard />
-        </ProtectedRoute>
-      } />
+
 
       <Route path="/users" element={
         <ProtectedRoute>
