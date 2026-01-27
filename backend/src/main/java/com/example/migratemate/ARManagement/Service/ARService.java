@@ -85,4 +85,8 @@ public class ARService {
         return result;
     }
 
+    public java.util.List<ARHistory> getHistory(String userId) {
+        return arHistoryRepository.findByUserId(userId);
+    }
+
 }

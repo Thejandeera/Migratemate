@@ -27,4 +27,10 @@ public class ARController {
                     .body(Map.of("error", "Failed to analyze image: " + e.getMessage()));
         }
     }
+
+    @GetMapping("/history/{userId}")
+    public ResponseEntity<java.util.List<com.example.migratemate.ARManagement.Model.ARHistory>> getHistory(
+            @PathVariable String userId) {
+        return ResponseEntity.ok(arService.getHistory(userId));
+    }
 }

@@ -8,5 +8,5 @@ import java.util.List;
 
 @Repository
 public interface ARHistoryRepository extends MongoRepository<ARHistory, String> {
-    List<String> findByUserId(String userId);
+    List<ARHistory> findByUserId(String userId);
 }
