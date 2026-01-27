@@ -10,16 +10,17 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/ar")
-@CrossOrigin(origins = "${frontend.url}") // Allow frontend from properties
+@CrossOrigin(origins = "${frontend.url}")
 public class ARController {
 
     @Autowired
     private ARService arService;
 
     @PostMapping("/analyze")
-    public ResponseEntity<Map<String, String>> analyzeImage(@RequestParam("image") MultipartFile image) {
+    public ResponseEntity<Map<String, String>> analyzeImage(@RequestParam("image") MultipartFile image,
+            @RequestParam(value = "userId", required = false) String userId) {
         try {
-            Map<String, String> result = arService.analyzeImage(image);
+            Map<String, String> result = arService.analyzeImage(image, userId);
             return ResponseEntity.ok(result);
         } catch (Exception e) {
             return ResponseEntity.internalServerError()

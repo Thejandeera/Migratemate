@@ -118,10 +118,18 @@ const LiveARScanner = () => {
             const formData = new FormData();
             formData.append("image", blob, "live_capture.jpg");
 
+            // Get User ID from Session Storage
+            const userData = JSON.parse(sessionStorage.getItem("userData"));
+            const userId = userData?.id;
+            if (userId) {
+                formData.append("userId", userId);
+            }
+
             const response = await fetch(`${API_URL}/ar/analyze`, {
                 method: "POST",
                 body: formData,
             });
+
 
             if (response.ok) {
                 const data = await response.json();
@@ -148,6 +156,13 @@ const LiveARScanner = () => {
 
             const formData = new FormData();
             formData.append("image", file);
+
+            // Get User ID from Session Storage
+            const userData = JSON.parse(sessionStorage.getItem("userData"));
+            const userId = userData?.id;
+            if (userId) {
+                formData.append("userId", userId);
+            }
 
             try {
                 const response = await fetch(`${API_URL}/ar/analyze`, {
