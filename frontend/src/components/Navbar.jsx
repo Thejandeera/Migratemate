@@ -68,13 +68,17 @@ const Navbar = () => {
         setMobileMenuOpen(false);
     }, [location]);
 
+    const handleAuthNavigation = (e) => {
+        if (!isLoggedIn) {
+            e.preventDefault();
+            navigate('/login');
+        }
+    };
+
     const fetchNotifications = async (userId) => {
         if (!userId) return;
         try {
-            const token = localStorage.getItem('token'); // or sessionStorage
-            // Assuming we might need headers if secured, but 'getUserData' implies we have access
-            // Adding Authorization header just in case since we secured endpoints
-            // You might need to adjust how you retrieve the token based on 'utils/auth'
+            const token = localStorage.getItem('token');
             const storedToken = sessionStorage.getItem('token') || localStorage.getItem('token');
 
             const response = await fetch(`${API_URL}/notifications/user/${userId}`, {
@@ -309,11 +313,11 @@ const Navbar = () => {
 
                     <div className="hidden md:flex items-center space-x-8">
                         <Link to="/" className="text-sm font-medium text-gray-900 bg-gray-200/50 px-3 py-1.5 rounded-md">Home</Link>
-                        <Link to="/marketplace" className="text-sm font-medium text-gray-500 hover:text-gray-900">Marketplace</Link>
-                        <Link to="/community" className="text-sm font-medium text-gray-500 hover:text-gray-900">Community</Link>
-                        <Link to="/sos" className="text-sm font-medium text-gray-500 hover:text-gray-900">SOS</Link>
-                        <Link to="/profile" className="text-sm font-medium text-gray-500 hover:text-gray-900">Profile</Link>
-                        <Link to="/scanner" className="text-sm font-medium text-gray-500 hover:text-gray-900">Scanner</Link>
+                        <Link to="/marketplace" onClick={handleAuthNavigation} className="text-sm font-medium text-gray-500 hover:text-gray-900">Marketplace</Link>
+                        <Link to="/community" onClick={handleAuthNavigation} className="text-sm font-medium text-gray-500 hover:text-gray-900">Community</Link>
+                        <Link to="/sos" onClick={handleAuthNavigation} className="text-sm font-medium text-gray-500 hover:text-gray-900">SOS</Link>
+                        <Link to="/profile" onClick={handleAuthNavigation} className="text-sm font-medium text-gray-500 hover:text-gray-900">Profile</Link>
+                        <Link to="/scanner" onClick={handleAuthNavigation} className="text-sm font-medium text-gray-500 hover:text-gray-900">Scanner</Link>
                     </div>
 
                     <div className="hidden md:flex items-center gap-4">
@@ -405,11 +409,11 @@ const Navbar = () => {
                     >
                         <div className="px-4 pt-2 pb-6 space-y-2 shadow-inner">
                             <Link to="/" className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">Home</Link>
-                            <Link to="/marketplace" className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">Marketplace</Link>
-                            <Link to="/community" className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">Community</Link>
-                            <Link to="/sos" className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">SOS</Link>
-                            <Link to="/profile" className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">Profile</Link>
-                            <Link to="/scanner" className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">Scanner</Link>
+                            <Link to="/marketplace" onClick={handleAuthNavigation} className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">Marketplace</Link>
+                            <Link to="/community" onClick={handleAuthNavigation} className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">Community</Link>
+                            <Link to="/sos" onClick={handleAuthNavigation} className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">SOS</Link>
+                            <Link to="/profile" onClick={handleAuthNavigation} className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">Profile</Link>
+                            <Link to="/scanner" onClick={handleAuthNavigation} className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">Scanner</Link>
 
                             <div className="border-t border-gray-100 pt-4 mt-4">
                                 {isLoggedIn ? (
