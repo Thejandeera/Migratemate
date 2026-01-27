@@ -11,6 +11,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
+import com.example.migratemate.ARManagement.Model.ARHistory;
+import com.example.migratemate.ARManagement.Repository.ARHistoryRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Service
 public class ARService {
@@ -20,7 +23,10 @@ public class ARService {
 
     private final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=";
 
-    public Map<String, String> analyzeImage(MultipartFile imageFile) throws Exception {
+    @Autowired
+    private ARHistoryRepository arHistoryRepository;
+
+    public Map<String, String> analyzeImage(MultipartFile imageFile, String userId) throws Exception {
         // Encode image to Base64
         String base64Image = Base64.getEncoder().encodeToString(imageFile.getBytes());
 
@@ -53,17 +59,34 @@ public class ARService {
         // Basic cleanup of response text if it contains markdown code blocks
         responseText = responseText.replace("```json", "").replace("```", "").trim();
 
+        Map<String, String> result;
         try {
             // Try to parse JSON from AI
-            Map<String, String> result = mapper.readValue(responseText,
+            result = mapper.readValue(responseText,
                     new com.fasterxml.jackson.core.type.TypeReference<Map<String, String>>() {
                     });
-            return result;
         } catch (Exception e) {
             // Fallback if AI didn't return strict JSON
-            Map<String, String> fallback = new HashMap<>();
-            fallback.put("description", responseText);
-            return fallback;
+            result = new HashMap<>();
+            result.put("description", responseText);
         }
+
+        // Save to History if userId is present
+        if (userId != null && !userId.isEmpty() && !userId.equals("undefined") && !userId.equals("null")) {
+            ARHistory history = ARHistory.builder()
+                    .userId(userId)
+                    .name(result.getOrDefault("name", "Unknown"))
+                    .location(result.getOrDefault("location", "Unknown"))
+                    .description(result.getOrDefault("description", responseText))
+                    .build();
+            arHistoryRepository.save(history);
+        }
+
+        return result;
     }
+
+    public java.util.List<ARHistory> getHistory(String userId) {
+        return arHistoryRepository.findByUserId(userId);
+    }
+
 }

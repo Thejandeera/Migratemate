@@ -17,7 +17,7 @@ const LiveARScanner = () => {
     // State
     const [model, setModel] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [mode, setMode] = useState("camera"); // 'camera' or 'upload'
+    const [mode, setMode] = useState("upload"); // 'camera' or 'upload'
 
     // Live Camera State
     const [detections, setDetections] = useState([]);
@@ -118,10 +118,18 @@ const LiveARScanner = () => {
             const formData = new FormData();
             formData.append("image", blob, "live_capture.jpg");
 
+            // Get User ID from Session Storage
+            const userData = JSON.parse(sessionStorage.getItem("userData"));
+            const userId = userData?.id;
+            if (userId) {
+                formData.append("userId", userId);
+            }
+
             const response = await fetch(`${API_URL}/ar/analyze`, {
                 method: "POST",
                 body: formData,
             });
+
 
             if (response.ok) {
                 const data = await response.json();
@@ -148,6 +156,13 @@ const LiveARScanner = () => {
 
             const formData = new FormData();
             formData.append("image", file);
+
+            // Get User ID from Session Storage
+            const userData = JSON.parse(sessionStorage.getItem("userData"));
+            const userId = userData?.id;
+            if (userId) {
+                formData.append("userId", userId);
+            }
 
             try {
                 const response = await fetch(`${API_URL}/ar/analyze`, {
@@ -197,6 +212,37 @@ const LiveARScanner = () => {
         });
     };
 
+    // 5. Fetch History
+    const [history, setHistory] = useState([]);
+    const [expandedId, setExpandedId] = useState(null);
+    const [visibleCount, setVisibleCount] = useState(6);
+
+    const toggleExpand = (index) => {
+        setExpandedId(expandedId === index ? null : index);
+    };
+
+    const loadMore = () => {
+        setVisibleCount(prev => prev + 6);
+    };
+
+    useEffect(() => {
+        const fetchHistory = async () => {
+            const userData = JSON.parse(sessionStorage.getItem("userData"));
+            if (userData?.id) {
+                try {
+                    const res = await fetch(`${API_URL}/ar/history/${userData.id}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        setHistory(data.reverse()); // Show newest first
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch history", error);
+                }
+            }
+        };
+        fetchHistory();
+    }, [uploadArResult, liveArResult]); // Refresh when new scan happens
+
     const clearImage = () => {
         setSelectedImage(null);
         setUploadArResult(null);
@@ -209,47 +255,47 @@ const LiveARScanner = () => {
 
             <div className="flex-grow flex flex-col items-center pt-24 pb-12 px-4 sm:px-6">
 
-                <div className="text-center max-w-2xl mx-auto mb-8">
-                    <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
-                        MigrateMate <span className="text-[#22C55E]">Lens</span>
+                <div className="text-center max-w-2xl mx-auto mb-8 animate-fade-in-down">
+                    <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 mb-4 tracking-tight">
+                        MigrateMate <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-500 to-emerald-700">Lens</span>
                     </h1>
-                    <p className="text-gray-600 text-lg">
-                        Real-time AI analysis & object detection.
+                    <p className="text-gray-600 text-lg md:text-xl max-w-lg mx-auto">
+                        Discover the world around you with AI-powered analysis and object detection.
                     </p>
                 </div>
 
                 {/* Toggles */}
-                <div className="bg-gray-100 p-1 rounded-xl flex gap-1 mb-8 shadow-sm">
-                    <button
-                        onClick={() => setMode("camera")}
-                        className={`px-6 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all duration-200 ${mode === "camera" ? "bg-white text-[#22C55E] shadow-sm" : "text-gray-500 hover:text-gray-900"
-                            }`}
-                    >
-                        <Camera className="w-4 h-4" />
-                        Live Camera
-                    </button>
+                <div className="bg-white p-1.5 rounded-2xl flex gap-1 mb-10 shadow-md border border-gray-100">
                     <button
                         onClick={() => setMode("upload")}
-                        className={`px-6 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all duration-200 ${mode === "upload" ? "bg-white text-[#22C55E] shadow-sm" : "text-gray-500 hover:text-gray-900"
+                        className={`px-8 py-3 rounded-xl text-sm font-bold flex items-center gap-2 transition-all duration-300 ${mode === "upload" ? "bg-green-50 text-green-600 shadow-sm ring-1 ring-green-100" : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
                             }`}
                     >
                         <Upload className="w-4 h-4" />
                         Upload Image
                     </button>
+                    <button
+                        onClick={() => setMode("camera")}
+                        className={`px-8 py-3 rounded-xl text-sm font-bold flex items-center gap-2 transition-all duration-300 ${mode === "camera" ? "bg-green-50 text-green-600 shadow-sm ring-1 ring-green-100" : "text-gray-500 hover:text-gray-900 hover:bg-gray-50"
+                            }`}
+                    >
+                        <Camera className="w-4 h-4" />
+                        Live Camera
+                    </button>
                 </div>
 
-                <div className="w-full max-w-6xl flex flex-col lg:flex-row gap-8 items-start justify-center">
+                <div className="w-full max-w-7xl flex flex-col lg:flex-row gap-8 items-start justify-center mb-16">
 
                     {/* Main Viewport */}
-                    <div className="relative w-full max-w-xl bg-black rounded-2xl overflow-hidden shadow-2xl ring-4 ring-gray-100 aspect-[3/4] sm:aspect-[4/3] flex items-center justify-center">
+                    <div className="relative w-full lg:flex-1 bg-black rounded-3xl overflow-hidden shadow-2xl ring-1 ring-gray-900/5 aspect-[4/3] sm:aspect-[16/9] lg:aspect-[4/3] flex items-center justify-center group">
 
                         {/* CAMERA MODE */}
                         {mode === "camera" && (
                             <>
                                 {loading && (
-                                    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-white bg-black/80">
-                                        <Loader2 className="w-10 h-10 animate-spin mb-4 text-[#22C55E]" />
-                                        <p>Loading Camera AI...</p>
+                                    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-white bg-black/90 backdrop-blur-sm">
+                                        <Loader2 className="w-12 h-12 animate-spin mb-4 text-green-500" />
+                                        <p className="font-medium tracking-wide">Initializing AI Models...</p>
                                     </div>
                                 )}
                                 <Webcam
@@ -265,9 +311,9 @@ const LiveARScanner = () => {
                                 />
                                 {/* Scanning Indicator */}
                                 {isAnalyzingLive && (
-                                    <div className="absolute top-4 right-4 bg-black/50 text-white text-xs px-3 py-1.5 rounded-full flex items-center gap-2 backdrop-blur-md animate-pulse">
-                                        <Sparkles className="w-3 h-3 text-[#22C55E]" />
-                                        Scanning Scene...
+                                    <div className="absolute top-6 right-6 bg-black/60 text-white text-xs px-4 py-2 rounded-full flex items-center gap-2 backdrop-blur-md border border-white/10 animate-pulse shadow-lg">
+                                        <Sparkles className="w-3 h-3 text-green-400" />
+                                        Analyzing Scene...
                                     </div>
                                 )}
                             </>
@@ -275,24 +321,27 @@ const LiveARScanner = () => {
 
                         {/* UPLOAD MODE */}
                         {mode === "upload" && (
-                            <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 text-gray-400 relative">
+                            <div className="w-full h-full flex flex-col items-center justify-center bg-white text-black relative">
                                 {analyzing && (
-                                    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center text-white bg-black/60 backdrop-blur-sm">
-                                        <Loader2 className="w-12 h-12 animate-spin mb-4 text-[#22C55E]" />
-                                        <p>Analyzing...</p>
+                                    <div className="absolute inset-0 z-30 flex flex-col items-center justify-center text-white bg-black/70 backdrop-blur-md">
+                                        <Loader2 className="w-14 h-14 animate-spin mb-4 text-green-500" />
+                                        <p className="font-semibold text-lg">Analyzing Image...</p>
                                     </div>
                                 )}
                                 {selectedImage ? (
                                     <>
-                                        <img src={selectedImage} alt="Uploaded" className="absolute w-full h-full object-contain bg-black" />
-                                        <button onClick={clearImage} className="absolute top-4 right-4 bg-white/90 p-2 rounded-full shadow-lg z-20">
-                                            <X className="w-5 h-5 text-gray-800" />
+                                        <img src={selectedImage} alt="Uploaded" className="absolute w-full h-full object-contain bg-black/90 backdrop-blur-xl" />
+                                        <button onClick={clearImage} className="absolute top-6 right-6 bg-white p-2.5 rounded-full shadow-lg z-20 hover:bg-gray-100 transition-colors">
+                                            <X className="w-5 h-5 text-gray-900" />
                                         </button>
                                     </>
                                 ) : (
-                                    <label className="cursor-pointer group flex flex-col items-center p-8">
-                                        <ImageIcon className="w-12 h-12 text-[#22C55E] mb-4 group-hover:scale-110 transition" />
-                                        <p className="font-semibold text-gray-900">Click to Upload</p>
+                                    <label className="cursor-pointer group/upload flex flex-col items-center p-12 hover:bg-gray-100/50 rounded-3xl transition-all duration-300">
+                                        <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mb-6 group-hover/upload:scale-110 transition-transform duration-300 shadow-sm">
+                                            <ImageIcon className="w-8 h-8 text-green-600" />
+                                        </div>
+                                        <p className="font-bold text-gray-900 text-xl mb-2">Click to Upload</p>
+                                        <p className="text-gray-500 text-sm">SVG, PNG, JPG or GIF (max. 10MB)</p>
                                         <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
                                     </label>
                                 )}
@@ -300,50 +349,55 @@ const LiveARScanner = () => {
                         )}
                     </div>
 
-                    {/* Results Panel - DYNAMIC */}
-                    <div className="w-full lg:w-96 flex-shrink-0 space-y-4">
+                    {/* Results Sidebar */}
+                    <div className="w-full lg:w-[26rem] flex-shrink-0 space-y-6">
 
                         {/* LIVE INSIGHT RESULTS (Camera Only) */}
                         {mode === "camera" && (
-                            <div className="space-y-4">
+                            <div className="space-y-6">
                                 {/* Gemini Result */}
                                 {liveArResult ? (
-                                    <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden animate-fade-in-up">
-                                        <div className="p-3 border-b border-gray-100 bg-[#F0FDF4] flex justify-between items-center">
-                                            <h3 className="font-bold text-gray-800 flex items-center gap-2 text-sm">
-                                                <Sparkles className="w-4 h-4 text-[#22C55E]" />
+                                    <div className="bg-white rounded-3xl shadow-xl shadow-green-900/5 border border-green-50 overflow-hidden animate-fade-in-up">
+                                        <div className="p-4 border-b border-green-50 bg-gradient-to-r from-green-50 to-white flex justify-between items-center">
+                                            <h3 className="font-bold text-green-900 flex items-center gap-2">
+                                                <Sparkles className="w-4 h-4 text-green-600" />
                                                 Live Insight
                                             </h3>
-                                            <span className="text-[10px] text-gray-400 uppercase tracking-wider">AI Powered</span>
+                                            <span className="text-[10px] bg-white px-2 py-1 rounded-full text-green-600 font-bold uppercase tracking-wider shadow-sm border border-green-100">AI Powered</span>
                                         </div>
-                                        <div className="p-4">
-                                            <h2 className="text-lg font-bold text-gray-900 mb-1">{liveArResult.name || "Unknown Place"}</h2>
+                                        <div className="p-6">
+                                            <h2 className="text-xl font-bold text-gray-900 mb-2 leading-tight">{liveArResult.name || "Identified Location"}</h2>
                                             {liveArResult.location && (
-                                                <div className="flex items-center gap-1 text-gray-500 text-xs mb-3">
-                                                    <MapPin className="w-3 h-3" />
+                                                <div className="flex items-center gap-1.5 text-gray-500 text-sm mb-4">
+                                                    <MapPin className="w-4 h-4 text-green-500" />
                                                     {liveArResult.location}
                                                 </div>
                                             )}
-                                            <p className="text-sm text-gray-600 leading-snug line-clamp-4">
+                                            <p className="text-gray-600 leading-relaxed text-sm">
                                                 {liveArResult.description}
                                             </p>
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 text-center">
-                                        <p className="text-sm text-gray-400 italic">Point at a landmark to verify detailed info...</p>
+                                    <div className="bg-white rounded-3xl shadow-lg border border-gray-100 p-8 text-center flex flex-col items-center justify-center min-h-[200px]">
+                                        <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mb-3">
+                                            <Camera className="w-5 h-5 text-gray-400" />
+                                        </div>
+                                        <h3 className="font-semibold text-gray-900 mb-1">Ready to Scan</h3>
+                                        <p className="text-sm text-gray-500 max-w-[200px]">Point your camera at a landmark or object to get real-time insights.</p>
                                     </div>
                                 )}
 
                                 {/* TensorFlow Detections */}
                                 {detections.length > 0 && (
-                                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
-                                        <h4 className="text-xs font-bold text-gray-400 uppercase mb-3">Visible Objects</h4>
+                                    <div className="bg-white rounded-3xl shadow-lg border border-gray-100 p-6">
+                                        <h4 className="text-xs font-bold text-gray-400 uppercase mb-4 tracking-wider">Objects Detected</h4>
                                         <div className="flex flex-wrap gap-2">
                                             {detections.map((det, i) => (
-                                                <span key={i} className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-md font-medium capitalize">
-                                                    {det.class} ({Math.round(det.score * 100)}%)
-                                                </span>
+                                                <div key={i} className="px-3 py-1.5 bg-gray-50 text-gray-700 text-xs rounded-lg font-semibold capitalize border border-gray-100 flex items-center gap-2">
+                                                    {det.class}
+                                                    <span className="text-green-600 bg-green-50 px-1.5 rounded-md text-[10px]">{Math.round(det.score * 100)}%</span>
+                                                </div>
                                             ))}
                                         </div>
                                     </div>
@@ -354,19 +408,74 @@ const LiveARScanner = () => {
 
                         {/* UPLOAD RESULTS */}
                         {mode === "upload" && uploadArResult && (
-                            <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 animate-fade-in-up">
-                                <h2 className="text-2xl font-bold text-gray-900 mb-1">{uploadArResult.name || "Analysis Result"}</h2>
+                            <div className="bg-white rounded-3xl shadow-xl shadow-green-900/5 border border-green-50 p-8 animate-fade-in-up relative overflow-hidden">
+                                <div className="absolute top-0 right-0 p-4 opacity-10">
+                                    <Sparkles className="w-24 h-24 text-green-600" />
+                                </div>
+                                <h2 className="text-2xl font-bold text-gray-900 mb-2 relative z-10">{uploadArResult.name || "Analysis Result"}</h2>
                                 {uploadArResult.location && (
-                                    <div className="flex items-center gap-1 text-gray-500 text-sm mb-4">
-                                        <MapPin className="w-4 h-4" />
+                                    <div className="flex items-center gap-2 text-gray-500 text-sm mb-5 relative z-10">
+                                        <MapPin className="w-4 h-4 text-green-500" />
                                         {uploadArResult.location}
                                     </div>
                                 )}
-                                <p className="text-gray-700 text-sm leading-relaxed mb-4">{uploadArResult.description}</p>
+                                <p className="text-gray-700 leading-relaxed relative z-10 text-[15px]">{uploadArResult.description}</p>
                             </div>
                         )}
                     </div>
                 </div>
+
+                {/* HISTORY SECTION */}
+                {history.length > 0 && (
+                    <div className="w-full max-w-7xl animate-fade-in-up">
+                        <div className="flex items-center gap-3 mb-8">
+                            <div className="h-8 w-1 bg-green-500 rounded-full"></div>
+                            <h2 className="text-2xl font-bold text-gray-900">Recent Discoveries</h2>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {history.slice(0, visibleCount).map((item, index) => (
+                                <div key={index} className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-lg border border-gray-100 transition-all duration-300">
+                                    <div className="flex justify-between items-start mb-2">
+                                        <h3 className="font-bold text-gray-900 text-lg line-clamp-1 group-hover:text-green-600 transition-colors">{item.name || "Unknown"}</h3>
+                                        <span className="text-xs text-gray-400 whitespace-nowrap bg-gray-50 px-2 py-1 rounded-md">{new Date(item.timestamp).toLocaleDateString()}</span>
+                                    </div>
+
+                                    {item.location && (
+                                        <div className="flex items-center gap-1.5 text-gray-500 text-xs mb-4">
+                                            <MapPin className="w-3.5 h-3.5 text-gray-400" />
+                                            <span className="line-clamp-1">{item.location}</span>
+                                        </div>
+                                    )}
+
+                                    <div className={`overflow-hidden transition-all duration-300 ease-in-out ${expandedId === index ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}`}>
+                                        <p className="text-gray-600 text-sm leading-relaxed border-t border-gray-100 pt-3">
+                                            {item.description}
+                                        </p>
+                                    </div>
+
+                                    <button
+                                        onClick={() => toggleExpand(index)}
+                                        className="mt-3 text-green-600 text-xs font-semibold hover:underline focus:outline-none flex items-center gap-1"
+                                    >
+                                        {expandedId === index ? "Show Less" : "View Details"}
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+
+                        {visibleCount < history.length && (
+                            <div className="mt-8 flex justify-center">
+                                <button
+                                    onClick={loadMore}
+                                    className="px-6 py-2.5 bg-white border border-gray-200 text-gray-700 font-semibold rounded-full shadow-sm hover:bg-gray-50 hover:border-gray-300 transition-all text-sm"
+                                >
+                                    Load More Discoveries
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
             <Footer />
         </div>
