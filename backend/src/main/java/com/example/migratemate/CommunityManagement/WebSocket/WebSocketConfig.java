@@ -16,7 +16,17 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         // Endpoint for WebSocket connection
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns("*") // Allow all origins for development
-                .withSockJS(); // Enable SockJS fallback for browsers without WebSocket support
+                .withSockJS();// Enable SockJS fallback for browsers without WebSocket support
+
+        //NEW SOS EMERGENCY ENDPOINT
+        // Endpoint for SOS Emergency WebSocket connection
+        registry.addEndpoint("/ws-sos")
+                .setAllowedOriginPatterns("*") // Allow all origins for development
+                .withSockJS(); // Enable SockJS fallback
+
+        // Also register without SockJS for modern browsers
+        registry.addEndpoint("/ws-sos")
+                .setAllowedOriginPatterns("*");
     }
 
     /**
