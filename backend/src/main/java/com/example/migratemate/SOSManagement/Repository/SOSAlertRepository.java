@@ -1,5 +1,6 @@
-package com.example.migratemate.SOSManagement;
+package com.example.migratemate.SOSManagement.Repository;
 
+import com.example.migratemate.SOSManagement.Enitity.SOSAlert;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;

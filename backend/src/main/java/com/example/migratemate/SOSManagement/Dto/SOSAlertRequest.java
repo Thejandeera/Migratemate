@@ -1,4 +1,4 @@
-package com.example.migratemate.SOSManagement;
+package com.example.migratemate.SOSManagement.Dto;
 
 public class SOSAlertRequest {
 

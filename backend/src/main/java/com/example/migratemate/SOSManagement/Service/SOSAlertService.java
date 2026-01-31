@@ -1,5 +1,8 @@
-package com.example.migratemate.SOSManagement;
+package com.example.migratemate.SOSManagement.Service;
 
+import com.example.migratemate.SOSManagement.Dto.SOSAlertRequest;
+import com.example.migratemate.SOSManagement.Enitity.SOSAlert;
+import com.example.migratemate.SOSManagement.Repository.SOSAlertRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.geo.GeoJsonPoint;
 import org.springframework.stereotype.Service;

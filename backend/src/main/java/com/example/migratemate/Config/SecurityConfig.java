@@ -60,6 +60,7 @@ public class SecurityConfig {
                                 "/ws/**",
                                 "/topic/**",
                                 "/app/**",
+                                "/api/sos/**",
                                 "/queue/**",
                                 "/error")
                         .permitAll()
