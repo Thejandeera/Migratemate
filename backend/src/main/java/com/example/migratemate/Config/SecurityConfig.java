@@ -64,6 +64,9 @@ public class SecurityConfig {
                                 "/error")
                         .permitAll()
 
+                        // Service Marketplace - Public GET access
+                        .requestMatchers(HttpMethod.GET, "/api/services/**").permitAll()
+
                         // Authenticated endpoints
                         .requestMatchers("/api/notifications/**").authenticated()
 
