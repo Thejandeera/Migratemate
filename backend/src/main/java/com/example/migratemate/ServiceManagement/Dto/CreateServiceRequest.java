@@ -39,4 +39,7 @@ public class CreateServiceRequest {
 
     // Image URLs (to be populated after upload to Cloudinary)
     private List<String> imageUrls;
+
+    // Base64 encoded images for upload
+    private List<String> imagesBase64;
 }

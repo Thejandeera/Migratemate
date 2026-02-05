@@ -47,7 +47,7 @@ All endpoints return a standard response format:
 ### 1. Create Service
 **POST** `/api/services`
 
-Creates a new service listing.
+Creates a new service listing with optional image uploads.
 
 **Request Body:**
 ```json
@@ -67,9 +67,18 @@ Creates a new service listing.
   "durationType": "MINUTES",
   "availableDays": ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"],
   "availableTimeSlot": "6AM-10PM",
-  "imageUrls": ["https://example.com/image1.jpg", "https://example.com/image2.jpg"]
+  "imagesBase64": ["data:image/png;base64,iVBORw0KGgo...", "data:image/jpeg;base64,/9j/4AAQ..."],
+  "imageUrls": ["https://example.com/existing-image.jpg"]
 }
 ```
+
+**Image Upload Options:**
+| Field | Type | Description |
+|-------|------|-------------|
+| `imagesBase64` | List\<String\> | Base64 encoded images (auto-uploaded to Cloudinary) |
+| `imageUrls` | List\<String\> | Direct image URLs (optional) |
+
+> **Note:** Base64 images are automatically uploaded to Cloudinary and the returned URLs are stored.
 
 **Response (201 Created):**
 ```json
@@ -90,7 +99,7 @@ Creates a new service listing.
     "price": 85.00,
     "currency": "AUD",
     "pricingType": "FIXED",
-    "imageUrls": ["https://example.com/image1.jpg"],
+    "imageUrls": ["https://res.cloudinary.com/.../image1.png", "https://example.com/existing-image.jpg"],
     "features": ["Air-conditioned vehicle", "Luggage assistance", "Meet & Greet"],
     "maxCapacity": 4,
     "duration": 60,
@@ -106,7 +115,6 @@ Creates a new service listing.
     "updatedAt": "2026-02-01T16:00:00"
   }
 }
-```
 
 ---
 
@@ -252,12 +260,20 @@ Updates an existing service. Only the service owner can update.
   "description": "Updated description",
   "price": 95.00,
   "isAvailable": true,
+  "newImagesBase64": ["data:image/png;base64,iVBORw0KGgo..."],
   "newImageUrls": ["https://example.com/new-image.jpg"],
-  "removeImageUrls": ["https://example.com/old-image.jpg"]
+  "removeImageUrls": ["https://res.cloudinary.com/.../old-image.jpg"]
 }
 ```
 
-> **Note:** All fields are optional. Only include fields you want to update.
+**Image Update Options:**
+| Field | Type | Description |
+|-------|------|-------------|
+| `newImagesBase64` | List\<String\> | New base64 images to upload to Cloudinary |
+| `newImageUrls` | List\<String\> | New direct image URLs to add |
+| `removeImageUrls` | List\<String\> | Image URLs to remove (also deleted from Cloudinary) |
+
+> **Note:** All fields are optional. Only include fields you want to update. Removed images are automatically deleted from Cloudinary.
 
 **Response (200 OK):**
 ```json
@@ -402,10 +418,14 @@ Toggles the `isAvailable` status of a service.
 
 ## Notes
 
-1. **Image URLs**: The `imageUrls` field accepts direct URLs. Image upload functionality will be implemented later via a separate endpoint.
+1. **Image Upload**: Base64 encoded images can be sent via `imagesBase64` (create) or `newImagesBase64` (update). They are automatically uploaded to Cloudinary and stored as URLs.
 
-2. **Provider Info**: Provider details (`providerName`, `providerProfilePicture`) are automatically populated from the authenticated user's profile.
+2. **Image Deletion**: When removing images via `removeImageUrls`, they are automatically deleted from Cloudinary.
 
-3. **Timestamps**: `createdAt` and `updatedAt` are managed automatically by the system.
+3. **Provider Info**: Provider details (`providerName`, `providerProfilePicture`) are automatically populated from the authenticated user's profile.
 
-4. **Initial Values**: New services are created with `isActive=true`, `isAvailable=true`, `totalBookings=0`, `averageRating=0.0`, `totalReviews=0`.
+4. **Timestamps**: `createdAt` and `updatedAt` are managed automatically by the system.
+
+5. **Initial Values**: New services are created with `isActive=true`, `isAvailable=true`, `totalBookings=0`, `averageRating=0.0`, `totalReviews=0`.
+
+6. **Cloudinary Folder**: Service images are stored in `migratemate/services` folder on Cloudinary.
