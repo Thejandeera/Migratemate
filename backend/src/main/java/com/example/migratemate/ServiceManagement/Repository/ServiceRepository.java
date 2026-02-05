@@ -31,10 +31,19 @@ public interface ServiceRepository extends MongoRepository<ServiceEntity, String
 
     List<ServiceEntity> findByPriceBetweenAndIsActiveTrue(Double minPrice, Double maxPrice);
 
-    @Query("{ 'isActive': true, $and: [ " +
-            "{ $or: [ { $expr: { $eq: [?0, null] } }, { 'category': ?0 } ] }, " +
-            "{ $or: [ { $expr: { $eq: [?1, null] } }, { 'origin': { $regex: ?1, $options: 'i' } } ] }, " +
-            "{ $or: [ { $expr: { $eq: [?2, null] } }, { 'destination': { $regex: ?2, $options: 'i' } } ] } " +
-            "] }")
-    List<ServiceEntity> searchWithFilters(String category, String origin, String destination);
+    // Simple query - filtering will be done in service layer for null handling
+    @Query("{ 'isActive': true }")
+    List<ServiceEntity> findAllActive();
+
+    // Category-based search
+    @Query("{ 'isActive': true, 'category': ?0 }")
+    List<ServiceEntity> findByCategoryActive(String category);
+
+    // Origin-based search (case-insensitive)
+    @Query("{ 'isActive': true, 'origin': { $regex: ?0, $options: 'i' } }")
+    List<ServiceEntity> findByOriginActive(String origin);
+
+    // Destination-based search (case-insensitive)
+    @Query("{ 'isActive': true, 'destination': { $regex: ?0, $options: 'i' } }")
+    List<ServiceEntity> findByDestinationActive(String destination);
 }

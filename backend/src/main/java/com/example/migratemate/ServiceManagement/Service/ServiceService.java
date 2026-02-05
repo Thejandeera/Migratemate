@@ -201,16 +201,33 @@ public class ServiceService {
         if (request.getSearchTerm() != null && !request.getSearchTerm().isEmpty()) {
             results = serviceRepository.searchByKeyword(request.getSearchTerm());
         } else {
-            // Use filter search
-            results = serviceRepository.searchWithFilters(
-                    request.getCategory(),
-                    request.getOrigin(),
-                    request.getDestination());
+            // Start with all active services and filter in memory
+            results = serviceRepository.findAllActive();
         }
 
-        // Apply additional filters in memory
+        // Apply all filters in memory for flexibility
         return results.stream()
                 .filter(s -> {
+                    // Category filter
+                    if (request.getCategory() != null && !request.getCategory().isEmpty()) {
+                        if (!request.getCategory().equalsIgnoreCase(s.getCategory())) {
+                            return false;
+                        }
+                    }
+                    // Origin filter (case-insensitive contains)
+                    if (request.getOrigin() != null && !request.getOrigin().isEmpty()) {
+                        if (s.getOrigin() == null
+                                || !s.getOrigin().toLowerCase().contains(request.getOrigin().toLowerCase())) {
+                            return false;
+                        }
+                    }
+                    // Destination filter (case-insensitive contains)
+                    if (request.getDestination() != null && !request.getDestination().isEmpty()) {
+                        if (s.getDestination() == null
+                                || !s.getDestination().toLowerCase().contains(request.getDestination().toLowerCase())) {
+                            return false;
+                        }
+                    }
                     // Price range filter
                     if (request.getMinPrice() != null && s.getPrice() != null && s.getPrice() < request.getMinPrice()) {
                         return false;
