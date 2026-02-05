@@ -5,6 +5,7 @@ import Login from './Pages/Login'
 import LandingPage from './Pages/LandingPage'
 import Dashboard from './Pages/Dashboard'
 import Profile from './Pages/Profile'
+import MarketPlace from './Pages/MarketPlace'
 import LiveARScanner from './components/Scanner/LiveARScanner'
 
 const App = () => {
@@ -15,6 +16,7 @@ const App = () => {
       <Route path="/signup" element={<Signup />} />
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/profile" element={<Profile />} />
+      <Route path="/marketplace" element={<MarketPlace />} />
       <Route path="/scanner" element={<LiveARScanner />} />
     </Routes>
   )
