@@ -115,6 +115,7 @@ Creates a new service listing with optional image uploads.
     "updatedAt": "2026-02-01T16:00:00"
   }
 }
+```
 
 ---
 
