@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -20,9 +21,10 @@ public class ServiceService {
 
     private final ServiceRepository serviceRepository;
     private final UserRepository userRepository;
+    private final ImageUploadService imageUploadService;
 
     // Create a new service
-    public ServiceResponse createService(String email, CreateServiceRequest request) {
+    public ServiceResponse createService(String email, CreateServiceRequest request) throws IOException {
         User provider = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -46,8 +48,18 @@ public class ServiceService {
         service.setCurrency(request.getCurrency() != null ? request.getCurrency() : "AUD");
         service.setPricingType(request.getPricingType() != null ? request.getPricingType() : "FIXED");
 
-        // Service details - use imageUrls directly (to be implemented later)
-        service.setImageUrls(request.getImageUrls());
+        // Upload base64 images to Cloudinary
+        List<String> imageUrls = new ArrayList<>();
+        if (request.getImagesBase64() != null && !request.getImagesBase64().isEmpty()) {
+            imageUrls = imageUploadService.uploadServiceImages(request.getImagesBase64());
+            log.info("Uploaded {} images to Cloudinary", imageUrls.size());
+        }
+        // Also add any direct URLs provided
+        if (request.getImageUrls() != null && !request.getImageUrls().isEmpty()) {
+            imageUrls.addAll(request.getImageUrls());
+        }
+        service.setImageUrls(imageUrls);
+
         service.setFeatures(request.getFeatures());
         service.setMaxCapacity(request.getMaxCapacity());
         service.setDuration(request.getDuration());
@@ -75,7 +87,8 @@ public class ServiceService {
     }
 
     // Update an existing service
-    public ServiceResponse updateService(String serviceId, String email, UpdateServiceRequest request) {
+    public ServiceResponse updateService(String serviceId, String email, UpdateServiceRequest request)
+            throws IOException {
         ServiceEntity service = serviceRepository.findById(serviceId)
                 .orElseThrow(() -> new RuntimeException("Service not found"));
 
@@ -123,16 +136,28 @@ public class ServiceService {
         if (request.getAvailableTimeSlot() != null)
             service.setAvailableTimeSlot(request.getAvailableTimeSlot());
 
-        // Handle image URL updates
+        // Handle image updates
         List<String> currentImages = service.getImageUrls() != null ? new ArrayList<>(service.getImageUrls())
                 : new ArrayList<>();
 
-        // Remove specified images
+        // Remove specified images from Cloudinary and list
         if (request.getRemoveImageUrls() != null && !request.getRemoveImageUrls().isEmpty()) {
-            currentImages.removeAll(request.getRemoveImageUrls());
+            for (String urlToRemove : request.getRemoveImageUrls()) {
+                if (currentImages.remove(urlToRemove)) {
+                    imageUploadService.deleteServiceImage(urlToRemove);
+                    log.info("Deleted image from Cloudinary: {}", urlToRemove);
+                }
+            }
         }
 
-        // Add new image URLs directly (to be implemented later)
+        // Upload new base64 images to Cloudinary
+        if (request.getNewImagesBase64() != null && !request.getNewImagesBase64().isEmpty()) {
+            List<String> newUrls = imageUploadService.uploadServiceImages(request.getNewImagesBase64());
+            currentImages.addAll(newUrls);
+            log.info("Uploaded {} new images to Cloudinary", newUrls.size());
+        }
+
+        // Add new direct URLs if provided
         if (request.getNewImageUrls() != null && !request.getNewImageUrls().isEmpty()) {
             currentImages.addAll(request.getNewImageUrls());
         }

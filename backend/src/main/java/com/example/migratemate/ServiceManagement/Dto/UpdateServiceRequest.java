@@ -42,6 +42,9 @@ public class UpdateServiceRequest {
     // New image URLs to add (after Cloudinary upload)
     private List<String> newImageUrls;
 
+    // Base64 encoded images for upload
+    private List<String> newImagesBase64;
+
     // Image URLs to remove
     private List<String> removeImageUrls;
 }

@@ -21,7 +21,7 @@ public class ServiceController {
 
     private final ServiceService serviceService;
 
-    // Create a new service (requires authentication)
+    // Create a new service (requires authentication bearer tolken)
     @PostMapping
     public ResponseEntity<ApiResponse<ServiceResponse>> createService(@RequestBody CreateServiceRequest request) {
         try {
@@ -201,6 +201,13 @@ public class ServiceController {
                     .body(ApiResponse.<ServiceResponse>builder()
                             .success(false)
                             .message(e.getMessage())
+                            .build());
+        } catch (Exception e) {
+            log.error("Failed to update service: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<ServiceResponse>builder()
+                            .success(false)
+                            .message("Failed to update service: " + e.getMessage())
                             .build());
         }
     }
