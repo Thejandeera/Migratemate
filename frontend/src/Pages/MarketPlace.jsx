@@ -302,7 +302,9 @@ const MarketPlace = () => {
             };
 
             const data = await searchServices(filters);
-            setServices(data || []);
+            // Filter out inactive services (double-check on frontend)
+            const activeServices = (data || []).filter(s => s.isAvailable !== false && s.available !== false);
+            setServices(activeServices);
         } catch (err) {
             console.error('Failed to fetch services:', err);
             setError(err.message || 'Failed to load services');

@@ -62,8 +62,12 @@ const CreateGigForm = ({ isOpen, onClose, onSuccess, editGig = null }) => {
         images: []
     });
 
-    // Image previews
+    // Image previews (for new images uploaded)
     const [imagePreviews, setImagePreviews] = useState([]);
+    // Existing image URLs from editGig (for edit mode)
+    const [existingImageUrls, setExistingImageUrls] = useState([]);
+    // URLs of existing images to be removed (for edit mode)
+    const [removedImageUrls, setRemovedImageUrls] = useState([]);
 
     // Pre-fill form data when editing
     React.useEffect(() => {
@@ -86,10 +90,14 @@ const CreateGigForm = ({ isOpen, onClose, onSuccess, editGig = null }) => {
                 availableTimeSlot: editGig.availableTimeSlot || '',
                 images: []
             });
-            // Set existing image URLs as previews
+            // Set existing image URLs separately
             if (editGig.imageUrls?.length > 0) {
-                setImagePreviews(editGig.imageUrls);
+                setExistingImageUrls(editGig.imageUrls);
+            } else {
+                setExistingImageUrls([]);
             }
+            setImagePreviews([]);
+            setRemovedImageUrls([]);
             setCurrentStep(1);
             setError(null);
         } else if (!isOpen) {
@@ -113,6 +121,8 @@ const CreateGigForm = ({ isOpen, onClose, onSuccess, editGig = null }) => {
                 images: []
             });
             setImagePreviews([]);
+            setExistingImageUrls([]);
+            setRemovedImageUrls([]);
             setCurrentStep(1);
             setError(null);
         }
@@ -161,6 +171,13 @@ const CreateGigForm = ({ isOpen, onClose, onSuccess, editGig = null }) => {
             images: prev.images.filter((_, i) => i !== index)
         }));
         setImagePreviews(prev => prev.filter((_, i) => i !== index));
+    };
+
+    // Remove existing image (for edit mode)
+    const removeExistingImage = (index) => {
+        const urlToRemove = existingImageUrls[index];
+        setRemovedImageUrls(prev => [...prev, urlToRemove]);
+        setExistingImageUrls(prev => prev.filter((_, i) => i !== index));
     };
 
     const handleDragOver = (e) => {
@@ -247,6 +264,11 @@ const CreateGigForm = ({ isOpen, onClose, onSuccess, editGig = null }) => {
                     // For creates, use imagesBase64
                     requestBody.imagesBase64 = base64Images;
                 }
+            }
+
+            // For updates, include images to remove
+            if (isEditMode && removedImageUrls.length > 0) {
+                requestBody.removeImageUrls = removedImageUrls;
             }
 
             const API_URL = `${import.meta.env.VITE_API_BASE_URL}/api`;
@@ -614,24 +636,53 @@ const CreateGigForm = ({ isOpen, onClose, onSuccess, editGig = null }) => {
                                 </div>
                             </div>
 
-                            {/* Image Previews */}
+                            {/* Existing Images (Edit Mode) */}
+                            {isEditMode && existingImageUrls.length > 0 && (
+                                <div>
+                                    <p className="text-sm font-medium text-gray-700 mb-2">Current Images</p>
+                                    <div className="grid grid-cols-5 gap-3">
+                                        {existingImageUrls.map((url, index) => (
+                                            <div key={`existing-${index}`} className="relative group">
+                                                <img
+                                                    src={url}
+                                                    alt={`Existing ${index + 1}`}
+                                                    className="w-full h-24 object-cover rounded-lg border border-gray-200"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeExistingImage(index)}
+                                                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+                                                >
+                                                    <X className="w-3 h-3" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* New Image Previews */}
                             {imagePreviews.length > 0 && (
-                                <div className="grid grid-cols-5 gap-3">
-                                    {imagePreviews.map((preview, index) => (
-                                        <div key={index} className="relative group">
-                                            <img
-                                                src={preview}
-                                                alt={`Preview ${index + 1}`}
-                                                className="w-full h-24 object-cover rounded-lg border border-gray-200"
-                                            />
-                                            <button
-                                                onClick={() => removeImage(index)}
-                                                className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                            >
-                                                <X className="w-3 h-3" />
-                                            </button>
-                                        </div>
-                                    ))}
+                                <div>
+                                    <p className="text-sm font-medium text-gray-700 mb-2">New Images</p>
+                                    <div className="grid grid-cols-5 gap-3">
+                                        {imagePreviews.map((preview, index) => (
+                                            <div key={`new-${index}`} className="relative group">
+                                                <img
+                                                    src={preview}
+                                                    alt={`Preview ${index + 1}`}
+                                                    className="w-full h-24 object-cover rounded-lg border border-green-200"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={() => removeImage(index)}
+                                                    className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md"
+                                                >
+                                                    <X className="w-3 h-3" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             )}
                         </div>
