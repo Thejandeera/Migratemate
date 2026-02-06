@@ -219,7 +219,7 @@ const CreateGigForm = ({ isOpen, onClose, onSuccess, editGig = null }) => {
                 })
             );
 
-            // Prepare request body
+            // Prepare request body - different image field names for create vs update
             const requestBody = {
                 title: formData.title,
                 description: formData.description || formData.title,
@@ -235,9 +235,19 @@ const CreateGigForm = ({ isOpen, onClose, onSuccess, editGig = null }) => {
                 duration: formData.duration ? parseInt(formData.duration) : null,
                 durationType: formData.durationType,
                 availableDays: formData.availableDays.map(day => day.toUpperCase()),
-                availableTimeSlot: formData.availableTimeSlot || null,
-                imagesBase64: base64Images.length > 0 ? base64Images : undefined
+                availableTimeSlot: formData.availableTimeSlot || null
             };
+
+            // Add images with correct field name based on mode
+            if (base64Images.length > 0) {
+                if (isEditMode) {
+                    // For updates, use newImagesBase64
+                    requestBody.newImagesBase64 = base64Images;
+                } else {
+                    // For creates, use imagesBase64
+                    requestBody.imagesBase64 = base64Images;
+                }
+            }
 
             const API_URL = `${import.meta.env.VITE_API_BASE_URL}/api`;
             const url = isEditMode
