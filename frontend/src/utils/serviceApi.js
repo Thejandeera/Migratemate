@@ -10,11 +10,11 @@ export const getAllServices = async () => {
     try {
         const response = await fetch(`${API_URL}/services`);
         const data = await response.json();
-        
+
         if (!response.ok || !data.success) {
             throw new Error(data.message || 'Failed to fetch services');
         }
-        
+
         return data.data;
     } catch (error) {
         console.error('Error fetching services:', error);
@@ -27,11 +27,11 @@ export const getServiceById = async (id) => {
     try {
         const response = await fetch(`${API_URL}/services/${id}`);
         const data = await response.json();
-        
+
         if (!response.ok || !data.success) {
             throw new Error(data.message || 'Service not found');
         }
-        
+
         return data.data;
     } catch (error) {
         console.error('Error fetching service:', error);
@@ -44,11 +44,11 @@ export const getServicesByCategory = async (category) => {
     try {
         const response = await fetch(`${API_URL}/services/category/${category}`);
         const data = await response.json();
-        
+
         if (!response.ok || !data.success) {
             throw new Error(data.message || 'Failed to fetch services by category');
         }
-        
+
         return data.data;
     } catch (error) {
         console.error('Error fetching services by category:', error);
@@ -72,7 +72,7 @@ export const searchServices = async (filters = {}) => {
     try {
         // Build query string from non-null filters
         const params = new URLSearchParams();
-        
+
         if (filters.category) params.append('category', filters.category);
         if (filters.origin) params.append('origin', filters.origin);
         if (filters.destination) params.append('destination', filters.destination);
@@ -81,20 +81,55 @@ export const searchServices = async (filters = {}) => {
         if (filters.searchTerm) params.append('searchTerm', filters.searchTerm);
         if (filters.pricingType) params.append('pricingType', filters.pricingType);
         if (filters.availableOnly !== undefined && filters.availableOnly !== null) params.append('availableOnly', filters.availableOnly);
-        
+
         const queryString = params.toString();
         const url = queryString ? `${API_URL}/services/search?${queryString}` : `${API_URL}/services/search`;
-        
+
         const response = await fetch(url);
         const data = await response.json();
-        
+
         if (!response.ok || !data.success) {
             throw new Error(data.message || 'Search failed');
         }
-        
+
         return data.data;
     } catch (error) {
         console.error('Error searching services:', error);
+        throw error;
+    }
+};
+
+// Get services created by the authenticated user (requires auth)
+export const getMyServices = async () => {
+    try {
+        // Get token from auth storage (matching pattern from api.js)
+        let token = null;
+        try {
+            const authData = JSON.parse(sessionStorage.getItem('migratemate_auth') || localStorage.getItem('migratemate_auth'));
+            token = authData?.token;
+        } catch (e) {
+            console.error("Error parsing auth data", e);
+        }
+
+        if (!token) {
+            throw new Error('Not authenticated');
+        }
+
+        const response = await fetch(`${API_URL}/services/my-services`, {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || 'Failed to fetch your services');
+        }
+
+        return data.data;
+    } catch (error) {
+        console.error('Error fetching my services:', error);
         throw error;
     }
 };
