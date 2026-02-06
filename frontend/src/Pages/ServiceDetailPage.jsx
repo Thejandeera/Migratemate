@@ -20,7 +20,6 @@ import {
     MessageCircle
 } from 'lucide-react';
 
-// Category display names
 const CATEGORY_NAMES = {
     'TRANSPORT': 'Transport',
     'HOUSING': 'Housing',
@@ -28,28 +27,24 @@ const CATEGORY_NAMES = {
     'CULTURAL_SUPPORT': 'Cultural Support',
 };
 
-// Pricing type display
 const PRICING_TYPE_NAMES = {
     'FIXED': 'Fixed Price',
     'HOURLY': 'Per Hour',
     'NEGOTIABLE': 'Negotiable',
 };
 
-// Duration type display
 const DURATION_TYPE_NAMES = {
     'MINUTES': 'min',
     'HOURS': 'hrs',
     'DAYS': 'days',
 };
 
-// Badge Component
 const Badge = ({ children, className = '' }) => (
     <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${className}`}>
         {children}
     </span>
 );
 
-// Review Card Component
 const ReviewCard = ({ name, initial, date, rating, text, verified = true }) => (
     <div className="bg-gray-50 rounded-xl p-6 mb-4">
         <div className="flex items-start justify-between mb-3">
@@ -235,12 +230,11 @@ const ServiceDetailPage = () => {
             setSelectedImageIndex((prev) =>
                 prev >= service.imageUrls.length - 1 ? 0 : prev + 1
             );
-        }, 4000); // Change image every 4 seconds
+        }, 4000);
 
         return () => clearInterval(interval);
     }, [service?.imageUrls, isPaused]);
 
-    // Handle thumbnail click
     const handleImageClick = (index) => {
         setSelectedImageIndex(index);
         setIsPaused(true);
@@ -248,13 +242,10 @@ const ServiceDetailPage = () => {
         setTimeout(() => setIsPaused(false), 10000);
     };
 
-    // Get category display name
     const categoryDisplay = service?.category ? (CATEGORY_NAMES[service.category] || service.category) : '';
 
-    // Get selected image or placeholder
     const heroImage = service?.imageUrls?.[selectedImageIndex] || service?.imageUrls?.[0] || 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80&w=1200';
 
-    // Location display
     const locationDisplay = service?.specificLocation || service?.destination || 'Location TBD';
 
     return (
