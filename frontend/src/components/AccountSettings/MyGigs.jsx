@@ -18,7 +18,7 @@ const MyGigs = () => {
     const [openMenuId, setOpenMenuId] = useState(null);
     const [editGig, setEditGig] = useState(null);
 
-    // Mock data for views and bookings (to be replaced with real API later)
+    // Mock data for views and bookings To be implemented with booking system
     const mockStats = {
         totalViews: 165,
         totalBookings: 31,
@@ -33,7 +33,6 @@ const MyGigs = () => {
                 setError(null);
                 const data = await getMyServices();
                 // Add mock views and bookings to each gig
-                // Also normalize isAvailable to available
                 const gigsWithMockData = data.map(gig => ({
                     ...gig,
                     available: gig.available ?? gig.isAvailable ?? true,
@@ -54,12 +53,10 @@ const MyGigs = () => {
 
     const handleGigCreated = (gig, isUpdate = false) => {
         if (isUpdate) {
-            // Update existing gig in the list
             setGigs(prev => prev.map(g =>
                 g.id === gig.id ? { ...gig, views: g.views, bookings: g.bookings } : g
             ));
         } else {
-            // Add new gig to the list
             setGigs(prev => [{
                 ...gig,
                 views: mockStats.viewsPerGig(),
@@ -75,24 +72,20 @@ const MyGigs = () => {
         { label: 'Total Bookings', value: mockStats.totalBookings.toString(), icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z', color: 'bg-green-100 text-green-600' },
     ];
 
-    // Get first image or placeholder
     const getGigImage = (gig) => {
         return gig.imageUrls?.[0] || 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80&w=800';
     };
 
-    // Get location display
     const getLocation = (gig) => {
         return gig.specificLocation || gig.destination || 'Remote';
     };
 
-    // Get price display
     const getPriceDisplay = (gig) => {
         const price = gig.price || 0;
         const currency = gig.currency || 'AUD';
         return `${price} ${currency}`;
     };
 
-    // Get pricing unit
     const getPricingUnit = (gig) => {
         const units = {
             'FIXED': 'service',
@@ -102,22 +95,18 @@ const MyGigs = () => {
         return units[gig.pricingType] || 'service';
     };
 
-    // Toggle dropdown menu
     const toggleMenu = (gigId) => {
         setOpenMenuId(openMenuId === gigId ? null : gigId);
     };
 
-    // Close menu when clicking outside
     const closeMenu = () => setOpenMenuId(null);
 
-    // Handle Update
     const handleUpdate = (gig) => {
         setEditGig(gig);
         setShowCreateForm(true);
         setOpenMenuId(null);
     };
 
-    // Handle Delete
     const handleDelete = async (gigId) => {
         if (!window.confirm('Are you sure you want to delete this service?')) return;
 
