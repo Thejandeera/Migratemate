@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { searchServices, getAllServices } from '../utils/serviceApi';
@@ -44,6 +44,7 @@ const LOCATIONS = ['All Locations', 'Sydney', 'Melbourne', 'Brisbane', 'Perth', 
 
 // Service Card Component - adapted for API data format
 const ServiceCard = ({ service }) => {
+    const navigate = useNavigate();
     const {
         id,
         title,
@@ -75,12 +76,18 @@ const ServiceCard = ({ service }) => {
     // Location display - prefer specificLocation, then destination
     const locationDisplay = specificLocation || destination || 'Location TBD';
 
+    // Handle card click to navigate to service detail
+    const handleCardClick = () => {
+        navigate(`/service/${id}`);
+    };
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 group"
+            onClick={handleCardClick}
+            className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 group cursor-pointer"
         >
             {/* Image */}
             <div className="relative h-48 overflow-hidden">
@@ -163,12 +170,11 @@ const ServiceCard = ({ service }) => {
                                 <span className="text-xs text-gray-400">Helper</span>
                             </div>
                         </div>
-                        <Link
-                            to={`/service/${id}`}
-                            className="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-semibold rounded-lg hover:bg-[#22C55E] hover:text-white transition-all duration-200"
+                        <span
+                            className="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-semibold rounded-lg group-hover:bg-[#22C55E] group-hover:text-white transition-all duration-200"
                         >
                             View
-                        </Link>
+                        </span>
                     </div>
                 </div>
             </div>
