@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getMyServices } from '../../utils/serviceApi';
+import CreateGigForm from './CreateGigForm';
 
 // Category display names
 const CATEGORY_NAMES = {
@@ -13,6 +14,9 @@ const MyGigs = () => {
     const [gigs, setGigs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [showCreateForm, setShowCreateForm] = useState(false);
+    const [openMenuId, setOpenMenuId] = useState(null);
+    const [editGig, setEditGig] = useState(null);
 
     // Mock data for views and bookings (to be replaced with real API later)
     const mockStats = {
@@ -29,8 +33,10 @@ const MyGigs = () => {
                 setError(null);
                 const data = await getMyServices();
                 // Add mock views and bookings to each gig
+                // Also normalize isAvailable to available
                 const gigsWithMockData = data.map(gig => ({
                     ...gig,
+                    available: gig.available ?? gig.isAvailable ?? true,
                     views: mockStats.viewsPerGig(),
                     bookings: mockStats.bookingsPerGig()
                 }));
@@ -45,6 +51,23 @@ const MyGigs = () => {
 
         fetchMyGigs();
     }, []);
+
+    const handleGigCreated = (gig, isUpdate = false) => {
+        if (isUpdate) {
+            // Update existing gig in the list
+            setGigs(prev => prev.map(g =>
+                g.id === gig.id ? { ...gig, views: g.views, bookings: g.bookings } : g
+            ));
+        } else {
+            // Add new gig to the list
+            setGigs(prev => [{
+                ...gig,
+                views: mockStats.viewsPerGig(),
+                bookings: mockStats.bookingsPerGig()
+            }, ...prev]);
+        }
+        setEditGig(null);
+    };
 
     const stats = [
         { label: 'Active Gigs', value: gigs.length.toString(), icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4', color: 'bg-green-100 text-green-600' },
@@ -79,6 +102,90 @@ const MyGigs = () => {
         return units[gig.pricingType] || 'service';
     };
 
+    // Toggle dropdown menu
+    const toggleMenu = (gigId) => {
+        setOpenMenuId(openMenuId === gigId ? null : gigId);
+    };
+
+    // Close menu when clicking outside
+    const closeMenu = () => setOpenMenuId(null);
+
+    // Handle Update
+    const handleUpdate = (gig) => {
+        setEditGig(gig);
+        setShowCreateForm(true);
+        setOpenMenuId(null);
+    };
+
+    // Handle Delete
+    const handleDelete = async (gigId) => {
+        if (!window.confirm('Are you sure you want to delete this service?')) return;
+
+        try {
+            let token = null;
+            try {
+                const authData = JSON.parse(sessionStorage.getItem('migratemate_auth') || localStorage.getItem('migratemate_auth'));
+                token = authData?.token;
+            } catch (e) {
+                console.error("Error parsing auth data", e);
+            }
+
+            const API_URL = `${import.meta.env.VITE_API_BASE_URL}/api`;
+            const response = await fetch(`${API_URL}/services/${gigId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                setGigs(prev => prev.filter(g => g.id !== gigId));
+            } else {
+                alert('Failed to delete service');
+            }
+        } catch (err) {
+            console.error('Error deleting service:', err);
+            alert('Failed to delete service');
+        }
+        setOpenMenuId(null);
+    };
+
+    // Handle Toggle Active
+    const handleToggle = async (gig) => {
+        try {
+            let token = null;
+            try {
+                const authData = JSON.parse(sessionStorage.getItem('migratemate_auth') || localStorage.getItem('migratemate_auth'));
+                token = authData?.token;
+            } catch (e) {
+                console.error("Error parsing auth data", e);
+            }
+
+            const API_URL = `${import.meta.env.VITE_API_BASE_URL}/api`;
+            const response = await fetch(`${API_URL}/services/${gig.id}/toggle`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            const data = await response.json();
+            if (response.ok && data.success) {
+                // API returns isAvailable, but we use available in the UI
+                const newAvailableStatus = data.data.isAvailable ?? data.data.available;
+                setGigs(prev => prev.map(g =>
+                    g.id === gig.id ? { ...g, available: newAvailableStatus, isAvailable: newAvailableStatus } : g
+                ));
+            } else {
+                alert('Failed to toggle service status');
+            }
+        } catch (err) {
+            console.error('Error toggling service:', err);
+            alert('Failed to toggle service status');
+        }
+        setOpenMenuId(null);
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -86,7 +193,10 @@ const MyGigs = () => {
                     <h3 className="text-lg font-semibold text-gray-900">My Service Listings</h3>
                     <p className="text-sm text-gray-500">Manage the services you offer to other migrants</p>
                 </div>
-                <button className="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition flex items-center gap-2 shadow-sm">
+                <button
+                    onClick={() => setShowCreateForm(true)}
+                    className="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition flex items-center gap-2 shadow-sm"
+                >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
                     Create New Gig
                 </button>
@@ -169,8 +279,8 @@ const MyGigs = () => {
                                             <div className="flex items-center gap-2 mb-1">
                                                 <h4 className="font-bold text-gray-900 line-clamp-1">{gig.title}</h4>
                                                 <span className={`px-2 py-0.5 text-[10px] font-bold uppercase rounded-full tracking-wide ${gig.available
-                                                        ? 'bg-green-100 text-green-700'
-                                                        : 'bg-gray-100 text-gray-600'
+                                                    ? 'bg-green-100 text-green-700'
+                                                    : 'bg-gray-100 text-gray-600'
                                                     }`}>
                                                     {gig.available ? 'Active' : 'Inactive'}
                                                 </span>
@@ -182,9 +292,47 @@ const MyGigs = () => {
                                                 {gig.description}
                                             </p>
                                         </div>
-                                        <button className="text-gray-400 hover:text-gray-600 p-1">
-                                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" /></svg>
-                                        </button>
+                                        <div className="relative">
+                                            <button
+                                                onClick={() => toggleMenu(gig.id)}
+                                                className="text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-100 rounded-lg transition"
+                                            >
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" /></svg>
+                                            </button>
+
+                                            {/* Dropdown Menu */}
+                                            {openMenuId === gig.id && (
+                                                <>
+                                                    <div
+                                                        className="fixed inset-0 z-10"
+                                                        onClick={closeMenu}
+                                                    />
+                                                    <div className="absolute right-0 top-8 w-40 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-20">
+                                                        <button
+                                                            onClick={() => handleUpdate(gig)}
+                                                            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                                            Update
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleToggle(gig)}
+                                                            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
+                                                            {gig.available ? 'Deactivate' : 'Activate'}
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDelete(gig.id)}
+                                                            className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                            Delete
+                                                        </button>
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
                                     </div>
 
                                     <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-50">
@@ -208,6 +356,17 @@ const MyGigs = () => {
                     ))}
                 </div>
             )}
+
+            {/* Create/Edit Gig Modal */}
+            <CreateGigForm
+                isOpen={showCreateForm}
+                onClose={() => {
+                    setShowCreateForm(false);
+                    setEditGig(null);
+                }}
+                onSuccess={handleGigCreated}
+                editGig={editGig}
+            />
         </div>
     );
 };
