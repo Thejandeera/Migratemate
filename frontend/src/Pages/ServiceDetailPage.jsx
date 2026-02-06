@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { getServiceById } from '../utils/serviceApi';
@@ -196,6 +196,8 @@ const ServiceDetailPage = () => {
     const [service, setService] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+    const [isPaused, setIsPaused] = useState(false);
 
     // Fetch service data
     useEffect(() => {
@@ -223,18 +225,44 @@ const ServiceDetailPage = () => {
         fetchService();
     }, [id]);
 
+    // Auto-slideshow effect
+    useEffect(() => {
+        if (!service?.imageUrls || service.imageUrls.length <= 1 || isPaused) {
+            return;
+        }
+
+        const interval = setInterval(() => {
+            setSelectedImageIndex((prev) =>
+                prev >= service.imageUrls.length - 1 ? 0 : prev + 1
+            );
+        }, 4000); // Change image every 4 seconds
+
+        return () => clearInterval(interval);
+    }, [service?.imageUrls, isPaused]);
+
+    // Handle thumbnail click
+    const handleImageClick = (index) => {
+        setSelectedImageIndex(index);
+        setIsPaused(true);
+        // Resume slideshow after 10 seconds of inactivity
+        setTimeout(() => setIsPaused(false), 10000);
+    };
+
     // Get category display name
     const categoryDisplay = service?.category ? (CATEGORY_NAMES[service.category] || service.category) : '';
 
-    // Get first image or placeholder
-    const heroImage = service?.imageUrls?.[0] || 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80&w=1200';
+    // Get selected image or placeholder
+    const heroImage = service?.imageUrls?.[selectedImageIndex] || service?.imageUrls?.[0] || 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80&w=1200';
 
     // Location display
     const locationDisplay = service?.specificLocation || service?.destination || 'Location TBD';
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+        <div className="min-h-screen bg-gray-50 flex flex-col font-sans relative">
             <Navbar />
+
+            {/* Top gradient shadow */}
+            <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black/10 to-transparent pointer-events-none z-10"></div>
 
             <main className="flex-grow pt-20 pb-16">
                 {/* Back Navigation */}
@@ -297,34 +325,64 @@ const ServiceDetailPage = () => {
                         <div className="flex flex-col lg:flex-row gap-8">
                             {/* Main Content */}
                             <div className="flex-1">
-                                {/* Hero Image */}
+                                {/* Hero Image with Slideshow */}
                                 <div className="relative h-[400px] rounded-2xl overflow-hidden mb-8 shadow-sm">
-                                    <img
-                                        src={heroImage}
-                                        alt={service.title}
-                                        className="w-full h-full object-cover"
-                                        onError={(e) => {
-                                            e.target.src = 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80&w=1200';
-                                        }}
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
-                                    <div className="absolute top-6 left-6">
+                                    <AnimatePresence mode="wait">
+                                        <motion.img
+                                            key={selectedImageIndex}
+                                            src={heroImage}
+                                            alt={service.title}
+                                            className="w-full h-full object-cover absolute inset-0"
+                                            initial={{ opacity: 0, scale: 1.05 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            exit={{ opacity: 0, scale: 0.95 }}
+                                            transition={{ duration: 0.5, ease: 'easeInOut' }}
+                                            onError={(e) => {
+                                                e.target.src = 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80&w=1200';
+                                            }}
+                                        />
+                                    </AnimatePresence>
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent pointer-events-none"></div>
+                                    <div className="absolute top-6 left-6 z-10">
                                         <Badge className="bg-white/90 backdrop-blur text-gray-900 shadow-sm">
                                             {categoryDisplay}
                                         </Badge>
                                     </div>
+                                    {/* Slideshow indicators */}
+                                    {service.imageUrls && service.imageUrls.length > 1 && (
+                                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                                            {service.imageUrls.map((_, index) => (
+                                                <button
+                                                    key={index}
+                                                    onClick={() => handleImageClick(index)}
+                                                    className={`w-2 h-2 rounded-full transition-all duration-300 ${selectedImageIndex === index
+                                                        ? 'bg-white w-6'
+                                                        : 'bg-white/50 hover:bg-white/75'
+                                                        }`}
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Image Gallery (if multiple images) */}
                                 {service.imageUrls && service.imageUrls.length > 1 && (
                                     <div className="flex gap-3 mb-8 overflow-x-auto pb-2">
                                         {service.imageUrls.map((url, index) => (
-                                            <img
+                                            <div
                                                 key={index}
-                                                src={url}
-                                                alt={`${service.title} - ${index + 1}`}
-                                                className="w-24 h-24 rounded-lg object-cover flex-shrink-0 cursor-pointer hover:ring-2 hover:ring-[#22C55E] transition-all"
-                                            />
+                                                onClick={() => handleImageClick(index)}
+                                                className={`flex-shrink-0 cursor-pointer rounded-lg overflow-hidden transition-all border-2 ${selectedImageIndex === index
+                                                    ? 'border-[#22C55E]'
+                                                    : 'border-transparent hover:border-[#22C55E]/50'
+                                                    }`}
+                                            >
+                                                <img
+                                                    src={url}
+                                                    alt={`${service.title} - ${index + 1}`}
+                                                    className="w-24 h-24 object-cover"
+                                                />
+                                            </div>
                                         ))}
                                     </div>
                                 )}

@@ -59,6 +59,7 @@ const ServiceCard = ({ service }) => {
         providerName,
         providerProfilePicture,
         description,
+        isVerified = true,
     } = service;
 
     // Get display name for category
@@ -68,7 +69,7 @@ const ServiceCard = ({ service }) => {
     const displayImage = imageUrls?.[0] || 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80&w=1000';
 
     // Format price display
-    const priceDisplay = `$${price?.toFixed(0) || 0} ${currency}`;
+    const priceDisplay = `$${price?.toFixed(0) || 0}`;
 
     // Get provider initial
     const providerInitial = providerName?.charAt(0)?.toUpperCase() || 'P';
@@ -87,30 +88,21 @@ const ServiceCard = ({ service }) => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
             onClick={handleCardClick}
-            className="bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 group cursor-pointer"
+            className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-transform duration-200 hover:-translate-y-1 hover:shadow-md group cursor-pointer h-full"
         >
             {/* Image */}
             <div className="relative h-48 overflow-hidden">
                 <img
                     src={displayImage}
                     alt={title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     onError={(e) => {
                         e.target.src = 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80&w=1000';
                     }}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
-
-                {/* Category Badge */}
-                <div className="absolute top-3 left-3">
-                    <span className="px-3 py-1 bg-white/90 backdrop-blur-sm text-xs font-semibold text-gray-700 rounded-full">
-                        {categoryDisplay}
-                    </span>
-                </div>
-
                 {/* Price Badge */}
-                <div className="absolute bottom-3 right-3">
-                    <span className="px-3 py-1.5 bg-[#22C55E] text-white text-sm font-bold rounded-lg shadow-lg">
+                <div className="absolute top-3 right-3">
+                    <span className="bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-bold text-gray-900 shadow-sm">
                         {priceDisplay}
                     </span>
                 </div>
@@ -118,64 +110,57 @@ const ServiceCard = ({ service }) => {
 
             {/* Content */}
             <div className="p-5">
-                {/* Title */}
-                <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-1 group-hover:text-[#22C55E] transition-colors">
-                    {title}
-                </h3>
-
-                {/* Description */}
-                <p className="text-sm text-gray-500 mb-4 line-clamp-2">
-                    {description}
-                </p>
-
-                {/* Rating & Location */}
-                <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-1">
-                        <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                        <span className="text-sm font-semibold text-gray-900">{averageRating?.toFixed(1) || '0.0'}</span>
-                        <span className="text-xs text-gray-400">({totalReviews} reviews)</span>
-                    </div>
-                    <div className="flex items-center gap-1 text-gray-500">
-                        <MapPin className="w-4 h-4" />
-                        <span className="text-xs font-medium">{locationDisplay}</span>
+                {/* Category & Rating */}
+                <div className="flex justify-between items-start mb-2">
+                    <span className="text-xs font-semibold text-[#22C55E] uppercase tracking-wide">
+                        {categoryDisplay}
+                    </span>
+                    <div className="flex items-center text-yellow-400 text-sm font-bold">
+                        <Star className="w-4 h-4 fill-current mr-1" />
+                        {averageRating?.toFixed(1) || '0.0'}
                     </div>
                 </div>
 
-                {/* Divider */}
-                <div className="border-t border-gray-100 pt-4">
-                    {/* Provider */}
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            {providerProfilePicture ? (
-                                <img
-                                    src={providerProfilePicture}
-                                    alt={providerName}
-                                    className="w-10 h-10 rounded-full object-cover shadow-md"
-                                    onError={(e) => {
-                                        e.target.style.display = 'none';
-                                        e.target.nextSibling.style.display = 'flex';
-                                    }}
-                                />
-                            ) : null}
-                            <div
-                                className={`w-10 h-10 bg-gradient-to-br from-[#22C55E] to-[#16A34A] rounded-full flex items-center justify-center text-white font-bold text-sm shadow-md ${providerProfilePicture ? 'hidden' : ''}`}
-                            >
-                                {providerInitial}
-                            </div>
-                            <div>
-                                <div className="flex items-center gap-1.5">
-                                    <span className="text-sm font-semibold text-gray-900">{providerName || 'Provider'}</span>
-                                    <CheckCircle className="w-4 h-4 text-[#22C55E]" />
-                                </div>
-                                <span className="text-xs text-gray-400">Helper</span>
-                            </div>
-                        </div>
-                        <span
-                            className="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-semibold rounded-lg group-hover:bg-[#22C55E] group-hover:text-white transition-all duration-200"
+                {/* Title */}
+                <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-[#22C55E] transition-colors">
+                    {title}
+                </h3>
+
+                {/* Location */}
+                <div className="flex items-center text-gray-500 text-sm mb-4">
+                    <MapPin className="w-4 h-4 mr-1.5" />
+                    {locationDisplay}
+                </div>
+
+                {/* Provider Section */}
+                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                    <div className="flex items-center gap-3">
+                        {providerProfilePicture ? (
+                            <img
+                                src={providerProfilePicture}
+                                alt={providerName}
+                                className="w-8 h-8 rounded-full object-cover"
+                                onError={(e) => {
+                                    e.target.style.display = 'none';
+                                    e.target.nextSibling.style.display = 'flex';
+                                }}
+                            />
+                        ) : null}
+                        <div
+                            className={`w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-medium text-sm ${providerProfilePicture ? 'hidden' : ''}`}
                         >
-                            View
+                            {providerInitial}
+                        </div>
+                        <span className="text-sm font-medium text-gray-700">
+                            {providerName || 'Provider'}
                         </span>
                     </div>
+                    {isVerified && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">
+                            <CheckCircle className="w-3 h-3" />
+                            Verified
+                        </span>
+                    )}
                 </div>
             </div>
         </motion.div>
@@ -184,40 +169,51 @@ const ServiceCard = ({ service }) => {
 
 // Filter Sidebar Component
 const FilterSidebar = ({ selectedCategory, setSelectedCategory, selectedLocation, setSelectedLocation, priceRange, setPriceRange, verifiedOnly, setVerifiedOnly }) => {
+    // Price range options
+    const PRICE_RANGES = [
+        { label: 'Any Price', value: 200, id: 'any' },
+        { label: 'Under $50', value: 50, id: 'under-50' },
+        { label: '$50 - $100', value: 100, id: '50-100' },
+        { label: '$100+', value: 200, id: 'over-100' },
+    ];
+
     return (
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 sticky top-24">
-            <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-bold text-gray-900">Filters</h3>
-                <button className="text-xs font-medium text-[#22C55E] hover:underline">
-                    Reset All
-                </button>
+        <div className="space-y-8">
+            {/* Header */}
+            <div className="flex items-center justify-between">
+                <h2 className="text-lg font-bold text-gray-900">Filters</h2>
+                <Filter className="w-5 h-5 text-gray-400" />
             </div>
 
             {/* Categories */}
-            <div className="mb-6">
-                <h4 className="text-sm font-semibold text-gray-700 mb-3">Category</h4>
-                <div className="space-y-2">
+            <div>
+                <h3 className="text-sm font-semibold text-gray-900 mb-4">Category</h3>
+                <div className="space-y-3">
                     {CATEGORIES.map((cat) => (
-                        <button
+                        <label
                             key={cat.name}
-                            onClick={() => setSelectedCategory(cat.value)}
-                            className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${selectedCategory === cat.value
-                                ? 'bg-[#22C55E]/10 text-[#16A34A] border border-[#22C55E]/20'
-                                : 'text-gray-600 hover:bg-gray-50'
-                                }`}
+                            className="flex items-center group cursor-pointer"
                         >
-                            <div className="flex items-center gap-2.5">
-                                <cat.icon className="w-4 h-4" />
-                                <span>{cat.name}</span>
+                            <input
+                                type="checkbox"
+                                checked={selectedCategory === cat.value}
+                                onChange={() => setSelectedCategory(selectedCategory === cat.value ? null : cat.value)}
+                                className="w-4 h-4 text-[#22C55E] border-gray-300 rounded focus:ring-[#22C55E] cursor-pointer accent-[#22C55E]"
+                            />
+                            <div className="ml-3 flex items-center gap-2">
+                                <cat.icon className="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
+                                <span className="text-gray-600 group-hover:text-gray-900 text-sm">
+                                    {cat.name}
+                                </span>
                             </div>
-                        </button>
+                        </label>
                     ))}
                 </div>
             </div>
 
             {/* Location */}
-            <div className="mb-6">
-                <h4 className="text-sm font-semibold text-gray-700 mb-3">Location</h4>
+            <div>
+                <h3 className="text-sm font-semibold text-gray-900 mb-4">Location</h3>
                 <div className="relative">
                     <select
                         value={selectedLocation}
@@ -233,29 +229,34 @@ const FilterSidebar = ({ selectedCategory, setSelectedCategory, selectedLocation
             </div>
 
             {/* Price Range */}
-            <div className="mb-6">
-                <h4 className="text-sm font-semibold text-gray-700 mb-3">Price Range</h4>
+            <div>
+                <h3 className="text-sm font-semibold text-gray-900 mb-4">Price Range</h3>
                 <div className="space-y-3">
-                    <input
-                        type="range"
-                        min="0"
-                        max="200"
-                        value={priceRange}
-                        onChange={(e) => setPriceRange(parseInt(e.target.value))}
-                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#22C55E]"
-                    />
-                    <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-500">$0</span>
-                        <span className="font-semibold text-[#22C55E]">${priceRange} AUD</span>
-                        <span className="text-gray-500">$200+</span>
-                    </div>
+                    {PRICE_RANGES.map((item) => (
+                        <label
+                            key={item.id}
+                            className="flex items-center group cursor-pointer"
+                        >
+                            <input
+                                type="radio"
+                                name="price"
+                                id={item.id}
+                                checked={priceRange === item.value}
+                                onChange={() => setPriceRange(item.value)}
+                                className="w-4 h-4 text-[#22C55E] border-gray-300 focus:ring-[#22C55E] cursor-pointer accent-[#22C55E]"
+                            />
+                            <span className="ml-3 text-gray-600 group-hover:text-gray-900 text-sm">
+                                {item.label}
+                            </span>
+                        </label>
+                    ))}
                 </div>
             </div>
 
             {/* Verified Only Toggle */}
-            <div className="mb-6">
+            <div>
                 <label className="flex items-center justify-between cursor-pointer">
-                    <span className="text-sm font-semibold text-gray-700">Verified Helpers Only</span>
+                    <span className="text-sm font-semibold text-gray-900">Verified Helpers Only</span>
                     <div className="relative">
                         <input
                             type="checkbox"
@@ -267,11 +268,6 @@ const FilterSidebar = ({ selectedCategory, setSelectedCategory, selectedLocation
                     </div>
                 </label>
             </div>
-
-            {/* Apply Button */}
-            <button className="w-full py-3 bg-[#22C55E] text-white font-semibold rounded-xl hover:bg-[#16A34A] transition-colors shadow-lg shadow-[#22C55E]/20">
-                Apply Filters
-            </button>
         </div>
     );
 };
@@ -336,28 +332,45 @@ const MarketPlace = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
+        <div className="min-h-screen bg-gray-50 flex flex-col font-sans relative">
             <Navbar />
 
-            <main className="pt-24">
+            {/* Top gradient shadow */}
+            <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black/10 to-transparent pointer-events-none z-10"></div>
+
+            <main className="flex-grow">
                 {/* Hero / Search Section */}
-
-                {/* Main Content */}
-                <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-                    <div className="flex flex-col lg:flex-row gap-8">
-                        {/* Mobile Filter Button */}
-                        <div className="lg:hidden">
-                            <button
-                                onClick={() => setMobileFiltersOpen(true)}
-                                className="w-full flex items-center justify-center gap-2 py-3 bg-white border border-gray-200 rounded-xl text-gray-700 font-semibold hover:bg-gray-50 transition-colors"
-                            >
-                                <Filter className="w-4 h-4" />
-                                Filters
-                            </button>
+                <div className="pb-8 pt-32 px-4 sm:px-6 lg:px-8">
+                    <div className="max-w-7xl mx-auto">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                            <div>
+                                <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                                    Service Marketplace
+                                </h1>
+                                <p className="text-gray-500">
+                                    Find trusted help for your move.
+                                </p>
+                            </div>
+                            <div className="w-full md:w-96">
+                                <div className="relative">
+                                    <input
+                                        type="text"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        placeholder="Search services..."
+                                        className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#22C55E] focus:border-[#22C55E] outline-none transition-all"
+                                    />
+                                    <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+                                </div>
+                            </div>
                         </div>
+                    </div>
+                </div>
 
-                        {/* Desktop Sidebar */}
-                        <aside className="hidden lg:block w-72 flex-shrink-0">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <div className="flex flex-col lg:flex-row gap-8">
+                        {/* Sidebar */}
+                        <aside className="w-full lg:w-64 flex-shrink-0">
                             <FilterSidebar
                                 selectedCategory={selectedCategory}
                                 setSelectedCategory={setSelectedCategory}
@@ -370,69 +383,8 @@ const MarketPlace = () => {
                             />
                         </aside>
 
-                        {/* Mobile Filter Modal */}
-                        <AnimatePresence>
-                            {mobileFiltersOpen && (
-                                <>
-                                    <motion.div
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        exit={{ opacity: 0 }}
-                                        onClick={() => setMobileFiltersOpen(false)}
-                                        className="fixed inset-0 bg-black/50 z-50 lg:hidden"
-                                    />
-                                    <motion.div
-                                        initial={{ x: '-100%' }}
-                                        animate={{ x: 0 }}
-                                        exit={{ x: '-100%' }}
-                                        transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                                        className="fixed left-0 top-0 bottom-0 w-80 bg-white z-50 lg:hidden overflow-y-auto"
-                                    >
-                                        <div className="flex items-center justify-between p-4 border-b border-gray-100">
-                                            <h3 className="text-lg font-bold text-gray-900">Filters</h3>
-                                            <button
-                                                onClick={() => setMobileFiltersOpen(false)}
-                                                className="p-2 text-gray-500 hover:text-gray-700"
-                                            >
-                                                <X className="w-5 h-5" />
-                                            </button>
-                                        </div>
-                                        <div className="p-4">
-                                            <FilterSidebar
-                                                selectedCategory={selectedCategory}
-                                                setSelectedCategory={setSelectedCategory}
-                                                selectedLocation={selectedLocation}
-                                                setSelectedLocation={setSelectedLocation}
-                                                priceRange={priceRange}
-                                                setPriceRange={setPriceRange}
-                                                verifiedOnly={verifiedOnly}
-                                                setVerifiedOnly={setVerifiedOnly}
-                                            />
-                                        </div>
-                                    </motion.div>
-                                </>
-                            )}
-                        </AnimatePresence>
-
-                        {/* Services Grid */}
+                        {/* Grid */}
                         <div className="flex-1">
-                            {/* Results Header */}
-                            <div className="flex items-center justify-between mb-6">
-                                <h2 className="text-xl font-bold text-gray-900">
-                                    {loading ? 'Loading...' : `${services.length} Services Found`}
-                                </h2>
-                                <div className="flex items-center gap-3">
-                                    <span className="text-sm text-gray-500">Sort by:</span>
-                                    <select className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 focus:ring-2 focus:ring-[#22C55E] outline-none cursor-pointer">
-                                        <option>Recommended</option>
-                                        <option>Price: Low to High</option>
-                                        <option>Price: High to Low</option>
-                                        <option>Rating</option>
-                                        <option>Most Reviews</option>
-                                    </select>
-                                </div>
-                            </div>
-
                             {/* Loading State */}
                             {loading && (
                                 <div className="flex flex-col items-center justify-center py-16">
@@ -459,18 +411,11 @@ const MarketPlace = () => {
                                 </div>
                             )}
 
-                            {/* Grid */}
+                            {/* Services Grid */}
                             {!loading && !error && services.length > 0 && (
                                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                                    {services.map((service, index) => (
-                                        <motion.div
-                                            key={service.id}
-                                            initial={{ opacity: 0, y: 20 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ duration: 0.4, delay: index * 0.05 }}
-                                        >
-                                            <ServiceCard service={service} />
-                                        </motion.div>
+                                    {services.map((service) => (
+                                        <ServiceCard key={service.id} service={service} />
                                     ))}
                                 </div>
                             )}
@@ -491,26 +436,14 @@ const MarketPlace = () => {
                                     </button>
                                 </div>
                             )}
-
-                            {/* Load More */}
-                            {!loading && !error && services.length > 0 && (
-                                <div className="mt-10 text-center">
-                                    <button className="px-8 py-3 bg-white border border-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all">
-                                        Load More Services
-                                    </button>
-                                </div>
-                            )}
                         </div>
                     </div>
-                </section>
+                </div>
             </main>
 
             {/* Floating Chat Bot */}
-            <button className="fixed bottom-8 right-8 w-14 h-14 bg-[#22C55E] rounded-full shadow-xl flex items-center justify-center text-white hover:bg-[#16A34A] transition-all z-40 hover:scale-110 duration-200 group">
-                <Bot className="w-7 h-7 group-hover:rotate-12 transition-transform" />
-                <span className="absolute -top-12 right-0 px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                    Need help? Chat with AI
-                </span>
+            <button className="fixed bottom-8 right-8 w-14 h-14 bg-[#22C55E] rounded-full shadow-lg flex items-center justify-center text-white hover:bg-[#16A34A] transition-colors z-40 hover:scale-110 duration-200">
+                <Bot className="w-7 h-7" />
             </button>
 
             <Footer />
