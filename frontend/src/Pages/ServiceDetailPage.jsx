@@ -49,31 +49,32 @@ const Badge = ({ children, className = '' }) => (
     </span>
 );
 
-// Review Card Component (placeholder - can be enhanced when reviews API is available)
-const ReviewCard = ({ name, initial, date, rating, text }) => (
-    <div className="bg-white rounded-xl border border-gray-100 p-5 hover:shadow-md transition-shadow">
-        <div className="flex items-start gap-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-[#22C55E] to-[#16A34A] rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md flex-shrink-0">
-                {initial}
-            </div>
-            <div className="flex-1">
-                <div className="flex items-center justify-between mb-2">
-                    <div>
-                        <h4 className="font-semibold text-gray-900">{name}</h4>
-                        <p className="text-xs text-gray-400">{date}</p>
-                    </div>
-                    <div className="flex items-center gap-1">
-                        {[...Array(5)].map((_, i) => (
-                            <Star
-                                key={i}
-                                className={`w-4 h-4 ${i < rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-200'}`}
-                            />
-                        ))}
-                    </div>
+// Review Card Component
+const ReviewCard = ({ name, initial, date, rating, text, verified = true }) => (
+    <div className="bg-gray-50 rounded-xl p-6 mb-4">
+        <div className="flex items-start justify-between mb-3">
+            <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#22C55E]/10 flex items-center justify-center text-[#22C55E] font-bold">
+                    {initial}
                 </div>
-                <p className="text-gray-600 text-sm">{text}</p>
+                <div>
+                    <div className="flex items-center gap-2">
+                        <h4 className="font-bold text-gray-900 text-sm">{name}</h4>
+                        {verified && <CheckCircle className="w-3 h-3 text-[#22C55E]" />}
+                    </div>
+                    <p className="text-xs text-gray-500">{date}</p>
+                </div>
+            </div>
+            <div className="flex text-yellow-400">
+                {[...Array(5)].map((_, i) => (
+                    <Star
+                        key={i}
+                        className={`w-4 h-4 ${i < rating ? 'fill-current' : 'text-gray-300'}`}
+                    />
+                ))}
             </div>
         </div>
+        <p className="text-gray-600 text-sm leading-relaxed">{text}</p>
     </div>
 );
 
@@ -84,20 +85,16 @@ const BookingCard = ({ service }) => {
 
     return (
         <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm sticky top-24">
-            {/* Header with Title */}
             <h3 className="text-lg font-bold text-gray-900 mb-2">
                 Book this Service
             </h3>
 
-            {/* Price Display */}
             <div className="flex items-baseline gap-2 mb-6">
                 <span className="text-3xl font-bold text-[#22C55E]">{priceDisplay}</span>
                 <span className="text-sm text-gray-500">{pricingType}</span>
             </div>
 
-            {/* Booking Form */}
             <div className="space-y-4">
-                {/* Date Input */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                         Select Date
@@ -111,7 +108,6 @@ const BookingCard = ({ service }) => {
                     </div>
                 </div>
 
-                {/* Message Textarea */}
                 <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                         Message to Helper
@@ -123,12 +119,10 @@ const BookingCard = ({ service }) => {
                     />
                 </div>
 
-                {/* Request Booking Button */}
                 <button className="w-full py-3 bg-[#22C55E] text-white font-semibold rounded-xl hover:bg-[#16A34A] transition-colors shadow-lg shadow-[#22C55E]/20 mt-2">
                     Request Booking
                 </button>
 
-                {/* Note */}
                 <p className="text-xs text-center text-gray-500 mt-3">
                     You won't be charged yet
                 </p>
