@@ -144,7 +144,7 @@ const LandingPage = () => {
                                     <img src="https://i.pravatar.cc/150?u=a042581f4e29026024d" alt="User" />
                                 </div>
                                 <div>
-                                    <h5 className="text-sm font-bold text-gray-900">Amara Jayasuriya</h5>
+                                    <h5 className="text-sm font-bold text-gray-900">Thejandeera Sandeepana</h5>
                                     <p className="text-xs text-gray-500">Student from Sri Lanka</p>
                                 </div>
                             </div>
@@ -164,8 +164,8 @@ const LandingPage = () => {
                                     <img src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="User" />
                                 </div>
                                 <div>
-                                    <h5 className="text-sm font-bold text-gray-900">Rajiv Patel</h5>
-                                    <p className="text-xs text-gray-500">Engineer from India</p>
+                                    <h5 className="text-sm font-bold text-gray-900">Sumuditha Vimukthi</h5>
+                                    <p className="text-xs text-gray-500">Engineer from Sri Lanka</p>
                                 </div>
                             </div>
                         </div>
@@ -184,8 +184,8 @@ const LandingPage = () => {
                                     <img src="https://i.pravatar.cc/150?u=a04258114e29026702d" alt="User" />
                                 </div>
                                 <div>
-                                    <h5 className="text-sm font-bold text-gray-900">Chen Wei</h5>
-                                    <p className="text-xs text-gray-500">Nurse from China</p>
+                                    <h5 className="text-sm font-bold text-gray-900">Nimal Kalperuma</h5>
+                                    <p className="text-xs text-gray-500">Nurse from Srilanka</p>
                                 </div>
                             </div>
                         </div>
