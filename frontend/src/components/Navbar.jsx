@@ -312,12 +312,12 @@ const Navbar = () => {
 
 
                     <div className="hidden md:flex items-center space-x-8">
-                        <Link to="/" className="text-sm font-medium text-gray-900 bg-gray-200/50 px-3 py-1.5 rounded-md">Home</Link>
-                        <Link to="/marketplace" onClick={handleAuthNavigation} className="text-sm font-medium text-gray-500 hover:text-gray-900">Marketplace</Link>
-                        <Link to="/community" onClick={handleAuthNavigation} className="text-sm font-medium text-gray-500 hover:text-gray-900">Community</Link>
-                        <Link to="/sos" onClick={handleAuthNavigation} className="text-sm font-medium text-gray-500 hover:text-gray-900">SOS</Link>
-                        <Link to="/profile" onClick={handleAuthNavigation} className="text-sm font-medium text-gray-500 hover:text-gray-900">Profile</Link>
-                        <Link to="/scanner" onClick={handleAuthNavigation} className="text-sm font-medium text-gray-500 hover:text-gray-900">Scanner</Link>
+                        <Link to="/" className={`text-sm font-medium px-3 py-1.5 rounded-md transition-colors ${location.pathname === '/' ? 'text-gray-900 bg-gray-200/50' : 'text-gray-500 hover:text-gray-900'}`}>Home</Link>
+                        <Link to="/marketplace" onClick={handleAuthNavigation} className={`text-sm font-medium px-3 py-1.5 rounded-md transition-colors ${location.pathname === '/marketplace' ? 'text-gray-900 bg-gray-200/50' : 'text-gray-500 hover:text-gray-900'}`}>Marketplace</Link>
+                        <Link to="/community" onClick={handleAuthNavigation} className={`text-sm font-medium px-3 py-1.5 rounded-md transition-colors ${location.pathname === '/community' ? 'text-gray-900 bg-gray-200/50' : 'text-gray-500 hover:text-gray-900'}`}>Community</Link>
+                        <Link to="/sos" onClick={handleAuthNavigation} className={`text-sm font-medium px-3 py-1.5 rounded-md transition-colors ${location.pathname === '/sos' ? 'text-gray-900 bg-gray-200/50' : 'text-gray-500 hover:text-gray-900'}`}>SOS</Link>
+                        <Link to="/profile" onClick={handleAuthNavigation} className={`text-sm font-medium px-3 py-1.5 rounded-md transition-colors ${location.pathname === '/profile' ? 'text-gray-900 bg-gray-200/50' : 'text-gray-500 hover:text-gray-900'}`}>Profile</Link>
+                        <Link to="/scanner" onClick={handleAuthNavigation} className={`text-sm font-medium px-3 py-1.5 rounded-md transition-colors ${location.pathname === '/scanner' ? 'text-gray-900 bg-gray-200/50' : 'text-gray-500 hover:text-gray-900'}`}>Scanner</Link>
                     </div>
 
                     <div className="hidden md:flex items-center gap-4">
@@ -408,12 +408,12 @@ const Navbar = () => {
                         className="md:hidden bg-white border-t border-gray-100 overflow-hidden"
                     >
                         <div className="px-4 pt-2 pb-6 space-y-2 shadow-inner">
-                            <Link to="/" className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">Home</Link>
-                            <Link to="/marketplace" onClick={handleAuthNavigation} className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">Marketplace</Link>
-                            <Link to="/community" onClick={handleAuthNavigation} className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">Community</Link>
-                            <Link to="/sos" onClick={handleAuthNavigation} className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">SOS</Link>
-                            <Link to="/profile" onClick={handleAuthNavigation} className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">Profile</Link>
-                            <Link to="/scanner" onClick={handleAuthNavigation} className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">Scanner</Link>
+                            <Link to="/" className={`block px-3 py-2 text-base font-medium rounded-md ${location.pathname === '/' ? 'text-[#22C55E] bg-[#22C55E]/10' : 'text-gray-700 hover:bg-gray-50'}`}>Home</Link>
+                            <Link to="/marketplace" onClick={handleAuthNavigation} className={`block px-3 py-2 text-base font-medium rounded-md ${location.pathname === '/marketplace' ? 'text-[#22C55E] bg-[#22C55E]/10' : 'text-gray-700 hover:bg-gray-50'}`}>Marketplace</Link>
+                            <Link to="/community" onClick={handleAuthNavigation} className={`block px-3 py-2 text-base font-medium rounded-md ${location.pathname === '/community' ? 'text-[#22C55E] bg-[#22C55E]/10' : 'text-gray-700 hover:bg-gray-50'}`}>Community</Link>
+                            <Link to="/sos" onClick={handleAuthNavigation} className={`block px-3 py-2 text-base font-medium rounded-md ${location.pathname === '/sos' ? 'text-[#22C55E] bg-[#22C55E]/10' : 'text-gray-700 hover:bg-gray-50'}`}>SOS</Link>
+                            <Link to="/profile" onClick={handleAuthNavigation} className={`block px-3 py-2 text-base font-medium rounded-md ${location.pathname === '/profile' ? 'text-[#22C55E] bg-[#22C55E]/10' : 'text-gray-700 hover:bg-gray-50'}`}>Profile</Link>
+                            <Link to="/scanner" onClick={handleAuthNavigation} className={`block px-3 py-2 text-base font-medium rounded-md ${location.pathname === '/scanner' ? 'text-[#22C55E] bg-[#22C55E]/10' : 'text-gray-700 hover:bg-gray-50'}`}>Scanner</Link>
 
                             <div className="border-t border-gray-100 pt-4 mt-4">
                                 {isLoggedIn ? (
