@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { getUserData, isAuthenticated } from '../utils/auth';
+import AiSuggestions from '../components/Dashboard/AiSuggestions';
 
 const Dashboard = () => {
     const navigate = useNavigate();
@@ -42,56 +43,7 @@ const Dashboard = () => {
         }
     ];
 
-    const suggestions = [
-        {
-            title: "Airport Pickup in Sydney",
-            tag: "Recommended",
-            desc: "Based on your recent arrival, you might need a safe pickup from the airport.",
-            subText: `You mentioned ${user.destinationCountry || 'Australia'} as your destination`,
-            action: "Book Now",
-            icon: (
-                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
-            )
-        },
-        {
-            title: "Furnished Housing in Melbourne",
-            tag: "Recommended",
-            desc: "We found 3 verified housing options matching your preferences.",
-            subText: "Housing is your listed interest",
-            action: "View Options",
-            icon: (
-                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
-            )
-        },
-        {
-            title: "Get Your Tax File Number",
-            tag: "Suggested",
-            desc: "Apply for your TFN within 28 days of arrival to start working legally.",
-            subText: "Essential for new migrants",
-            action: "Learn How",
-            icon: (
-                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-            )
-        },
-        {
-            title: "Join Australia Community",
-            tag: "Suggested",
-            desc: `Connect with 2,450 people from ${user.countryOfOrigin || 'your country'} already settled in ${user.destinationCountry || 'Australia'}.`,
-            subText: `Your destination is ${user.destinationCountry || 'Australia'}`,
-            action: "Join Now",
-            icon: (
-                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                </svg>
-            )
-        }
-    ];
+
 
     const activeRequests = [
         {
@@ -204,48 +156,7 @@ const Dashboard = () => {
                         </div>
 
                         {/* AI Suggestions */}
-                        <div className="bg-green-50/50 rounded-xl border border-green-100 p-6">
-                            <div className="mb-6">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <div className="bg-green-100 p-1 rounded">
-                                        <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                                    </div>
-                                    <h2 className="text-lg font-semibold text-gray-900">AI Suggestions for You</h2>
-                                </div>
-                                <p className="text-sm text-gray-500">Personalized recommendations based on your profile</p>
-                            </div>
-
-                            <div className="space-y-4">
-                                {suggestions.map((item, idx) => (
-                                    <div key={idx} className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm">
-                                        <div className="flex items-start gap-4">
-                                            <div className="mt-1 bg-gray-50 p-2 rounded-lg text-gray-600">
-                                                {item.icon}
-                                            </div>
-                                            <div className="flex-1">
-                                                <div className="flex items-center gap-2 mb-1">
-                                                    <h3 className="font-semibold text-gray-900 text-sm">{item.title}</h3>
-                                                    <span className="text-[10px] font-medium px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded border border-gray-200 uppercase tracking-wide">{item.tag}</span>
-                                                </div>
-                                                <p className="text-sm text-gray-600 mb-2 leading-relaxed">{item.desc}</p>
-                                                <div className="flex items-center gap-1 text-xs text-gray-400 mb-3">
-                                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                                    {item.subText}
-                                                </div>
-                                                <button className="text-xs font-semibold flex items-center gap-1 hover:underline">
-                                                    {item.action}
-                                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                            <button className="w-full text-center text-xs text-gray-500 mt-4 hover:text-gray-700 flex items-center justify-center gap-1">
-                                View all suggestions
-                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-                            </button>
-                        </div>
+                        <AiSuggestions user={user} />
 
                         {/* Active Requests */}
                         <div>
