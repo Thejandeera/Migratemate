@@ -26,4 +26,5 @@ public class RegisterRequest {
     private String avatarBase64;
     private String passportImageBase64;
     private String selfieImageBase64;
+    private String otp;
 }

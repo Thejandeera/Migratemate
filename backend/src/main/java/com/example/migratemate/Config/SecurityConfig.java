@@ -53,6 +53,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/users/register",
                                 "/api/users/login",
+                                "/api/users/send-otp",
+                                "/api/users/verify-otp",
                                 "/api/admin/register",
                                 "/api/admin/login",
                                 "/api/communities/**",

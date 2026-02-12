@@ -23,8 +23,13 @@ const Signup = () => {
         destinationCountry: '',
         avatarBase64: '',
         passportImageBase64: '',
-        selfieImageBase64: ''
+        selfieImageBase64: '',
+        otp: ''
     });
+
+    const [otpSent, setOtpSent] = useState(false);
+    const [otpVerified, setOtpVerified] = useState(false);
+    const [otpLoading, setOtpLoading] = useState(false);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -105,6 +110,58 @@ const Signup = () => {
         setCameraActive(true);
     };
 
+    const sendOtp = async () => {
+        if (!formData.email) {
+            setError("Please enter your email address first.");
+            return;
+        }
+        setOtpLoading(true);
+        setError('');
+        try {
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/users/send-otp`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: formData.email }),
+            });
+            const data = await response.json();
+            if (response.ok && data.success) {
+                setOtpSent(true);
+                alert(`OTP sent to ${formData.email}`);
+            } else {
+                setError(data.message || 'Failed to send OTP.');
+            }
+        } catch (err) {
+            setError('Network error. Could not send OTP.');
+        } finally {
+            setOtpLoading(false);
+        }
+    };
+
+    const verifyOtp = async () => {
+        if (!formData.otp) return;
+        setOtpLoading(true);
+        setError('');
+        try {
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/users/verify-otp`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: formData.email, otp: formData.otp }),
+            });
+            const data = await response.json();
+            if (response.ok && data.success) {
+                setOtpVerified(true);
+                alert("Email verification successful!");
+                setError('');
+            } else {
+                setError(data.message || 'Invalid OTP. Please try again.');
+            }
+        } catch (err) {
+            setError('Network error. Could not verify OTP.');
+        } finally {
+            setOtpLoading(false);
+        }
+    };
+
     const registerUser = async (dataToSubmit) => {
         setLoading(true);
         setError('');
@@ -143,6 +200,10 @@ const Signup = () => {
         if (step === 1) {
             if (!formData.firstName || !formData.lastName || !formData.email || !formData.password || !formData.phone || !formData.countryOfOrigin || !formData.destinationCountry) {
                 setError("Please fill in all fields to continue.");
+                return;
+            }
+            if (!otpVerified) {
+                setError("Please verify your email with OTP to continue.");
                 return;
             }
         }
@@ -224,8 +285,63 @@ const Signup = () => {
 
                                         <div>
                                             <label className="block text-sm font-semibold text-gray-700 mb-1">Email Address</label>
-                                            <input name="email" type="email" required value={formData.email} onChange={handleChange} className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#22C55E]/20 focus:border-[#22C55E] focus:bg-white text-sm transition-all" placeholder="jane@example.com" />
+                                            <div className="flex gap-2">
+                                                <input
+                                                    name="email"
+                                                    type="email"
+                                                    required
+                                                    disabled={otpVerified}
+                                                    value={formData.email}
+                                                    onChange={handleChange}
+                                                    className={`block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#22C55E]/20 focus:border-[#22C55E] focus:bg-white text-sm transition-all ${otpVerified ? 'bg-green-50 text-gray-500' : ''}`}
+                                                    placeholder="jane@example.com"
+                                                />
+                                                {!otpVerified && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={sendOtp}
+                                                        disabled={otpLoading || !formData.email}
+                                                        className="px-4 py-2 bg-[#22C55E] text-white text-sm font-semibold rounded-lg hover:bg-[#16A34A] disabled:opacity-50 whitespace-nowrap"
+                                                    >
+                                                        {otpLoading ? 'Sending...' : (otpSent ? 'Resend OTP' : 'Send OTP')}
+                                                    </button>
+                                                )}
+                                                {otpVerified && (
+                                                    <div className="flex items-center justify-center px-4 bg-green-100 text-green-600 rounded-lg">
+                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
+
+                                        {otpSent && !otpVerified && (
+                                            <div className="bg-blue-50 p-4 rounded-xl border border-blue-100">
+                                                <label className="block text-sm font-semibold text-gray-700 mb-2">Enter Verification Code</label>
+                                                <div className="flex gap-2">
+                                                    <input
+                                                        name="otp"
+                                                        type="text"
+                                                        required
+                                                        value={formData.otp}
+                                                        onChange={handleChange}
+                                                        className="block w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#22C55E]/20 focus:border-[#22C55E] text-sm transition-all tracking-widest text-center font-mono text-lg"
+                                                        placeholder="000000"
+                                                        maxLength={6}
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={verifyOtp}
+                                                        disabled={otpLoading || !formData.otp || formData.otp.length < 6}
+                                                        className="px-6 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-all"
+                                                    >
+                                                        {otpLoading ? 'Verifying...' : 'Verify'}
+                                                    </button>
+                                                </div>
+                                                <p className="text-xs text-blue-600 mt-2">
+                                                    We sent a 6-digit code to {formData.email}. Please enter it above.
+                                                </p>
+                                            </div>
+                                        )}
 
                                         <div>
                                             <label className="block text-sm font-semibold text-gray-700 mb-1">Password</label>
