@@ -1,9 +1,5 @@
-package com.example.migratemate.SOSManagement.Controller;
+package com.example.migratemate.SOSManagement;
 
-import com.example.migratemate.SOSManagement.Dto.*;
-
-import com.example.migratemate.SOSManagement.Enitity.SOSAlert;
-import com.example.migratemate.SOSManagement.Service.SOSAlertService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

@@ -54,6 +54,13 @@ public class User {
 
     private String selfieImageUrl;
 
+    // Location tracking
+    private Double longitude;
+
+    private Double latitude;
+
+    private LocalDateTime locationUpdatedAt;
+
     @Builder.Default
     private Boolean isVerified = false;
 
