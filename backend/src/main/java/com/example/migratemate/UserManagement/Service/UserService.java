@@ -1,5 +1,7 @@
 package com.example.migratemate.UserManagement.Service;
 
+import com.example.migratemate.EmailManagement.Service.EmailService;
+
 import com.cloudinary.provisioning.Account;
 import com.example.migratemate.AdminManagement.Entity.Admin;
 import com.example.migratemate.AdminManagement.Repository.AdminRepository;
@@ -35,19 +37,25 @@ public class UserService implements UserDetailsService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final CloudinaryService cloudinaryService;
+    private final OtpService otpService;
+    private final EmailService emailService;
 
     public UserService(UserRepository userRepository,
             AdminRepository adminRepository,
             PasswordEncoder passwordEncoder,
             JwtService jwtService,
             @Lazy AuthenticationManager authenticationManager,
-            CloudinaryService cloudinaryService) {
+            CloudinaryService cloudinaryService,
+            OtpService otpService,
+            EmailService emailService) {
         this.userRepository = userRepository;
         this.adminRepository = adminRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
         this.cloudinaryService = cloudinaryService;
+        this.otpService = otpService;
+        this.emailService = emailService;
     }
 
     /**
@@ -59,6 +67,12 @@ public class UserService implements UserDetailsService {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("Email already registered");
         }
+
+        // Validate OTP
+        if (request.getOtp() == null || request.getOtp().isEmpty()) {
+            throw new IllegalArgumentException("OTP is required");
+        }
+        otpService.consumeOtp(request.getEmail(), request.getOtp());
 
         // Upload images to Cloudinary
         String avatarUrl = null;
@@ -479,6 +493,21 @@ public class UserService implements UserDetailsService {
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .build();
+    }
+
+    /**
+     * Send OTP to email
+     */
+    public void sendOtp(String email) {
+        if (userRepository.existsByEmail(email)) {
+            throw new IllegalArgumentException("Email already registered");
+        }
+        String otp = otpService.generateOtp(email);
+        emailService.sendOtpEmail(email, otp);
+    }
+
+    public boolean verifyOtp(String email, String otp) {
+        return otpService.checkOtp(email, otp);
     }
 
     public void deleteUserById(String userId) {
