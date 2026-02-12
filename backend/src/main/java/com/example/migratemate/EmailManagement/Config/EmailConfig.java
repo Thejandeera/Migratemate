@@ -14,7 +14,7 @@ public class EmailConfig {
     @Value("${spring.mail.host:smtp.gmail.com}")
     private String host;
 
-    @Value("${spring.mail.port:587}")
+    @Value("${spring.mail.port:465}")
     private int port;
 
     @Value("${spring.mail.username:}")
@@ -23,40 +23,35 @@ public class EmailConfig {
     @Value("${spring.mail.password:}")
     private String password;
 
-    @Value("${spring.mail.properties.mail.smtp.auth:true}")
-    private String auth;
-
-    @Value("${spring.mail.properties.mail.smtp.starttls.enable:true}")
-    private String starttls;
-
-    @Value("${spring.mail.properties.mail.smtp.ssl.enable:true}")
-    private String sslEnable;
-
-    @Value("${spring.mail.properties.mail.smtp.ssl.trust:smtp.gmail.com}")
-    private String sslTrust;
-
     @Bean
     public JavaMailSender javaMailSender() {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
+
         mailSender.setHost(host);
         mailSender.setPort(port);
-
-        // Only set username and password if they're provided
-        if (username != null && !username.isEmpty()) {
-            mailSender.setUsername(username);
-        }
-        if (password != null && !password.isEmpty()) {
-            mailSender.setPassword(password);
-        }
+        mailSender.setUsername(username);
+        mailSender.setPassword(password);
 
         Properties props = mailSender.getJavaMailProperties();
         props.put("mail.transport.protocol", "smtp");
-        props.put("mail.smtp.auth", auth);
-        props.put("mail.smtp.starttls.enable", starttls);
-        props.put("mail.smtp.ssl.enable", sslEnable); // Important for Port 465
+        props.put("mail.smtp.auth", "true");
         props.put("mail.debug", "true");
-        props.put("mail.smtp.ssl.trust", sslTrust);
-        // Add timeouts to prevent hanging
+
+        // Configuration for port 465 (SSL/TLS)
+        if (port == 465) {
+            props.put("mail.smtp.ssl.enable", "true");
+            props.put("mail.smtp.ssl.trust", host);
+            props.put("mail.smtp.starttls.enable", "false");
+        }
+        // Configuration for port 587 (STARTTLS)
+        else if (port == 587) {
+            props.put("mail.smtp.starttls.enable", "true");
+            props.put("mail.smtp.starttls.required", "true");
+            props.put("mail.smtp.ssl.enable", "false");
+            props.put("mail.smtp.ssl.protocols", "TLSv1.2");
+        }
+
+        // Timeouts to prevent hanging
         props.put("mail.smtp.connectiontimeout", "15000");
         props.put("mail.smtp.timeout", "15000");
         props.put("mail.smtp.writetimeout", "15000");

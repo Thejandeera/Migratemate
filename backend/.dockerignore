@@ -1,0 +1,10 @@
+target/
+*.iml
+.idea/
+.classpath
+.project
+.settings/
+bin/
+*.log
+local.properties
+.env
