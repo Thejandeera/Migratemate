@@ -29,6 +29,9 @@ public class EmailConfig {
     @Value("${spring.mail.properties.mail.smtp.starttls.enable:true}")
     private String starttls;
 
+    @Value("${spring.mail.properties.mail.smtp.ssl.enable:true}")
+    private String sslEnable;
+
     @Value("${spring.mail.properties.mail.smtp.ssl.trust:smtp.gmail.com}")
     private String sslTrust;
 
@@ -50,6 +53,7 @@ public class EmailConfig {
         props.put("mail.transport.protocol", "smtp");
         props.put("mail.smtp.auth", auth);
         props.put("mail.smtp.starttls.enable", starttls);
+        props.put("mail.smtp.ssl.enable", sslEnable); // Important for Port 465
         props.put("mail.debug", "true");
         props.put("mail.smtp.ssl.trust", sslTrust);
         // Add timeouts to prevent hanging
