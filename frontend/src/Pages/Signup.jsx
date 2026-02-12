@@ -178,7 +178,7 @@ const Signup = () => {
             const data = await response.json();
 
             if (response.ok && data.success) {
-                alert('Registration Successful! Please Login.');
+                alert('Registration Successful! A confirmation email has been sent to you. Please Login.');
                 navigate('/');
             } else {
                 setError(data.message || 'Registration failed. Please try again.');

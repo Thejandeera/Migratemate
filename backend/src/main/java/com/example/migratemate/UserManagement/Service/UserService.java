@@ -119,6 +119,9 @@ public class UserService implements UserDetailsService {
 
         log.info("User registered successfully: {}", user.getEmail());
 
+        // Send registration success email
+        emailService.sendRegistrationSuccessEmail(user.getEmail(), user.getFirstName());
+
         // Generate tokens
         UserDetails userDetails = loadUserByUsername(user.getEmail());
         String token = jwtService.generateToken(userDetails);
