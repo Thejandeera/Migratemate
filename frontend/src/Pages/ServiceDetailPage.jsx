@@ -4,6 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { getServiceById } from '../utils/serviceApi';
+import { createBooking } from '../utils/bookingApi';
+import { isAuthenticated } from '../utils/auth';
+
 import {
     ArrowLeft,
     MapPin,
@@ -77,6 +80,50 @@ const ReviewCard = ({ name, initial, date, rating, text, verified = true }) => (
 const BookingCard = ({ service }) => {
     const priceDisplay = `$${service.price?.toFixed(0) || 0} ${service.currency || 'AUD'}`;
     const pricingType = PRICING_TYPE_NAMES[service.pricingType] || service.pricingType;
+    const navigate = useNavigate();
+
+    const [bookingDate, setBookingDate] = useState('');
+    const [notes, setNotes] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [status, setStatus] = useState(null); // 'success', 'error'
+    const [errorMessage, setErrorMessage] = useState('');
+
+    const handleBooking = async () => {
+        if (!isAuthenticated()) {
+            // Redirect to login or show modal
+            alert("Please login to book a service");
+            navigate('/login');
+            return;
+        }
+
+        if (!bookingDate) {
+            alert("Please select a date");
+            return;
+        }
+
+        setIsSubmitting(true);
+        setStatus(null);
+        setErrorMessage('');
+
+        try {
+            await createBooking({
+                serviceId: service.id,
+                date: bookingDate,
+                notes: notes
+            });
+            setStatus('success');
+            // Clear form
+            setBookingDate('');
+            setNotes('');
+        } catch (error) {
+            console.error(error);
+            setStatus('error');
+            setErrorMessage(error.message || 'Failed to book service');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
 
     return (
         <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm sticky top-24">
@@ -97,8 +144,12 @@ const BookingCard = ({ service }) => {
                     <div className="relative">
                         <input
                             type="date"
+                            value={bookingDate}
+                            onChange={(e) => setBookingDate(e.target.value)}
+                            min={new Date().toISOString().split('T')[0]}
                             className="w-full pl-4 pr-10 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#22C55E] focus:border-[#22C55E] outline-none transition-all text-gray-700"
                         />
+
                         <Calendar className="absolute right-3 top-3 w-5 h-5 text-gray-400 pointer-events-none" />
                     </div>
                 </div>
@@ -109,18 +160,45 @@ const BookingCard = ({ service }) => {
                     </label>
                     <textarea
                         rows={3}
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
                         placeholder="Describe your needs..."
                         className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#22C55E] focus:border-[#22C55E] outline-none transition-all resize-none text-gray-700 placeholder-gray-400"
                     />
+
                 </div>
 
-                <button className="w-full py-3 bg-[#22C55E] text-white font-semibold rounded-xl hover:bg-[#16A34A] transition-colors shadow-lg shadow-[#22C55E]/20 mt-2">
-                    Request Booking
+                <button 
+                    onClick={handleBooking}
+                    disabled={isSubmitting}
+                    className={`w-full py-3 text-white font-semibold rounded-xl transition-colors shadow-lg mt-2 flex items-center justify-center gap-2 ${isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#22C55E] hover:bg-[#16A34A] shadow-[#22C55E]/20'}`}
+                >
+                    {isSubmitting ? (
+                        <>
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            Processing...
+                        </>
+                    ) : 'Request Booking'}
                 </button>
+
+                {status === 'success' && (
+                    <div className="bg-green-50 text-green-700 p-3 rounded-xl text-sm flex items-center gap-2 mt-2 border border-green-100">
+                        <CheckCircle className="w-4 h-4 text-green-600" />
+                        Booking requested successfully! Check your dashboard.
+                    </div>
+                )}
+                
+                {status === 'error' && (
+                    <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm flex items-center gap-2 mt-2 border border-red-100">
+                        <AlertCircle className="w-4 h-4 text-red-500" />
+                        {errorMessage}
+                    </div>
+                )}
 
                 <p className="text-xs text-center text-gray-500 mt-3">
                     You won't be charged yet
                 </p>
+
             </div>
         </div>
     );

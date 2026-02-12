@@ -3,11 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { getUserData, isAuthenticated } from '../utils/auth';
+import { getMyBookings } from '../utils/bookingApi';
 import AiSuggestions from '../components/Dashboard/AiSuggestions';
 
 const Dashboard = () => {
+
     const navigate = useNavigate();
     const user = getUserData();
+    const [bookings, setBookings] = React.useState([]);
+    const [loadingBookings, setLoadingBookings] = React.useState(true);
+
 
     // Mock Data for UI
     const quickActions = [
@@ -45,33 +50,20 @@ const Dashboard = () => {
 
 
 
-    const activeRequests = [
-        {
-            title: "Airport Pickup",
-            date: "2024-01-20 at 14:30",
-            status: "Accepted",
-            statusColor: "bg-green-500",
-            helper: "John Smith",
-            icon: (
-                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
-            )
-        },
-        {
-            title: "City Orientation Tour",
-            date: "2024-01-22 at 10:00",
-            status: "Pending",
-            statusColor: "bg-yellow-100 text-yellow-800",
-            helper: null,
-            icon: (
-                <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-            )
-        }
-    ];
+    // Get recent 2 bookings
+    const activeRequests = bookings.slice(0, 2).map(b => ({
+         title: b.serviceTitle,
+         date: new Date(b.requestedDate).toLocaleDateString(),
+         status: b.status.charAt(0) + b.status.substring(1).toLowerCase(),
+         statusColor: b.status === "ACCEPTED" ? "bg-green-500 text-white" : "bg-yellow-100 text-yellow-800",
+         helper: b.providerName,
+         icon: (
+             <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+             </svg>
+         )
+    }));
+
 
     const resources = [
         "Getting a Tax File Number (TFN)",
@@ -83,8 +75,14 @@ const Dashboard = () => {
     useEffect(() => {
         if (!isAuthenticated()) {
             navigate('/login');
+        } else {
+            getMyBookings()
+                .then(data => setBookings(data))
+                .catch(err => console.error(err))
+                .finally(() => setLoadingBookings(false));
         }
     }, [navigate]);
+
 
     if (!isAuthenticated()) return null;
 
@@ -168,7 +166,12 @@ const Dashboard = () => {
                                 </button>
                             </div>
                             <div className="space-y-3">
-                                {activeRequests.map((req, idx) => (
+                                {loadingBookings ? (
+                                    <p className="text-sm text-gray-500">Loading bookings...</p>
+                                ) : activeRequests.length === 0 ? (
+                                    <p className="text-sm text-gray-500">No active bookings found.</p>
+                                ) : (
+                                    activeRequests.map((req, idx) => (
                                     <div key={idx} className="bg-white border border-gray-100 rounded-xl p-4 flex items-center justify-between">
                                         <div className="flex items-center gap-4">
                                             <div className="bg-gray-50 p-2.5 rounded-lg text-gray-600">
@@ -180,21 +183,17 @@ const Dashboard = () => {
                                             </div>
                                         </div>
                                         <div className="text-right">
-                                            {req.status === "Accepted" ? (
-                                                <span className="inline-block px-2.5 py-1 rounded-full bg-green-500 text-white text-[10px] font-medium mb-1">
-                                                    {req.status}
-                                                </span>
-                                            ) : (
-                                                <span className={`inline-block px-2.5 py-1 rounded-full ${req.statusColor} text-[10px] font-medium mb-1`}>
-                                                    {req.status}
-                                                </span>
-                                            )}
+                                            <span className={`inline-block px-2.5 py-1 rounded-full ${req.statusColor} text-[10px] font-medium mb-1`}>
+                                                {req.status}
+                                            </span>
 
                                             {req.helper && <p className="text-[10px] text-gray-400">by {req.helper}</p>}
                                         </div>
                                     </div>
-                                ))}
+                                    ))
+                                )}
                             </div>
+
                         </div>
 
                     </div>
