@@ -15,13 +15,17 @@ public class BookingResponse {
     private Double totalAmount;
     private String currency;
 
-    private String customerId;
-    private String customerName;
-    private String customerAvatar;
-
     private String providerId;
     private String providerName;
     private String providerAvatar;
+    private String providerPhone;
+    private String providerEmail;
+
+    private String customerId;
+    private String customerName;
+    private String customerAvatar;
+    private String customerPhone;
+    private String customerEmail;
 
     private Date requestedDate;
     private String notes;

@@ -99,7 +99,7 @@ public class BookingService {
     }
 
     private BookingResponse mapToResponse(Booking booking) {
-        return BookingResponse.builder()
+        BookingResponse.BookingResponseBuilder builder = BookingResponse.builder()
                 .id(booking.getId())
                 .serviceId(booking.getServiceId())
                 .serviceTitle(booking.getServiceTitle())
@@ -114,7 +114,25 @@ public class BookingService {
                 .requestedDate(booking.getRequestedDate())
                 .notes(booking.getNotes())
                 .status(booking.getStatus())
-                .createdAt(booking.getCreatedAt() != null ? java.sql.Timestamp.valueOf(booking.getCreatedAt()) : null)
-                .build();
+                .createdAt(booking.getCreatedAt() != null ? java.sql.Timestamp.valueOf(booking.getCreatedAt()) : null);
+
+        // Fetch and populate contact details ONLY if booking is confirmed
+        if (booking.getStatus() == BookingStatus.ACCEPTED || booking.getStatus() == BookingStatus.COMPLETED) {
+            System.out.println("Booking " + booking.getId() + " is confirmed. Fetching contact details...");
+            
+            userRepository.findById(booking.getCustomerId()).ifPresent(customer -> {
+                System.out.println("Found customer: " + customer.getEmail() + ", Phone: " + customer.getPhone());
+                builder.customerEmail(customer.getEmail());
+                builder.customerPhone(customer.getPhone());
+            });
+
+            userRepository.findById(booking.getProviderId()).ifPresent(provider -> {
+                System.out.println("Found provider: " + provider.getEmail() + ", Phone: " + provider.getPhone());
+                builder.providerEmail(provider.getEmail());
+                builder.providerPhone(provider.getPhone());
+            });
+        }
+
+        return builder.build();
     }
 }
