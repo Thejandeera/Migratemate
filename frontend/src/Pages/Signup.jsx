@@ -13,6 +13,10 @@ const Signup = () => {
     const [cameraActive, setCameraActive] = useState(false);
     const [stream, setStream] = useState(null);
 
+    const [otp, setOtp] = useState('');
+    const [otpSent, setOtpSent] = useState(false);
+    const [otpVerified, setOtpVerified] = useState(false);
+
     const [formData, setFormData] = useState({
         email: '',
         password: '',
@@ -41,6 +45,56 @@ const Signup = () => {
                 }));
             };
             reader.readAsDataURL(file);
+        }
+    };
+
+    const sendOtp = async () => {
+        if (!formData.email) {
+            setError("Please enter your email first.");
+            return;
+        }
+        setLoading(true);
+        setError('');
+        try {
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/users/send-otp?email=${formData.email}`, {
+                method: 'POST'
+            });
+            const data = await response.json();
+            if (response.ok && data.success) {
+                setOtpSent(true);
+                alert("OTP sent to your email!");
+            } else {
+                setError(data.message || "Failed to send OTP.");
+            }
+        } catch (err) {
+            setError("Network error sending OTP.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const verifyOtp = async () => {
+        if (!otp) {
+            setError("Please enter the OTP.");
+            return;
+        }
+        setLoading(true);
+        setError('');
+        try {
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/users/verify-otp?email=${formData.email}&otp=${otp}`, {
+                method: 'POST'
+            });
+            const data = await response.json();
+            if (response.ok && data.success) {
+                setOtpVerified(true);
+                alert("Email verified successfully!");
+            } else {
+                setError(data.message || "Invalid OTP.");
+            }
+        } catch (err) {
+            setError("Network error verifying OTP.");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -145,6 +199,10 @@ const Signup = () => {
                 setError("Please fill in all fields to continue.");
                 return;
             }
+            if (!otpVerified) {
+                setError("Please verify your email to continue.");
+                return;
+            }
         }
         if (step === 2) {
             if (!formData.passportImageBase64 || !formData.avatarBase64) {
@@ -224,7 +282,50 @@ const Signup = () => {
 
                                         <div>
                                             <label className="block text-sm font-semibold text-gray-700 mb-1">Email Address</label>
-                                            <input name="email" type="email" required value={formData.email} onChange={handleChange} className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#22C55E]/20 focus:border-[#22C55E] focus:bg-white text-sm transition-all" placeholder="jane@example.com" />
+                                            <div className="flex gap-2">
+                                                <input
+                                                    name="email"
+                                                    type="email"
+                                                    required
+                                                    value={formData.email}
+                                                    onChange={handleChange}
+                                                    disabled={otpVerified}
+                                                    className={`block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#22C55E]/20 focus:border-[#22C55E] focus:bg-white text-sm transition-all ${otpVerified ? 'bg-green-50 border-green-200 text-green-700' : ''}`}
+                                                    placeholder="jane@example.com"
+                                                />
+                                                {!otpVerified && !otpSent && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={sendOtp}
+                                                        className="px-4 py-2 bg-[#22C55E] text-white rounded-lg whitespace-nowrap text-sm font-semibold hover:bg-[#16A34A] transition-colors"
+                                                    >
+                                                        Verify
+                                                    </button>
+                                                )}
+                                                {otpVerified && (
+                                                    <span className="flex items-center justify-center w-12 text-[#22C55E] bg-green-100 rounded-lg">
+                                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                                                    </span>
+                                                )}
+                                            </div>
+                                            {otpSent && !otpVerified && (
+                                                <div className="mt-3 flex gap-2">
+                                                    <input
+                                                        type="text"
+                                                        value={otp}
+                                                        onChange={(e) => setOtp(e.target.value)}
+                                                        className="block w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
+                                                        placeholder="Enter OTP"
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={verifyOtp}
+                                                        className="px-4 py-2 bg-gray-800 text-white rounded-lg whitespace-nowrap text-sm font-semibold hover:bg-gray-700 transition-colors"
+                                                    >
+                                                        Submit OTP
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
 
                                         <div>
