@@ -63,12 +63,14 @@ public class UserController {
      * Send OTP
      */
     @PostMapping("/send-otp")
-    public ResponseEntity<ApiResponse<Void>> sendOtp(@RequestBody OtpRequest request) {
+
+    public ResponseEntity<ApiResponse<Void>> sendOtp(@RequestParam String email) {
         try {
-            userService.sendOtp(request.getEmail());
+            userService.sendRegistrationOtp(email);
             return ResponseEntity.ok(ApiResponse.<Void>builder()
                     .success(true)
-                    .message("OTP sent successfully to " + request.getEmail())
+                    .message("OTP sent successfully to " + email)
+
                     .build());
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(ApiResponse.<Void>builder()
@@ -80,40 +82,33 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.<Void>builder()
                             .success(false)
-                            .message("Failed to send OTP: " + e.getMessage())
+
+                            .message("Failed to send OTP")
+
                             .build());
         }
     }
 
     /**
-     * Verify OTP (Optional check solely for UI feedback)
-     */
-    @PostMapping("/verify-otp") // Make sure the path is unique and clear
-    public ResponseEntity<ApiResponse<Boolean>> verifyOtp(@RequestBody java.util.Map<String, String> request) {
-        try {
-            String email = request.get("email");
-            String otp = request.get("otp");
-            boolean isValid = userService.verifyOtp(email, otp);
 
-            if (isValid) {
-                return ResponseEntity.ok(ApiResponse.<Boolean>builder()
-                        .success(true)
-                        .message("OTP verified")
-                        .data(true)
-                        .build());
-            } else {
-                return ResponseEntity.badRequest().body(ApiResponse.<Boolean>builder()
-                        .success(false)
-                        .message("Invalid or expired OTP")
-                        .data(false)
-                        .build());
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(ApiResponse.<Boolean>builder()
-                            .success(false)
-                            .message("Verification failed: " + e.getMessage())
-                            .build());
+     * Verify OTP
+     */
+    @PostMapping("/verify-otp")
+    public ResponseEntity<ApiResponse<Boolean>> verifyOtp(@RequestParam String email, @RequestParam String otp) {
+        boolean isValid = userService.verifyRegistrationOtp(email, otp);
+        if (isValid) {
+            return ResponseEntity.ok(ApiResponse.<Boolean>builder()
+                    .success(true)
+                    .message("OTP Verified")
+                    .data(true)
+                    .build());
+        } else {
+            return ResponseEntity.badRequest().body(ApiResponse.<Boolean>builder()
+                    .success(false)
+                    .message("Invalid or expired OTP")
+                    .data(false)
+                    .build());
+
         }
     }
 

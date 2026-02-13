@@ -1,15 +1,17 @@
 package com.example.migratemate.UserManagement.Service;
 
-import com.example.migratemate.EmailManagement.Service.EmailService;
 
-import com.cloudinary.provisioning.Account;
+
 import com.example.migratemate.AdminManagement.Entity.Admin;
 import com.example.migratemate.AdminManagement.Repository.AdminRepository;
 import com.example.migratemate.Config.JwtService;
+import com.example.migratemate.MailManagement.Event.UserRegistrationEvent;
+import com.example.migratemate.MailManagement.Service.EmailService;
 import com.example.migratemate.UserManagement.Dto.*;
 import com.example.migratemate.UserManagement.Entity.User;
 import com.example.migratemate.UserManagement.Repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -21,6 +23,8 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.context.ApplicationEventPublisher;
+import com.example.migratemate.MailManagement.Event.UserRegistrationEvent;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -37,8 +41,8 @@ public class UserService implements UserDetailsService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final CloudinaryService cloudinaryService;
-    private final OtpService otpService;
-    private final EmailService emailService;
+
+    private final ApplicationEventPublisher eventPublisher;
 
     public UserService(UserRepository userRepository,
             AdminRepository adminRepository,
@@ -46,7 +50,9 @@ public class UserService implements UserDetailsService {
             JwtService jwtService,
             @Lazy AuthenticationManager authenticationManager,
             CloudinaryService cloudinaryService,
-            OtpService otpService,
+
+            ApplicationEventPublisher eventPublisher,
+
             EmailService emailService) {
         this.userRepository = userRepository;
         this.adminRepository = adminRepository;
@@ -54,8 +60,67 @@ public class UserService implements UserDetailsService {
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
         this.cloudinaryService = cloudinaryService;
-        this.otpService = otpService;
+
+        this.eventPublisher = eventPublisher;
         this.emailService = emailService;
+    }
+
+    // In-memory OTP storage (For production, use Redis or Database)
+    private final java.util.concurrent.ConcurrentHashMap<String, String> otpStorage = new java.util.concurrent.ConcurrentHashMap<>();
+    private final java.util.concurrent.ConcurrentHashMap<String, Long> otpExpiry = new java.util.concurrent.ConcurrentHashMap<>();
+    private final EmailService emailService; // Inject EmailService
+
+    /**
+     * Send OTP for registration
+     */
+    @Transactional
+    public void sendRegistrationOtp(String email) {
+        if (userRepository.existsByEmail(email)) {
+            // For privacy, maybe don't reveal this? But for now consistent with other
+            // logic.
+            throw new IllegalArgumentException("Email already registered");
+        }
+
+        // Generate 6-digit OTP
+        String otp = String.format("%06d", new java.util.Random().nextInt(999999));
+
+        // Store OTP with 10 mins expiry
+        otpStorage.put(email, otp);
+        otpExpiry.put(email, System.currentTimeMillis() + (10 * 60 * 1000));
+
+        // Send Email
+        emailService.sendOtpEmail(email, otp);
+        log.info("📧 OTP sent to: {}", email);
+    }
+
+    /**
+     * Verify OTP
+     */
+    public boolean verifyRegistrationOtp(String email, String otp) {
+        if (!otpStorage.containsKey(email)) {
+            return false;
+        }
+
+        Long expiryTime = otpExpiry.get(email);
+        if (System.currentTimeMillis() > expiryTime) {
+            otpStorage.remove(email);
+            otpExpiry.remove(email);
+            return false;
+        }
+
+        String storedOtp = otpStorage.get(email);
+        if (storedOtp.equals(otp)) {
+            // OTP is valid
+            // We keep it until registration is complete, or maybe we don't remove it yet to
+            // allow the register call to proceed?
+            // Actually, the register call doesn't check OTP again in the current design
+            // (Frontend checks, then calls register).
+            // Backend register endpoint doesn't require OTP token.
+            // So we can just return true.
+            return true;
+        }
+        return false;
+
     }
 
     /**
@@ -119,8 +184,23 @@ public class UserService implements UserDetailsService {
 
         log.info("User registered successfully: {}", user.getEmail());
 
-        // Send registration success email
-        emailService.sendRegistrationSuccessEmail(user.getEmail(), user.getFirstName());
+
+        // Publish user registration event for email notification
+        try {
+            UserRegistrationEvent event = UserRegistrationEvent.builder()
+                    .userId(user.getId())
+                    .email(user.getEmail())
+                    .firstName(user.getFirstName())
+                    .lastName(user.getLastName())
+                    .fullName(user.getFullName())
+                    .build();
+
+            eventPublisher.publishEvent(event);
+            log.info("📧 User registration event published for: {}", user.getEmail());
+        } catch (Exception e) {
+            log.error("Failed to publish user registration event", e);
+            // Don't fail registration if email event fails
+
 
         // Generate tokens
         UserDetails userDetails = loadUserByUsername(user.getEmail());
@@ -168,7 +248,6 @@ public class UserService implements UserDetailsService {
     public UserResponse getUserProfile(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
         return mapToUserResponse(user);
     }
 
@@ -178,12 +257,10 @@ public class UserService implements UserDetailsService {
     public UserResponse getUserProfileById(String userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
-
         return mapToUserResponse(user);
     }
 
     // --- Admin Features ---
-
     public java.util.List<UserResponse> getAllUsers() {
         return userRepository.findAll().stream()
                 .map(this::mapToUserResponse)
@@ -197,7 +274,6 @@ public class UserService implements UserDetailsService {
         user.setIsVerified(isVerified);
         user.updateTimestamp();
         userRepository.save(user);
-
         return mapToUserResponse(user);
     }
 
@@ -223,9 +299,7 @@ public class UserService implements UserDetailsService {
 
         user.generateFullName();
         user.updateTimestamp();
-
         userRepository.save(user);
-
         return mapToUserResponse(user);
     }
 
@@ -302,8 +376,8 @@ public class UserService implements UserDetailsService {
         // Update full name and timestamp
         user.generateFullName();
         user.updateTimestamp();
-
         user = userRepository.save(user);
+
         log.info("User profile updated successfully: {}", user.getEmail());
 
         return mapToUserResponse(user);
@@ -380,8 +454,8 @@ public class UserService implements UserDetailsService {
 
         user.generateFullName();
         user.updateTimestamp();
-
         user = userRepository.save(user);
+
         log.info("User profile updated successfully with multipart: {}", user.getEmail());
 
         return mapToUserResponse(user);
@@ -403,8 +477,8 @@ public class UserService implements UserDetailsService {
         // Update password
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         user.updateTimestamp();
-
         userRepository.save(user);
+
         log.info("Password changed successfully for user: {}", user.getEmail());
     }
 
@@ -516,7 +590,6 @@ public class UserService implements UserDetailsService {
     public void deleteUserById(String userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
-
         userRepository.delete(user);
         log.info("User deleted by ID: {}", userId);
     }

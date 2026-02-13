@@ -73,6 +73,12 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- Mail Support -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
         <!-- Cloudinary -->
         <dependency>
             <groupId>com.cloudinary</groupId>
