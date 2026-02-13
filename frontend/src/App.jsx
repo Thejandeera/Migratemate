@@ -9,6 +9,8 @@ import MarketPlace from './Pages/MarketPlace'
 import ServiceDetailPage from './Pages/ServiceDetailPage'
 import LiveARScanner from './components/Scanner/LiveARScanner'
 
+//backup app
+
 const App = () => {
   return (
     <Routes>
