@@ -1,78 +1,99 @@
 package com.example.migratemate.MailManagement.Service;
 
 import com.example.migratemate.MailManagement.Dto.EmailDTO;
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.http.*;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.core.io.ByteArrayResource;
+import org.springframework.web.client.RestTemplate;
 
-import java.util.Map;
+import java.util.*;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class EmailService {
 
-    private final JavaMailSender mailSender;
+    @Value("${sendgrid.api.key:}")
+    private String sendGridApiKey;
 
-    @Value("${spring.mail.username}")
+    @Value("${spring.mail.username:noreply@migratemate.com}")
     private String fromEmail;
 
     @Value("${app.name:MigrateMate}")
     private String appName;
+
+    private final RestTemplate restTemplate = new RestTemplate();
+
+    /**
+     * Send HTML email using SendGrid Web API (works on Render!)
+     */
+    @Async
+    public void sendHtmlEmail(EmailDTO emailDTO) {
+        try {
+            // Check if API key is configured
+            if (sendGridApiKey == null || sendGridApiKey.isEmpty()) {
+                log.error("❌ SendGrid API key not configured!");
+                return;
+            }
+
+            String url = "https://api.sendgrid.com/v3/mail/send";
+
+            // Build request body
+            Map<String, Object> requestBody = new HashMap<>();
+
+            // Personalizations
+            Map<String, Object> personalization = new HashMap<>();
+            personalization.put("to", new Object[]{
+                    Map.of("email", emailDTO.getTo())
+            });
+            requestBody.put("personalizations", new Object[]{personalization});
+
+            // From
+            requestBody.put("from", Map.of("email", fromEmail, "name", appName));
+
+            // Subject
+            requestBody.put("subject", emailDTO.getSubject());
+
+            // Content
+            String contentType = emailDTO.getHtmlBody() != null ? "text/html" : "text/plain";
+            String contentValue = emailDTO.getHtmlBody() != null ? emailDTO.getHtmlBody() : emailDTO.getBody();
+
+            requestBody.put("content", new Object[]{
+                    Map.of("type", contentType, "value", contentValue)
+            });
+
+            // Headers
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.set("Authorization", "Bearer " + sendGridApiKey);
+
+            HttpEntity<Map<String, Object>> request = new HttpEntity<>(requestBody, headers);
+
+            // Send request
+            ResponseEntity<String> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.POST,
+                    request,
+                    String.class
+            );
+
+            if (response.getStatusCode().is2xxSuccessful()) {
+                log.info("✅ HTML email sent successfully to: {}", emailDTO.getTo());
+            } else {
+                log.error("❌ SendGrid API returned error: {} - {}", response.getStatusCode(), response.getBody());
+            }
+        } catch (Exception e) {
+            log.error("❌ Failed to send HTML email to: {}", emailDTO.getTo(), e);
+        }
+    }
 
     /**
      * Send simple text email
      */
     @Async
     public void sendSimpleEmail(EmailDTO emailDTO) {
-        try {
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setFrom(fromEmail);
-            message.setTo(emailDTO.getTo());
-            message.setSubject(emailDTO.getSubject());
-            message.setText(emailDTO.getBody());
-
-            mailSender.send(message);
-            log.info("✅ Simple email sent successfully to: {}", emailDTO.getTo());
-        } catch (Exception e) {
-            log.error("❌ Failed to send simple email to: {}", emailDTO.getTo(), e);
-        }
-    }
-
-    /**
-     * Send HTML email
-     */
-    @Async
-    public void sendHtmlEmail(EmailDTO emailDTO) {
-        try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-            helper.setFrom(fromEmail);
-            helper.setTo(emailDTO.getTo());
-            helper.setSubject(emailDTO.getSubject());
-            helper.setText(emailDTO.getHtmlBody(), true);
-
-            // Add attachments if any
-            if (emailDTO.getAttachments() != null && !emailDTO.getAttachments().isEmpty()) {
-                for (Map.Entry<String, byte[]> entry : emailDTO.getAttachments().entrySet()) {
-                    helper.addAttachment(entry.getKey(), new ByteArrayResource(entry.getValue()));
-                }
-            }
-
-            mailSender.send(message);
-            log.info("✅ HTML email sent successfully to: {}", emailDTO.getTo());
-        } catch (MessagingException e) {
-            log.error("❌ Failed to send HTML email to: {}", emailDTO.getTo(), e);
-        }
+        sendHtmlEmail(emailDTO);
     }
 
     /**
@@ -189,9 +210,6 @@ public class EmailService {
                 "                </ul>" +
                 "            </div>" +
                 "            <p>Complete your profile to unlock all features and start connecting with the community!</p>" +
-                "            <center>" +
-                "                <a href='#' class='button'>Complete Your Profile</a>" +
-                "            </center>" +
                 "            <p>If you have any questions, our support team is here to help. Just reply to this email!</p>" +
                 "            <p>Happy migrating! 🌍✈️</p>" +
                 "            <p style='margin-top: 30px;'><strong>The " + appName + " Team</strong></p>" +
