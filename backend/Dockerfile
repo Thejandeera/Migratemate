@@ -1,29 +1,20 @@
+FROM eclipse-temurin:17-jre-alpine
 
-FROM eclipse-temurin:17-jdk-jammy
-
+# Add labels for better image management
+LABEL maintainer="migratemate"
+LABEL version="1.0"
 
 WORKDIR /app
 
+# Copy the JAR file (note: no leading slash on target)
+COPY target/*.jar app.jar
 
-COPY pom.xml .
-COPY mvnw .
-COPY mvnw.cmd .
-COPY .mvn .mvn
-
-
-RUN chmod +x ./mvnw
-
-
-COPY src ./src
-
-
-RUN ./mvnw clean package -DskipTests
-
-
-RUN find target -name "*.jar" -not -name "*-sources.jar" -not -name "*-javadoc.jar" -exec cp {} app.jar \;
-
-
+# Expose the port
 EXPOSE 8080
 
+# Health check (optional - remove if causing issues)
+# HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+#   CMD wget --quiet --tries=1 --spider http://localhost:8080/actuator/health || exit 1
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Run the application
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
