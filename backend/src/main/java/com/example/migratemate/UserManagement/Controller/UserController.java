@@ -63,12 +63,14 @@ public class UserController {
      * Send OTP
      */
     @PostMapping("/send-otp")
+
     public ResponseEntity<ApiResponse<Void>> sendOtp(@RequestParam String email) {
         try {
             userService.sendRegistrationOtp(email);
             return ResponseEntity.ok(ApiResponse.<Void>builder()
                     .success(true)
                     .message("OTP sent successfully to " + email)
+
                     .build());
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(ApiResponse.<Void>builder()
@@ -80,12 +82,15 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(ApiResponse.<Void>builder()
                             .success(false)
+
                             .message("Failed to send OTP")
+
                             .build());
         }
     }
 
     /**
+
      * Verify OTP
      */
     @PostMapping("/verify-otp")
@@ -103,6 +108,7 @@ public class UserController {
                     .message("Invalid or expired OTP")
                     .data(false)
                     .build());
+
         }
     }
 

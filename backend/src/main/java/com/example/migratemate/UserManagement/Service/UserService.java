@@ -1,5 +1,7 @@
 package com.example.migratemate.UserManagement.Service;
 
+
+
 import com.example.migratemate.AdminManagement.Entity.Admin;
 import com.example.migratemate.AdminManagement.Repository.AdminRepository;
 import com.example.migratemate.Config.JwtService;
@@ -39,6 +41,7 @@ public class UserService implements UserDetailsService {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
     private final CloudinaryService cloudinaryService;
+
     private final ApplicationEventPublisher eventPublisher;
 
     public UserService(UserRepository userRepository,
@@ -47,7 +50,9 @@ public class UserService implements UserDetailsService {
             JwtService jwtService,
             @Lazy AuthenticationManager authenticationManager,
             CloudinaryService cloudinaryService,
+
             ApplicationEventPublisher eventPublisher,
+
             EmailService emailService) {
         this.userRepository = userRepository;
         this.adminRepository = adminRepository;
@@ -55,6 +60,7 @@ public class UserService implements UserDetailsService {
         this.jwtService = jwtService;
         this.authenticationManager = authenticationManager;
         this.cloudinaryService = cloudinaryService;
+
         this.eventPublisher = eventPublisher;
         this.emailService = emailService;
     }
@@ -114,6 +120,7 @@ public class UserService implements UserDetailsService {
             return true;
         }
         return false;
+
     }
 
     /**
@@ -125,6 +132,12 @@ public class UserService implements UserDetailsService {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new IllegalArgumentException("Email already registered");
         }
+
+        // Validate OTP
+        if (request.getOtp() == null || request.getOtp().isEmpty()) {
+            throw new IllegalArgumentException("OTP is required");
+        }
+        otpService.consumeOtp(request.getEmail(), request.getOtp());
 
         // Upload images to Cloudinary
         String avatarUrl = null;
@@ -171,6 +184,7 @@ public class UserService implements UserDetailsService {
 
         log.info("User registered successfully: {}", user.getEmail());
 
+
         // Publish user registration event for email notification
         try {
             UserRegistrationEvent event = UserRegistrationEvent.builder()
@@ -186,7 +200,7 @@ public class UserService implements UserDetailsService {
         } catch (Exception e) {
             log.error("Failed to publish user registration event", e);
             // Don't fail registration if email event fails
-        }
+
 
         // Generate tokens
         UserDetails userDetails = loadUserByUsername(user.getEmail());
@@ -556,6 +570,21 @@ public class UserService implements UserDetailsService {
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .build();
+    }
+
+    /**
+     * Send OTP to email
+     */
+    public void sendOtp(String email) {
+        if (userRepository.existsByEmail(email)) {
+            throw new IllegalArgumentException("Email already registered");
+        }
+        String otp = otpService.generateOtp(email);
+        emailService.sendOtpEmail(email, otp);
+    }
+
+    public boolean verifyOtp(String email, String otp) {
+        return otpService.checkOtp(email, otp);
     }
 
     public void deleteUserById(String userId) {
