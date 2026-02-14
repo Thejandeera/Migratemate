@@ -76,7 +76,9 @@ const Login = () => {
 
                 setUserData(profileData);
 
-                // Send Welcome Notification
+                // Welcome Notification (Client-side trigger removed as endpoint is deprecated)
+                // Backend can handle welcome notifications if needed via event listeners
+                /*
                 try {
                     const notifyResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/notifications`, {
                         method: 'POST',
@@ -97,6 +99,7 @@ const Login = () => {
                 } catch (notifyErr) {
                     console.error("Error sending login notification", notifyErr);
                 }
+                */
 
 
                 navigate('/dashboard');

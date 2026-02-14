@@ -10,6 +10,8 @@ import ServiceDetailPage from './Pages/ServiceDetailPage'
 import LiveARScanner from './components/Scanner/LiveARScanner'
 import SosPage from './Pages/SosPage'
 
+import ErrorBoundary from './components/ErrorBoundary';
+
 const App = () => {
   return (
     <Routes>
@@ -21,7 +23,11 @@ const App = () => {
       <Route path="/marketplace" element={<MarketPlace />} />
       <Route path="/service/:id" element={<ServiceDetailPage />} />
       <Route path="/scanner" element={<LiveARScanner />} />
-      <Route path="/sos" element={<SosPage />} />
+      <Route path="/sos" element={
+        <ErrorBoundary>
+          <SosPage />
+        </ErrorBoundary>
+      } />
     </Routes>
   )
 }

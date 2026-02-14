@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { clearAuthData, isAuthenticated, getUserData } from '../utils/auth';
+import { clearAuthData, isAuthenticated, getUserData, getAuthData } from '../utils/auth';
 import { API_URL } from '../utils/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, Check, CheckCheck, Trash2, Box, MessageSquare, Star, Settings } from 'lucide-react';
@@ -38,7 +38,7 @@ const Navbar = () => {
             if (authStatus) {
                 const user = getUserData();
                 setUserData(user);
-                fetchNotifications(user.id);
+                fetchNotifications();
             }
         };
 
@@ -75,23 +75,38 @@ const Navbar = () => {
         }
     };
 
-    const fetchNotifications = async (userId) => {
-        if (!userId) return;
+    const fetchNotifications = async () => {
+        if (!isLoggedIn) return; // No userId needed for this endpoint
         try {
-            const token = localStorage.getItem('token');
-            const storedToken = sessionStorage.getItem('token') || localStorage.getItem('token');
+            const authData = getAuthData();
+            if (!authData?.token) return;
 
-            const response = await fetch(`${API_URL}/notifications/user/${userId}`, {
+            const response = await fetch(`${API_URL}/sos-notifications`, {
                 headers: {
-                    'Authorization': `Bearer ${storedToken}`
+                    'Authorization': `Bearer ${authData.token}`
                 }
             });
             if (response.ok) {
-                const data = await response.json();
-                // Sort by new to old
-                const sortedData = data.sort((a, b) => new Date(b.createdTime) - new Date(a.createdTime));
-                setNotifications(sortedData);
-                setUnreadCount(sortedData.filter(n => !n.read).length);
+                const jsonResponse = await response.json();
+                if (jsonResponse.success) {
+                    const data = jsonResponse.data;
+                    // Sort by new to old
+                    const sortedData = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+                    // Map backend fields to frontend expected format
+                    const mappedNotifications = sortedData.map(n => ({
+                        ...n,
+                        description: n.message,
+                        createdTime: n.createdAt,
+                        read: n.isRead,
+                        // Map type to color for UI
+                        color: n.notificationType === 'SOS_ALERT' ? 'RED' :
+                            n.notificationType === 'SOS_RESPONSE' ? 'GREEN' : 'GRAY'
+                    }));
+
+                    setNotifications(mappedNotifications);
+                    setUnreadCount(mappedNotifications.filter(n => !n.read).length);
+                }
             }
         } catch (error) {
             console.error("Failed to fetch notifications", error);
@@ -100,11 +115,12 @@ const Navbar = () => {
 
     const markAsRead = async (notificationId) => {
         try {
-            const storedToken = sessionStorage.getItem('token') || localStorage.getItem('token');
-            await fetch(`${API_URL}/notifications/${notificationId}/read`, {
+            const authData = getAuthData();
+            if (!authData?.token) return;
+            await fetch(`${API_URL}/sos-notifications/${notificationId}/read`, {
                 method: 'PUT',
                 headers: {
-                    'Authorization': `Bearer ${storedToken}`
+                    'Authorization': `Bearer ${authData.token}`
                 }
             });
             setNotifications(prev => prev.map(n =>
@@ -117,13 +133,13 @@ const Navbar = () => {
     };
 
     const markAllAsRead = async () => {
-        if (!userData?.id) return;
         try {
-            const storedToken = sessionStorage.getItem('token') || localStorage.getItem('token');
-            await fetch(`${API_URL}/notifications/user/${userData.id}/read-all`, {
+            const authData = getAuthData();
+            if (!authData?.token) return;
+            await fetch(`${API_URL}/sos-notifications/read-all`, {
                 method: 'PUT',
                 headers: {
-                    'Authorization': `Bearer ${storedToken}`
+                    'Authorization': `Bearer ${authData.token}`
                 }
             });
             setNotifications(prev => prev.map(n => ({ ...n, read: true })));
@@ -136,11 +152,12 @@ const Navbar = () => {
     const deleteNotification = async (e, notificationId) => {
         e.stopPropagation(); // Prevent toggling read status if clicking delete
         try {
-            const storedToken = sessionStorage.getItem('token') || localStorage.getItem('token');
-            await fetch(`${API_URL}/notifications/${notificationId}`, {
+            const authData = getAuthData();
+            if (!authData?.token) return;
+            await fetch(`${API_URL}/sos-notifications/${notificationId}`, {
                 method: 'DELETE',
                 headers: {
-                    'Authorization': `Bearer ${storedToken}`
+                    'Authorization': `Bearer ${authData.token}`
                 }
             });
             setNotifications(prev => {
@@ -154,20 +171,11 @@ const Navbar = () => {
     };
 
     const deleteAllNotifications = async () => {
-        if (!userData?.id) return;
-        try {
-            const storedToken = sessionStorage.getItem('token') || localStorage.getItem('token');
-            await fetch(`${API_URL}/notifications/user/${userData.id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${storedToken}`
-                }
-            });
-            setNotifications([]);
-            setUnreadCount(0);
-        } catch (error) {
-            console.error("Failed to delete all notifications", error);
-        }
+        // Feature not supported by current backend
+        // Can be implemented if endpoint is added
+        console.warn("Delete all not supported yet");
+        setNotifications([]);
+        setUnreadCount(0);
     };
 
     const handleLogout = () => {
