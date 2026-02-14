@@ -58,6 +58,8 @@ public class SecurityConfig {
                                 "/api/admin/register",
                                 "/api/admin/login",
                                 "/api/communities/**",
+                                "/api/sos/**",
+                                "/api/sos-notifications",
                                 "/api/ar/**",
                                 "/ws/**",
                                 "/topic/**",

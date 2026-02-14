@@ -102,6 +102,18 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- WebSocket Support (Already exists in your pom.xml) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+
+        <!-- STOMP Protocol Support -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-reactor-netty</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>
