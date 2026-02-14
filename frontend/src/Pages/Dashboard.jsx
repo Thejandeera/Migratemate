@@ -5,6 +5,10 @@ import Footer from '../components/Footer';
 import { getUserData, isAuthenticated } from '../utils/auth';
 import { getMyBookings } from '../utils/bookingApi';
 import AiSuggestions from '../components/Dashboard/AiSuggestions';
+import { API_URL } from '../utils/api';
+import SockJS from 'sockjs-client';
+import { Stomp } from '@stomp/stompjs';
+import { AlertCircle, Navigation } from 'lucide-react';
 
 const Dashboard = () => {
 
@@ -12,6 +16,53 @@ const Dashboard = () => {
     const user = getUserData();
     const [bookings, setBookings] = React.useState([]);
     const [loadingBookings, setLoadingBookings] = React.useState(true);
+    const [sosAlerts, setSosAlerts] = React.useState([]);
+
+    // Initialize WebSocket for SOS Alerts
+    useEffect(() => {
+        const fetchActiveSosAlerts = async () => {
+            try {
+                // Use a public endpoint or ensure authenticated
+                // For Dashboard checking existence, we might fetch public info or just use WS
+                const response = await fetch(`${API_URL}/sos/active`); // Assuming this is open or we use token if needed
+                if (response.ok) {
+                    const result = await response.json();
+                    setSosAlerts(result.data || []);
+                }
+            } catch (error) {
+                console.error('Failed to fetch SOS alerts', error);
+            }
+        };
+
+        fetchActiveSosAlerts();
+
+        const baseUrl = API_URL.replace('/api', '');
+        const socket = new SockJS(`${baseUrl}/ws`);
+        const client = Stomp.over(() => socket);
+        // client.debug = () => {}; 
+
+        client.connect({}, () => {
+            client.subscribe('/topic/sos-alerts', (message) => {
+                const alert = JSON.parse(message.body);
+                if (alert.status === 'ACTIVE') {
+                    setSosAlerts(prev => {
+                        if (prev.find(a => a.id === alert.id)) return prev;
+                        return [alert, ...prev];
+                    });
+                } else {
+                    setSosAlerts(prev => prev.filter(a => a.id !== alert.id));
+                }
+            });
+        }, (error) => {
+            console.error('WebSocket Error:', error);
+        });
+
+        return () => {
+            if (client && client.connected) {
+                client.disconnect();
+            }
+        };
+    }, []);
 
 
     // Mock Data for UI
@@ -52,16 +103,16 @@ const Dashboard = () => {
 
     // Get recent 2 bookings
     const activeRequests = bookings.slice(0, 2).map(b => ({
-         title: b.serviceTitle,
-         date: new Date(b.requestedDate).toLocaleDateString(),
-         status: b.status.charAt(0) + b.status.substring(1).toLowerCase(),
-         statusColor: b.status === "ACCEPTED" ? "bg-green-500 text-white" : "bg-yellow-100 text-yellow-800",
-         helper: b.providerName,
-         icon: (
-             <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-             </svg>
-         )
+        title: b.serviceTitle,
+        date: new Date(b.requestedDate).toLocaleDateString(),
+        status: b.status.charAt(0) + b.status.substring(1).toLowerCase(),
+        statusColor: b.status === "ACCEPTED" ? "bg-green-500 text-white" : "bg-yellow-100 text-yellow-800",
+        helper: b.providerName,
+        icon: (
+            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+            </svg>
+        )
     }));
 
 
@@ -91,6 +142,32 @@ const Dashboard = () => {
             <Navbar />
 
             <div className="w-full px-4 sm:px-6 lg:px-8 py-25">
+                {/* Red Alert Banner */}
+                {sosAlerts.length > 0 && (
+                    <div className="mb-6 bg-red-50 border-l-4 border-red-600 p-4 rounded-r-lg shadow-md animate-fade-in-down">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                            <div className="flex items-start gap-3">
+                                <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0 animate-bounce" />
+                                <div>
+                                    <h3 className="text-red-800 font-bold text-lg">SOS ALERT ACTIVE</h3>
+                                    <p className="text-red-700 text-sm">
+                                        {sosAlerts.length} person{sosAlerts.length > 1 ? 's' : ''} need help right now!
+                                    </p>
+                                    <p className="text-red-600 text-xs mt-1">
+                                        Location: {sosAlerts[0].address}
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => navigate('/sos')}
+                                className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-bold text-sm shadow-lg transform hover:scale-105 transition-all flex items-center justify-center gap-2"
+                            >
+                                <Navigation className="w-4 h-4" />
+                                View Details & Respond
+                            </button>
+                        </div>
+                    </div>
+                )}
                 {/* Hero Section */}
                 <div className="bg-[#22C55E] rounded-2xl p-6 sm:p-10 mb-8 relative overflow-hidden">
                     <div className="relative z-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -111,7 +188,10 @@ const Dashboard = () => {
                                 </div>
                             </div>
                         </div>
-                        <button className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2 transition-colors shadow-sm">
+                        <button
+                            onClick={() => navigate('/sos')}
+                            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2 transition-colors shadow-sm animate-pulse hover:animate-none"
+                        >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
                             SOS Emergency
                         </button>
@@ -172,24 +252,24 @@ const Dashboard = () => {
                                     <p className="text-sm text-gray-500">No active bookings found.</p>
                                 ) : (
                                     activeRequests.map((req, idx) => (
-                                    <div key={idx} className="bg-white border border-gray-100 rounded-xl p-4 flex items-center justify-between">
-                                        <div className="flex items-center gap-4">
-                                            <div className="bg-gray-50 p-2.5 rounded-lg text-gray-600">
-                                                {req.icon}
+                                        <div key={idx} className="bg-white border border-gray-100 rounded-xl p-4 flex items-center justify-between">
+                                            <div className="flex items-center gap-4">
+                                                <div className="bg-gray-50 p-2.5 rounded-lg text-gray-600">
+                                                    {req.icon}
+                                                </div>
+                                                <div>
+                                                    <h3 className="text-sm font-semibold text-gray-900">{req.title}</h3>
+                                                    <p className="text-xs text-gray-500">{req.date}</p>
+                                                </div>
                                             </div>
-                                            <div>
-                                                <h3 className="text-sm font-semibold text-gray-900">{req.title}</h3>
-                                                <p className="text-xs text-gray-500">{req.date}</p>
-                                            </div>
-                                        </div>
-                                        <div className="text-right">
-                                            <span className={`inline-block px-2.5 py-1 rounded-full ${req.statusColor} text-[10px] font-medium mb-1`}>
-                                                {req.status}
-                                            </span>
+                                            <div className="text-right">
+                                                <span className={`inline-block px-2.5 py-1 rounded-full ${req.statusColor} text-[10px] font-medium mb-1`}>
+                                                    {req.status}
+                                                </span>
 
-                                            {req.helper && <p className="text-[10px] text-gray-400">by {req.helper}</p>}
+                                                {req.helper && <p className="text-[10px] text-gray-400">by {req.helper}</p>}
+                                            </div>
                                         </div>
-                                    </div>
                                     ))
                                 )}
                             </div>
