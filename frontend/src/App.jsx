@@ -8,6 +8,7 @@ import Profile from './Pages/Profile'
 import MarketPlace from './Pages/MarketPlace'
 import ServiceDetailPage from './Pages/ServiceDetailPage'
 import LiveARScanner from './components/Scanner/LiveARScanner'
+import SosPage from './Pages/SosPage'
 
 const App = () => {
   return (
@@ -20,6 +21,7 @@ const App = () => {
       <Route path="/marketplace" element={<MarketPlace />} />
       <Route path="/service/:id" element={<ServiceDetailPage />} />
       <Route path="/scanner" element={<LiveARScanner />} />
+      <Route path="/sos" element={<SosPage />} />
     </Routes>
   )
 }
