@@ -587,7 +587,7 @@ const SosPage = () => {
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className="lg:col-span-2 bg-white rounded-2xl shadow-xl overflow-hidden"
+                            className="lg:col-span-2 bg-white rounded-2xl shadow-xl overflow-hidden relative z-0"
                         >
                             <div className="h-[50vh] lg:h-[calc(100vh-200px)]">
                                 {userLocation ? (
