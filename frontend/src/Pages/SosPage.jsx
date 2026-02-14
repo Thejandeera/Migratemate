@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import { AlertCircle, Phone, MapPin, User, Clock, CheckCircle, X } from 'lucide-react';
+import { AlertCircle, Phone, MapPin, User, Clock, CheckCircle, X, Navigation } from 'lucide-react';
 import { getUserData, getAuthData } from '../utils/auth';
 import { API_URL } from '../utils/api';
 import { toast } from 'react-hot-toast';
@@ -364,6 +364,15 @@ const SosPage = () => {
         }
     };
 
+    const handleGetDirections = (alert) => {
+        // Open Google Maps in a new tab
+        const url = `https://www.google.com/maps/dir/?api=1&destination=${alert.latitude},${alert.longitude}`;
+        window.open(url, '_blank');
+
+        // Also mark as responding
+        handleRespondToSOS(alert.id);
+    };
+
     const MapUpdater = ({ center }) => {
         const map = useMap();
         useEffect(() => {
@@ -537,7 +546,7 @@ const SosPage = () => {
                                                                 <Clock className="w-3 h-3" />
                                                                 {getTimeSince(alert.createdAt)}
                                                             </span>
-                                                            {alert.userPhone && (
+                                                            {alert.userPhone && alert.userId !== userData?.id && (
                                                                 <a
                                                                     href={`tel:${alert.userPhone}`}
                                                                     className="flex items-center gap-1 text-green-600 hover:text-green-700"
@@ -552,11 +561,12 @@ const SosPage = () => {
                                                             <button
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
-                                                                    handleRespondToSOS(alert.id);
+                                                                    handleGetDirections(alert);
                                                                 }}
-                                                                className="mt-2 w-full bg-green-600 hover:bg-green-700 text-white text-xs font-semibold py-2 px-4 rounded-lg transition-all"
+                                                                className="mt-2 w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-2 px-4 rounded-lg transition-all flex items-center justify-center gap-2"
                                                             >
-                                                                Respond to Help
+                                                                <Navigation className="w-3 h-3" />
+                                                                Get Directions
                                                             </button>
                                                         )}
                                                         {alert.helperName && (
@@ -579,7 +589,7 @@ const SosPage = () => {
                             animate={{ opacity: 1, scale: 1 }}
                             className="lg:col-span-2 bg-white rounded-2xl shadow-xl overflow-hidden"
                         >
-                            <div className="h-[600px] lg:h-[calc(100vh-200px)]">
+                            <div className="h-[50vh] lg:h-[calc(100vh-200px)]">
                                 {userLocation ? (
                                     <MapContainer
                                         center={[userLocation.latitude, userLocation.longitude]}
@@ -636,7 +646,7 @@ const SosPage = () => {
                                                             {alert.address}
                                                         </div>
 
-                                                        {alert.userPhone && (
+                                                        {alert.userPhone && alert.userId !== userData?.id && (
                                                             <a
                                                                 href={`tel:${alert.userPhone}`}
                                                                 className="block text-center bg-green-600 hover:bg-green-700 text-white text-sm font-semibold py-2 px-4 rounded-lg transition-all mb-2"
@@ -648,10 +658,11 @@ const SosPage = () => {
 
                                                         {alert.userId !== userData?.id && !alert.helperId && (
                                                             <button
-                                                                onClick={() => handleRespondToSOS(alert.id)}
-                                                                className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-4 rounded-lg transition-all"
+                                                                onClick={() => handleGetDirections(alert)}
+                                                                className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-4 rounded-lg transition-all flex items-center justify-center gap-2"
                                                             >
-                                                                I'll Help
+                                                                <Navigation className="w-4 h-4" />
+                                                                Get Directions
                                                             </button>
                                                         )}
 
