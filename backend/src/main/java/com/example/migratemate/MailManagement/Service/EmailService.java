@@ -362,4 +362,64 @@ public class EmailService {
                 "</body>" +
                 "</html>";
     }
+
+    /**
+     * Send service deletion email
+     */
+    @Async
+    public void sendServiceDeletionEmail(String email, String serviceTitle, String reason) {
+        try {
+            String subject = "Service Deletion Notification - " + appName;
+            String htmlBody = buildServiceDeletionEmailTemplate(serviceTitle, reason);
+
+            EmailDTO emailDTO = EmailDTO.builder()
+                    .to(email)
+                    .subject(subject)
+                    .htmlBody(htmlBody)
+                    .build();
+
+            sendHtmlEmail(emailDTO);
+        } catch (Exception e) {
+            log.error("❌ Failed to send service deletion email to: {}", email, e);
+        }
+    }
+
+    /**
+     * Build service deletion email HTML template
+     */
+    private String buildServiceDeletionEmailTemplate(String serviceTitle, String reason) {
+        return "<!DOCTYPE html>" +
+                "<html>" +
+                "<head>" +
+                "    <meta charset='UTF-8'>" +
+                "    <style>" +
+                "        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }" +
+                "        .container { max-width: 600px; margin: 0 auto; padding: 20px; }" +
+                "        .header { background: #e53e3e; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }"
+                +
+                "        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 5px 5px; }" +
+                "        .reason-box { background: #fff; border-left: 4px solid #e53e3e; padding: 15px; margin: 20px 0; font-style: italic; color: #555; }"
+                +
+                "        .footer { text-align: center; margin-top: 20px; color: #777; font-size: 12px; }" +
+                "    </style>" +
+                "</head>" +
+                "<body>" +
+                "    <div class='container'>" +
+                "        <div class='header'><h1>Service Removed</h1></div>" +
+                "        <div class='content'>" +
+                "            <p>Hello,</p>" +
+                "            <p>We are writing to inform you that your service <strong>" + serviceTitle
+                + "</strong> has been removed from " + appName + " by an administrator.</p>" +
+                "            <p><strong>Reason for deletion:</strong></p>" +
+                "            <div class='reason-box'>" +
+                "                \"" + reason + "\"" +
+                "            </div>" +
+                "            <p>If you believe this was a mistake or have any questions, please contact our support team.</p>"
+                +
+                "        </div>" +
+                "        <div class='footer'><p>&copy; 2024 " + appName + "</p></div>" +
+                "    </div>" +
+                "</body>" +
+                "</html>";
+    }
 }

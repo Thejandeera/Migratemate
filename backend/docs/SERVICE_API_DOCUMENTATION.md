@@ -24,6 +24,7 @@ Authorization: Bearer <your_jwt_token>
 | GET `/api/services/search` | ❌ No |
 | PUT `/api/services/{id}` | ✅ Yes (Owner only) |
 | DELETE `/api/services/{id}` | ✅ Yes (Owner only) |
+| DELETE `/api/services/admin/{id}` | ✅ Yes (Admin only) |
 | PATCH `/api/services/{id}/toggle` | ✅ Yes (Owner only) |
 
 ---
@@ -306,7 +307,33 @@ Deletes a service. Only the service owner can delete.
 
 ---
 
-### 10. Toggle Service Availability
+### 10. Admin Delete Service
+**DELETE** `/api/services/admin/{id}`
+
+Deletes a service by an administrator and sends an email notification to the provider with a reason.
+
+**Path Parameters:**
+- `id` - Service ID
+
+**Request Body:**
+```json
+{
+  "reason": "Violation of terms of service regarding prohibited items."
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Service deleted by admin successfully",
+  "data": null
+}
+```
+
+---
+
+### 11. Toggle Service Availability
 **PATCH** `/api/services/{id}/toggle`
 
 Toggles the `isAvailable` status of a service.

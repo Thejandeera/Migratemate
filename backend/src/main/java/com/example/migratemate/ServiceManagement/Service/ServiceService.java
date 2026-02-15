@@ -22,6 +22,7 @@ public class ServiceService {
     private final ServiceRepository serviceRepository;
     private final UserRepository userRepository;
     private final ImageUploadService imageUploadService;
+    private final com.example.migratemate.MailManagement.Service.EmailService emailService;
 
     // Create a new service
     public ServiceResponse createService(String email, CreateServiceRequest request) throws IOException {
@@ -186,6 +187,23 @@ public class ServiceService {
 
         serviceRepository.delete(service);
         log.info("Service deleted successfully: {}", serviceId);
+    }
+
+    // Admin delete service with reason
+    public void adminDeleteService(String serviceId, String reason) {
+        ServiceEntity service = serviceRepository.findById(serviceId)
+                .orElseThrow(() -> new RuntimeException("Service not found"));
+
+        // Fetch provider to get email
+        User provider = userRepository.findById(service.getProviderId())
+                .orElseThrow(() -> new RuntimeException("Provider not found"));
+
+        // Send email notification
+        emailService.sendServiceDeletionEmail(provider.getEmail(), service.getTitle(), reason);
+
+        // Delete service
+        serviceRepository.delete(service);
+        log.info("Service deleted by admin: {} Reason: {}", serviceId, reason);
     }
 
     // Get service by ID
