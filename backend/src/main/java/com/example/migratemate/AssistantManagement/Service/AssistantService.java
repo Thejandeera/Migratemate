@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -44,7 +43,15 @@ public class AssistantService {
     @Autowired
     private ARHistoryRepository arHistoryRepository;
 
+    @Autowired
+    private ChatLimitService chatLimitService;
+
     public ChatHistory processChat(String userId, String userMessage) {
+        // Check Limit
+        if (!chatLimitService.canUserChat(userId)) {
+            return new ChatHistory(userId, userMessage, "You have reached your limit of 10 free chats.");
+        }
+
         // 1. Fetch Context Data
         String serviceContext = serviceRepository.findAll().stream()
                 .map(s -> s.getTitle() + " (" + s.getCategory() + ")")
@@ -109,6 +116,10 @@ public class AssistantService {
             JsonNode root = mapper.readTree(response.getBody());
             assistantResponse = root.path("candidates").get(0).path("content").path("parts").get(0).path("text")
                     .asText();
+
+            // Increment usage only on successful response
+            chatLimitService.incrementUserChat(userId);
+
         } catch (Exception e) {
             e.printStackTrace();
             assistantResponse = "Sorry, I encountered an error while processing your request.";
