@@ -9,6 +9,7 @@ import { API_URL } from '../utils/api';
 import SockJS from 'sockjs-client';
 import { Stomp } from '@stomp/stompjs';
 import { AlertCircle, Navigation } from 'lucide-react';
+import AssistantChat from '../components/Assistant/AssistantChat';
 
 const Dashboard = () => {
 
@@ -324,6 +325,7 @@ const Dashboard = () => {
             </div>
 
             <Footer />
+            <AssistantChat />
         </div>
     );
 };
