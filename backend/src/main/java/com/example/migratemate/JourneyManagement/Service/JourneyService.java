@@ -148,6 +148,18 @@ public class JourneyService {
         return origin.contains(loc) || dest.contains(loc);
     }
 
+    @Autowired
+    private com.example.migratemate.JourneyManagement.Repository.JourneyPlanRepository journeyPlanRepository;
+
+    public JourneyPlanEntity savePlan(JourneyPlanEntity planEntity) {
+        planEntity.setCreatedAt(new java.util.Date());
+        return journeyPlanRepository.save(planEntity);
+    }
+
+    public List<JourneyPlanEntity> getUserPlans(String userId) {
+        return journeyPlanRepository.findByUserId(userId);
+    }
+
     private String callGemini(String prompt) {
         try {
             ObjectMapper mapper = new ObjectMapper();

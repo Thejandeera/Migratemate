@@ -99,3 +99,41 @@ export const generateJourneyPlan = async (planRequest) => {
         throw error;
     }
 };
+
+export const saveJourneyPlan = async (planEntity) => {
+    try {
+        const response = await fetch(`${API_URL}/journey/save`, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify(planEntity)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to save plan');
+        }
+
+        return data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const getUserJourneyPlans = async (userId) => {
+    try {
+        const response = await fetch(`${API_URL}/journey/user/${userId}`, {
+            headers: getHeaders()
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to fetch user plans');
+        }
+
+        return data;
+    } catch (error) {
+        throw error;
+    }
+};
