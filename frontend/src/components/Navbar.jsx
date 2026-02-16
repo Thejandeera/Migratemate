@@ -326,6 +326,7 @@ const Navbar = () => {
                         <Link to="/sos" onClick={handleAuthNavigation} className={`text-sm font-medium px-3 py-1.5 rounded-md transition-colors ${location.pathname === '/sos' ? 'text-gray-900 bg-gray-200/50' : 'text-gray-500 hover:text-gray-900'}`}>SOS</Link>
                         <Link to="/profile" onClick={handleAuthNavigation} className={`text-sm font-medium px-3 py-1.5 rounded-md transition-colors ${location.pathname === '/profile' ? 'text-gray-900 bg-gray-200/50' : 'text-gray-500 hover:text-gray-900'}`}>Profile</Link>
                         <Link to="/scanner" onClick={handleAuthNavigation} className={`text-sm font-medium px-3 py-1.5 rounded-md transition-colors ${location.pathname === '/scanner' ? 'text-gray-900 bg-gray-200/50' : 'text-gray-500 hover:text-gray-900'}`}>Scanner</Link>
+                        <Link to="/journey-planner" className={`text-sm font-medium px-3 py-1.5 rounded-md transition-colors ${location.pathname === '/journey-planner' ? 'text-green-600 bg-green-50' : 'text-gray-500 hover:text-gray-900'}`}>Journey Planner</Link>
                     </div>
 
                     <div className="hidden md:flex items-center gap-4">
@@ -422,6 +423,7 @@ const Navbar = () => {
                             <Link to="/sos" onClick={handleAuthNavigation} className={`block px-3 py-2 text-base font-medium rounded-md ${location.pathname === '/sos' ? 'text-[#22C55E] bg-[#22C55E]/10' : 'text-gray-700 hover:bg-gray-50'}`}>SOS</Link>
                             <Link to="/profile" onClick={handleAuthNavigation} className={`block px-3 py-2 text-base font-medium rounded-md ${location.pathname === '/profile' ? 'text-[#22C55E] bg-[#22C55E]/10' : 'text-gray-700 hover:bg-gray-50'}`}>Profile</Link>
                             <Link to="/scanner" onClick={handleAuthNavigation} className={`block px-3 py-2 text-base font-medium rounded-md ${location.pathname === '/scanner' ? 'text-[#22C55E] bg-[#22C55E]/10' : 'text-gray-700 hover:bg-gray-50'}`}>Scanner</Link>
+                            <Link to="/journey-planner" className={`block px-3 py-2 text-base font-medium rounded-md ${location.pathname === '/journey-planner' ? 'text-[#22C55E] bg-[#22C55E]/10' : 'text-gray-700 hover:bg-gray-50'}`}>Journey Planner</Link>
 
                             <div className="border-t border-gray-100 pt-4 mt-4">
                                 {isLoggedIn ? (
