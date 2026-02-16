@@ -9,4 +9,5 @@ public class JourneyRequest {
     private Double budget;
     private Integer timelineWeeks;
     private Integer familySize;
+    private String additionalInfo;
 }

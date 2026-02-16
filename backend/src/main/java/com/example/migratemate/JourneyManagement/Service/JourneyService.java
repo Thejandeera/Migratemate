@@ -70,13 +70,17 @@ public class JourneyService {
         String prompt = String.format(
                 "You are a Smart Migration Journey Planner. Create a %d-week plan for a family of %d moving from %s to %s with a budget of $%.2f. "
                         +
+                        "User's Specific Needs/Notes: %s. "
+                        +
                         "Use the provided SERVICES to populate the plan. " +
                         "Output ONLY a JSON object with this structure: " +
-                        "{ 'summary': '...', 'phases': [ { 'phaseName': '...', 'aiAdvice': '...', 'recommendedServiceIds': ['id1', 'id2'] } ] } "
+                        "{ 'summary': '...', 'phases': [ { 'phaseName': '...', 'aiAdvice': 'MARKDOWN STRING: Detailed step-by-step guide. Use bullet points (- ), bold topics (**Topic**), and clear headers.', 'recommendedServiceIds': ['id1', 'id2'] } ] } "
+                        +
+                        "Make the advice highly detailed, practical, and structured pointwise. "
                         +
                         "CANDIDATE SERVICES: %s",
                 request.getTimelineWeeks(), request.getFamilySize(), request.getOrigin(), request.getDestination(),
-                request.getBudget(), candidatesJson);
+                request.getBudget(), request.getAdditionalInfo(), candidatesJson);
 
         // 3. Call Gemini
         String summary = "Plan generated successfully.";
