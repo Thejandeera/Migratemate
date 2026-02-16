@@ -160,6 +160,10 @@ public class JourneyService {
         return journeyPlanRepository.findByUserId(userId);
     }
 
+    public void deletePlan(String planId) {
+        journeyPlanRepository.deleteById(planId);
+    }
+
     private String callGemini(String prompt) {
         try {
             ObjectMapper mapper = new ObjectMapper();

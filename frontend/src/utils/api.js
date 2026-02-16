@@ -132,6 +132,30 @@ export const getUserJourneyPlans = async (userId) => {
             throw new Error(data.message || 'Failed to fetch user plans');
         }
 
+
+        return data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const deleteJourneyPlan = async (planId) => {
+    try {
+        const response = await fetch(`${API_URL}/journey/${planId}`, {
+            method: 'DELETE',
+            headers: getHeaders()
+        });
+
+        if (response.status === 204) {
+            return true;
+        }
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to delete plan');
+        }
+
         return data;
     } catch (error) {
         throw error;
