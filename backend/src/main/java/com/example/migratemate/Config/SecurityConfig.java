@@ -61,6 +61,7 @@ public class SecurityConfig {
                                 "/api/sos/**",
                                 "/api/sos-notifications",
                                 "/api/assistant/**",
+                                "/api/journey/**",
                                 "/api/ar/**",
                                 "/ws/**",
                                 "/topic/**",

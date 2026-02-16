@@ -79,3 +79,23 @@ export const createNotification = async (userId, title, description, color = 'GR
         console.error("Error creating notification", error);
     }
 };
+
+export const generateJourneyPlan = async (planRequest) => {
+    try {
+        const response = await fetch(`${API_URL}/journey/plan`, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify(planRequest)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to generate plan');
+        }
+
+        return data;
+    } catch (error) {
+        throw error;
+    }
+};
