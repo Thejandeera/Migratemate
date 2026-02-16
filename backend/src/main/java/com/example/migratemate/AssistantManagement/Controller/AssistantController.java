@@ -28,4 +28,12 @@ public class AssistantController {
     public ResponseEntity<List<ChatHistory>> getHistory(@PathVariable String userId) {
         return ResponseEntity.ok(assistantService.getHistory(userId));
     }
+
+    @Autowired
+    private com.example.migratemate.AssistantManagement.Service.ChatLimitService chatLimitService;
+
+    @GetMapping("/usage/{userId}")
+    public ResponseEntity<Map<String, Object>> getUsage(@PathVariable String userId) {
+        return ResponseEntity.ok(chatLimitService.getUsageStats(userId));
+    }
 }

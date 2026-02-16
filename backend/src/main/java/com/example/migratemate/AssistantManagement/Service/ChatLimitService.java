@@ -5,8 +5,6 @@ import com.example.migratemate.AssistantManagement.Repository.ChatUsageRepositor
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-
 @Service
 public class ChatLimitService {
 
@@ -17,21 +15,20 @@ public class ChatLimitService {
 
     public boolean canUserChat(String userId) {
         if (userId == null || userId.equals("guest") || userId.equals("undefined")) {
-            // Guests might have strict limits or allow a few, keeping it simple: allow
-            // guests for now or restrict?
-            // User asked "for each user should able to allow 10 chats only".
-            // I'll assume this applies to registered users. For guests, I'll allow a small
-            // number or just 10 too if I tracked by IP/session, but here I track by userId.
-            // If userId is guest, I can't track easily without session. For now, let's
-            // assume limit applies to Logged-in users.
             return true;
         }
 
-        Optional<ChatUsage> usageOpt = chatUsageRepository.findById(userId);
-        if (usageOpt.isPresent()) {
-            return usageOpt.get().getMessageCount() < MAX_CHATS;
+        ChatUsage usage = chatUsageRepository.findById(userId).orElse(new ChatUsage(userId, 0));
+
+        // Check for reset
+        if (usage.getLastResetTime() == null
+                || usage.getLastResetTime().toLocalDate().isBefore(java.time.LocalDate.now())) {
+            usage.setMessageCount(0);
+            usage.setLastResetTime(java.time.LocalDateTime.now());
+            chatUsageRepository.save(usage);
         }
-        return true;
+
+        return usage.getMessageCount() < MAX_CHATS;
     }
 
     public void incrementUserChat(String userId) {
@@ -42,14 +39,48 @@ public class ChatLimitService {
         ChatUsage usage = chatUsageRepository.findById(userId)
                 .orElse(new ChatUsage(userId, 0));
 
+        // Ensure reset check happens here too in case first action is increment
+        // (unlikely but safe)
+        if (usage.getLastResetTime() == null
+                || usage.getLastResetTime().toLocalDate().isBefore(java.time.LocalDate.now())) {
+            usage.setMessageCount(0);
+            usage.setLastResetTime(java.time.LocalDateTime.now());
+        }
+
         usage.incrementCount();
         chatUsageRepository.save(usage);
     }
 
-    public int getRemainingChats(String userId) {
+    public java.util.Map<String, Object> getUsageStats(String userId) {
+        System.out.println("DEBUG: getUsageStats called for userId: " + userId);
+        java.util.Map<String, Object> stats = new java.util.HashMap<>();
+
         if (userId == null || userId.equals("guest") || userId.equals("undefined")) {
-            return MAX_CHATS;
+            System.out.println("DEBUG: userId is null/guest/undefined, returning default stats.");
+            stats.put("count", 0);
+            stats.put("limit", MAX_CHATS);
+            stats.put("remaining", MAX_CHATS);
+            return stats;
         }
-        return MAX_CHATS - chatUsageRepository.findById(userId).map(ChatUsage::getMessageCount).orElse(0);
+
+        ChatUsage usage = chatUsageRepository.findById(userId).orElse(new ChatUsage(userId, 0));
+
+        // Helper reset check for display accuracy
+        if (usage.getLastResetTime() == null
+                || usage.getLastResetTime().toLocalDate().isBefore(java.time.LocalDate.now())) {
+            usage.setMessageCount(0);
+            usage.setLastResetTime(java.time.LocalDateTime.now());
+            chatUsageRepository.save(usage);
+        }
+
+        stats.put("count", usage.getMessageCount());
+        stats.put("limit", MAX_CHATS);
+        stats.put("remaining", MAX_CHATS - usage.getMessageCount());
+
+        // Calculate next reset (midnight tomorrow)
+        java.time.LocalDateTime nextReset = java.time.LocalDate.now().plusDays(1).atStartOfDay();
+        stats.put("nextReset", nextReset.toString());
+
+        return stats;
     }
 }

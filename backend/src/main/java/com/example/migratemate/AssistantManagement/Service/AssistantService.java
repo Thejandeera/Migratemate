@@ -52,86 +52,97 @@ public class AssistantService {
             return new ChatHistory(userId, userMessage, "You have reached your limit of 10 free chats.");
         }
 
-        // 1. Fetch Context Data
-        String serviceContext = serviceRepository.findAll().stream()
-                .map(s -> s.getTitle() + " (" + s.getCategory() + ")")
-                .collect(Collectors.joining(", "));
-
-        String communityContext = communityRepository.findAll().stream()
-                .map(c -> c.getName() + ": " + c.getDescription())
+        // 1. Fetch Context Data (Enhanced)
+        // Services: specific focus on active ones and details
+        String serviceContext = serviceRepository.findByIsActiveTrue().stream()
+                .map(s -> String.format("%s (%s) - %s [Origin: %s, Dest: %s, Price: $%.2f]",
+                        s.getTitle(), s.getCategory(), s.getDescription(), s.getOrigin(), s.getDestination(),
+                        s.getPrice()))
                 .collect(Collectors.joining("; "));
 
-        // Only fetch booking context if userId is valid
+        // Communities: specific focus on active ones
+        String communityContext = communityRepository.findByIsActiveTrue().stream()
+                .map(c -> String.format("%s (from %s to %s): %s",
+                        c.getName(), c.getOriginCountry(), c.getDestinationCountry(), c.getDescription()))
+                .collect(Collectors.joining("; "));
+
+        // Bookings (Existing logic + Provider logic)
         String bookingContext = "No bookings found.";
         String arContext = "No AR history found.";
 
         if (userId != null && !userId.equals("undefined") && !userId.equals("null")) {
-            bookingContext = bookingRepository.findByCustomerIdOrderByCreatedAtDesc(userId).stream() // Corrected method
-                                                                                                     // call //
-                                                                                                     // identifying by
-                                                                                                     // repo check
-                                                                                                     // earlier
-                    .map(b -> "Booking for " + b.getServiceTitle() + " on " + b.getRequestedDate() + " status: "
-                            + b.getStatus())
+            String customerBookings = bookingRepository.findByCustomerIdOrderByCreatedAtDesc(userId).stream()
+                    .map(b -> String.format("Ref:%s Service:%s Date:%s Status:%s", b.getId(), b.getServiceTitle(),
+                            b.getRequestedDate(), b.getStatus()))
                     .collect(Collectors.joining("; "));
+
+            String providerBookings = bookingRepository.findByProviderIdOrderByCreatedAtDesc(userId).stream()
+                    .map(b -> String.format("Ref:%s Client:%s Service:%s Date:%s Status:%s", b.getId(),
+                            b.getCustomerName(), b.getServiceTitle(), b.getRequestedDate(), b.getStatus()))
+                    .collect(Collectors.joining("; "));
+
+            if (!customerBookings.isEmpty() || !providerBookings.isEmpty()) {
+                bookingContext = "Your Bookings: " + (customerBookings.isEmpty() ? "None" : customerBookings) +
+                        " | Your Client Orders: " + (providerBookings.isEmpty() ? "None" : providerBookings);
+            }
 
             arContext = arHistoryRepository.findByUserId(userId).stream()
                     .map(ar -> "scanned: " + ar.getName() + " at " + ar.getLocation())
                     .collect(Collectors.joining("; "));
         }
 
-        // 2. Construct Prompt
-        String systemInstruction = "You are a personal AI Assistant for MigrateMate, an app helping migrants settle in Australia. "
-                +
-                "You have access to the following real-time data:\n" +
-                "Available Services: " + serviceContext + "\n" +
-                "User Bookings: " + bookingContext + "\n" +
-                "Communities: " + communityContext + "\n" +
-                "User's AR Scans History: " + arContext + "\n" +
-                "Answer the user's question accurately based on this data. Be helpful, concise, and friendly. " +
-                "If the user asks about something not in the data, try to be generally helpful about migrating to Australia.";
+        System.out.println("DEBUG: Context Built. Services: " + serviceContext.length() + " chars, Communities: "
+                + communityContext.length() + " chars.");
 
-        String requestBody = "{"
-                + "\"contents\": [{"
-                + "\"parts\": ["
-                + "{\"text\": \"" + systemInstruction.replace("\"", "'") + "\\n\\nUser: "
-                + userMessage.replace("\"", "'") + "\"}"
-                + "]"
-                + "}]"
-                + "}";
-
-        // 3. Call Gemini API
-        RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-
-        HttpEntity<String> entity = new HttpEntity<>(requestBody, headers);
-
-        String url = GEMINI_API_URL + geminiApiKey;
-        String assistantResponse = "I'm having trouble connecting right now. Please try again later.";
-
+        // 2. Construct Prompt safely using ObjectMapper
         try {
-            ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
             ObjectMapper mapper = new ObjectMapper();
+
+            String systemInstruction = "You are a personal AI Assistant for MigrateMate. "
+                    + "Data availability:\n"
+                    + "AVAILABLE SERVICES: " + serviceContext + "\n\n"
+                    + "COMMUNITIES: " + communityContext + "\n\n"
+                    + "USER BOOKINGS/ORDERS: " + bookingContext + "\n\n"
+                    + "AR HISTORY: " + arContext + "\n\n"
+                    + "Answer based on this data. If providing a service, mention price and origin/destination. Be helpful and friendly.";
+
+            // Build JSON structure: { "contents": [ { "parts": [ { "text": "..." } ] } ] }
+            var part = mapper.createObjectNode().put("text", systemInstruction + "\n\nUser Question: " + userMessage);
+            var parts = mapper.createArrayNode().add(part);
+            var content = mapper.createObjectNode().set("parts", parts);
+            var contents = mapper.createArrayNode().add(content);
+            var requestBodyNode = mapper.createObjectNode().set("contents", contents);
+
+            String requestBody = mapper.writeValueAsString(requestBodyNode);
+
+            // 3. Call Gemini API
+            RestTemplate restTemplate = new RestTemplate();
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+
+            HttpEntity<String> entity = new HttpEntity<>(requestBody, headers);
+            String url = GEMINI_API_URL + geminiApiKey;
+
+            ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
             JsonNode root = mapper.readTree(response.getBody());
-            assistantResponse = root.path("candidates").get(0).path("content").path("parts").get(0).path("text")
+            String assistantResponse = root.path("candidates").get(0).path("content").path("parts").get(0).path("text")
                     .asText();
 
-            // Increment usage only on successful response
+            // Increment usage
             chatLimitService.incrementUserChat(userId);
+
+            // 4. Save History
+            if (userId != null && !userId.equals("undefined")) {
+                ChatHistory history = new ChatHistory(userId, userMessage, assistantResponse);
+                chatHistoryRepository.save(history);
+                return history;
+            } else {
+                return new ChatHistory("guest", userMessage, assistantResponse);
+            }
 
         } catch (Exception e) {
             e.printStackTrace();
-            assistantResponse = "Sorry, I encountered an error while processing your request.";
-        }
-
-        // 4. Save Chat History
-        if (userId != null && !userId.equals("undefined")) {
-            ChatHistory history = new ChatHistory(userId, userMessage, assistantResponse);
-            chatHistoryRepository.save(history);
-            return history;
-        } else {
-            return new ChatHistory("guest", userMessage, assistantResponse);
+            return new ChatHistory(userId, userMessage, "Sorry, I encountered an internal error. Please try again.");
         }
     }
 

@@ -9,6 +9,7 @@ public class ChatUsage {
     @Id
     private String userId;
     private int messageCount;
+    private java.time.LocalDateTime lastResetTime;
 
     public ChatUsage() {
     }
@@ -16,6 +17,7 @@ public class ChatUsage {
     public ChatUsage(String userId, int messageCount) {
         this.userId = userId;
         this.messageCount = messageCount;
+        this.lastResetTime = java.time.LocalDateTime.now();
     }
 
     public String getUserId() {
@@ -36,5 +38,13 @@ public class ChatUsage {
 
     public void incrementCount() {
         this.messageCount++;
+    }
+
+    public java.time.LocalDateTime getLastResetTime() {
+        return lastResetTime;
+    }
+
+    public void setLastResetTime(java.time.LocalDateTime lastResetTime) {
+        this.lastResetTime = lastResetTime;
     }
 }
