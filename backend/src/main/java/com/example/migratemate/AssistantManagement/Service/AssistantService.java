@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 @Service
 public class AssistantService {
 
-    @Value("${gemini.api.key}")
+    @Value("${my.key}")
     private String geminiApiKey;
 
     private final String GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=";
