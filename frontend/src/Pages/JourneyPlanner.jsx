@@ -109,6 +109,19 @@ const JourneyPlanner = () => {
         setShowMyPlans(false);
     };
 
+    const resetPlanner = () => {
+        setFormData({
+            origin: '',
+            destination: '',
+            budget: 2000,
+            timelineWeeks: 4,
+            familySize: 1,
+            additionalInfo: ''
+        });
+        setPlan(null);
+        setStep(1);
+    };
+
     const downloadPDF = async () => {
         // Use the hidden print view for better quality
         const element = hiddenPrintRef.current;
@@ -123,6 +136,9 @@ const JourneyPlanner = () => {
             const pdf = new jsPDF('p', 'mm', 'a4');
             const pdfWidth = pdf.internal.pageSize.getWidth();
             const pdfHeight = pdf.internal.pageSize.getHeight();
+            // Desired bottom margin in mm
+            const bottomMargin = 20;
+            const contentHeightPerPage = pdfHeight - bottomMargin;
 
             const imgProps = pdf.getImageProperties(dataUrl);
             const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
@@ -130,14 +146,24 @@ const JourneyPlanner = () => {
             let heightLeft = imgHeight;
             let position = 0;
 
+            // First page
             pdf.addImage(dataUrl, 'PNG', 0, position, pdfWidth, imgHeight);
-            heightLeft -= pdfHeight;
+            // Mask the bottom margin with a white rectangle to create "spacing"
+            pdf.setFillColor(255, 255, 255);
+            pdf.rect(0, contentHeightPerPage, pdfWidth, bottomMargin, 'F');
 
-            while (heightLeft >= 0) {
-                position = heightLeft - imgHeight;
+            heightLeft -= contentHeightPerPage;
+
+            while (heightLeft > 0) {
+                position -= contentHeightPerPage; // Shift up by the content height we just printed
                 pdf.addPage();
                 pdf.addImage(dataUrl, 'PNG', 0, position, pdfWidth, imgHeight);
-                heightLeft -= pdfHeight;
+
+                // Mask the bottom margin again
+                pdf.setFillColor(255, 255, 255);
+                pdf.rect(0, contentHeightPerPage, pdfWidth, bottomMargin, 'F');
+
+                heightLeft -= contentHeightPerPage;
             }
 
             pdf.save(`MigrateMate_Plan_${formData.destination}.pdf`);
