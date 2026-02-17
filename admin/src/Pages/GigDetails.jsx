@@ -67,6 +67,13 @@ const ZoomableImage = ({ src, alt, className }) => {
     );
 };
 
+const STATUS_CONFIG = {
+    INREVIEW: { label: 'In Review', bg: 'bg-yellow-100', text: 'text-yellow-800', dot: 'bg-yellow-500' },
+    APPROVED: { label: 'Approved', bg: 'bg-green-100', text: 'text-green-800', dot: 'bg-green-500' },
+    REJECTED: { label: 'Rejected', bg: 'bg-red-100', text: 'text-red-800', dot: 'bg-red-500' },
+    ADVICED: { label: 'Adviced', bg: 'bg-blue-100', text: 'text-blue-800', dot: 'bg-blue-500' },
+};
+
 const GigDetails = () => {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -74,6 +81,7 @@ const GigDetails = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [notification, setNotification] = useState({ show: false, message: '', type: '' });
+    const [updatingStatus, setUpdatingStatus] = useState(false);
 
     useEffect(() => {
         fetchServiceDetails();
@@ -119,10 +127,43 @@ const GigDetails = () => {
         setTimeout(() => setNotification({ show: false, message: '', type: '' }), 3000);
     };
 
+    const handleStatusUpdate = async (newStatus) => {
+        setUpdatingStatus(true);
+        try {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/services/admin/${id}/status`, {
+                method: 'PATCH',
+                headers: getHeaders(),
+                body: JSON.stringify({ status: newStatus })
+            });
+            const data = await response.json();
+            if (data.success) {
+                setService({ ...service, status: newStatus });
+                showNotification(`Status updated to ${STATUS_CONFIG[newStatus]?.label || newStatus}`, 'success');
+            } else {
+                showNotification(data.message || 'Failed to update status', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            showNotification('Failed to update status', 'error');
+        } finally {
+            setUpdatingStatus(false);
+        }
+    };
+
     const getStatusBadge = (isActive, isAvailable) => {
         if (!isActive) return <span className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold flex items-center gap-1"><XCircle className="w-3 h-3" /> Inactive</span>;
         if (isAvailable) return <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Available</span>;
         return <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold flex items-center gap-1"><Clock className="w-3 h-3" /> Unavailable</span>;
+    };
+
+    const getServiceStatusBadge = (status) => {
+        const config = STATUS_CONFIG[status] || STATUS_CONFIG.INREVIEW;
+        return (
+            <span className={`px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 ${config.bg} ${config.text}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`}></span>
+                {config.label}
+            </span>
+        );
     };
 
     if (loading) return (
@@ -167,8 +208,8 @@ const GigDetails = () => {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -50 }}
                         className={`fixed top-20 right-4 left-4 md:left-auto md:right-6 p-4 rounded-xl shadow-2xl z-[200] text-white backdrop-blur-sm ${notification.type === 'success'
-                                ? 'bg-gradient-to-r from-green-500 to-emerald-600'
-                                : 'bg-gradient-to-r from-red-500 to-pink-600'
+                            ? 'bg-gradient-to-r from-green-500 to-emerald-600'
+                            : 'bg-gradient-to-r from-red-500 to-pink-600'
                             }`}
                     >
                         <div className="flex items-center justify-between">
@@ -200,6 +241,7 @@ const GigDetails = () => {
                             <div className="flex items-center gap-3 mb-2">
                                 <h1 className="text-3xl font-bold text-gray-900">{service.title}</h1>
                                 {getStatusBadge(service.isActive, service.isAvailable)}
+                                {getServiceStatusBadge(service.status)}
                             </div>
                             <div className="flex items-center gap-4 text-gray-500 text-sm">
                                 <span className="flex items-center gap-1 bg-white px-2 py-1 rounded border border-gray-200" onClick={() => copyToClipboard(service.id, 'Service ID')}>
@@ -398,6 +440,62 @@ const GigDetails = () => {
                                     </div>
                                     <div className="text-xs text-gray-500 uppercase mt-1">{service.totalReviews || 0} Reviews</div>
                                 </div>
+                            </div>
+                        </div>
+
+                        {/* Admin Status Actions */}
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                            <h2 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                <Tag className="w-5 h-5 text-gray-500" />
+                                Service Status
+                            </h2>
+                            <div className="mb-4">
+                                <div className="flex items-center justify-between py-2">
+                                    <span className="text-gray-500 text-sm">Current Status</span>
+                                    {getServiceStatusBadge(service.status)}
+                                </div>
+                            </div>
+                            <div className="space-y-2">
+                                {service.status !== 'APPROVED' && (
+                                    <button
+                                        onClick={() => handleStatusUpdate('APPROVED')}
+                                        disabled={updatingStatus}
+                                        className={`w-full py-2.5 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors font-medium text-sm flex items-center justify-center gap-2 border border-green-200 ${updatingStatus ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    >
+                                        <CheckCircle className="w-4 h-4" />
+                                        Approve
+                                    </button>
+                                )}
+                                {service.status !== 'REJECTED' && (
+                                    <button
+                                        onClick={() => handleStatusUpdate('REJECTED')}
+                                        disabled={updatingStatus}
+                                        className={`w-full py-2.5 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors font-medium text-sm flex items-center justify-center gap-2 border border-red-200 ${updatingStatus ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    >
+                                        <XCircle className="w-4 h-4" />
+                                        Reject
+                                    </button>
+                                )}
+                                {service.status !== 'ADVICED' && (
+                                    <button
+                                        onClick={() => handleStatusUpdate('ADVICED')}
+                                        disabled={updatingStatus}
+                                        className={`w-full py-2.5 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors font-medium text-sm flex items-center justify-center gap-2 border border-blue-200 ${updatingStatus ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    >
+                                        <Clock className="w-4 h-4" />
+                                        Advice
+                                    </button>
+                                )}
+                                {service.status !== 'INREVIEW' && (
+                                    <button
+                                        onClick={() => handleStatusUpdate('INREVIEW')}
+                                        disabled={updatingStatus}
+                                        className={`w-full py-2.5 bg-yellow-50 text-yellow-700 rounded-lg hover:bg-yellow-100 transition-colors font-medium text-sm flex items-center justify-center gap-2 border border-yellow-200 ${updatingStatus ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    >
+                                        <Clock className="w-4 h-4" />
+                                        Set In Review
+                                    </button>
+                                )}
                             </div>
                         </div>
 

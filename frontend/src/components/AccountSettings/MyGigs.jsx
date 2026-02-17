@@ -10,6 +10,14 @@ const CATEGORY_NAMES = {
     'CULTURAL_SUPPORT': 'Cultural Support'
 };
 
+// Service status display config
+const STATUS_CONFIG = {
+    INREVIEW: { label: 'In Review', bg: 'bg-yellow-100', text: 'text-yellow-700' },
+    APPROVED: { label: 'Approved', bg: 'bg-green-100', text: 'text-green-700' },
+    REJECTED: { label: 'Rejected', bg: 'bg-red-100', text: 'text-red-700' },
+    ADVICED: { label: 'Adviced', bg: 'bg-blue-100', text: 'text-blue-700' },
+};
+
 const MyGigs = () => {
     const [gigs, setGigs] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -273,6 +281,11 @@ const MyGigs = () => {
                                                     }`}>
                                                     {gig.available ? 'Active' : 'Inactive'}
                                                 </span>
+                                                {gig.status && STATUS_CONFIG[gig.status] && (
+                                                    <span className={`px-2 py-0.5 text-[10px] font-bold uppercase rounded-full tracking-wide ${STATUS_CONFIG[gig.status].bg} ${STATUS_CONFIG[gig.status].text}`}>
+                                                        {STATUS_CONFIG[gig.status].label}
+                                                    </span>
+                                                )}
                                             </div>
                                             <div className="text-xs text-gray-500 mb-2">
                                                 {CATEGORY_NAMES[gig.category] || gig.category} • {getLocation(gig)}
