@@ -6,7 +6,7 @@ import Navbar from '../components/Navbar';
 import { getAuthData } from '../utils/auth';
 
 // Adjust if you have a central config
-const API_BASE_URL = "http://localhost:8080/api";
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const CommunityChat = () => {
     const { id: communityId } = useParams();

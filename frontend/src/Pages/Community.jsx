@@ -4,6 +4,7 @@ import { Search, Users, MapPin, ArrowRight, Loader, Filter } from 'lucide-react'
 import { API_URL } from '../utils/api';
 import { getAuthData, isAuthenticated } from '../utils/auth';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 
 // Mock data for fallback/development if backend is empty
 const MOCK_COMMUNITIES = [
@@ -227,7 +228,7 @@ const Community = () => {
     // For now, in 'Browse', we just show 'Join'.
     // If the user attempts to join an already joined community, backend should handle it gracefully or we check locally.
 
-    return (
+    return (<>
         <div className="min-h-screen bg-gray-50 font-sans">
             <Navbar />
 
@@ -366,6 +367,8 @@ const Community = () => {
                 )}
             </div>
         </div>
+        <Footer />
+    </>
     );
 };
 

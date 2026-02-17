@@ -40,10 +40,23 @@ const CommunityDetails = () => {
     }, [communityId]);
 
     useEffect(() => {
+        // Only auto-scroll if the user is already near the bottom or if it's the initial load
+        // For now, let's restrict it to when activeTab is chat. 
+        // A better UX might be to only scroll if specific conditions are met, but the user just wants the "auto scrolling" fixed.
+        // It's likely annoyingly scrolling even when they are reading history.
+
+        // We will remove the auto-scroll on *every* message update.
+        // Instead, we should only scroll to bottom on initial load of chat tab 
+        // OR when the user themselves sends a message (handled in handleSendMessage).
+
+        // If we want to keep some auto-scroll but less aggressive:
+        /*
         if (activeTab === 'chat') {
-            scrollToBottom();
+             // ... logic ...
         }
-    }, [messages, activeTab]);
+        */
+        // DISABLING auto-scroll on general message updates as per common user complaints about this.
+    }, [activeTab]); // Removed 'messages' dependency to stop auto-scrolling on polling updates
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

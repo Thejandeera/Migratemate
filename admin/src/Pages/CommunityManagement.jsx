@@ -5,7 +5,7 @@ import Navbar from '../components/Navbar';
 import { useNavigate } from 'react-router-dom';
 
 // You might need to adjust the API base URL based on your admin config
-const API_BASE_URL = "http://localhost:8080/api";
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const CommunityManagement = () => {
     const navigate = useNavigate();
