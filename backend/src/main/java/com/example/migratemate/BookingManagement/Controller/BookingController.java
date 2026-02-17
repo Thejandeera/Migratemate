@@ -97,6 +97,59 @@ public class BookingController {
         }
     }
 
+    @GetMapping("/all")
+    public ResponseEntity<ApiResponse<List<BookingResponse>>> getAllBookings() {
+        try {
+            // In a real app, we should check for Admin role here
+            List<BookingResponse> bookings = bookingService.getAllBookings();
+            return ResponseEntity.ok(ApiResponse.<List<BookingResponse>>builder()
+                    .success(true)
+                    .data(bookings)
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(ApiResponse.<List<BookingResponse>>builder()
+                    .success(false)
+                    .message(e.getMessage())
+                    .build());
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteBooking(@PathVariable String id) {
+        try {
+            bookingService.deleteBooking(id);
+            return ResponseEntity.ok(ApiResponse.<Void>builder()
+                    .success(true)
+                    .message("Booking deleted successfully")
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.<Void>builder()
+                    .success(false)
+                    .message(e.getMessage())
+                    .build());
+        }
+    }
+
+    @PatchMapping("/{id}/admin-status")
+    public ResponseEntity<ApiResponse<BookingResponse>> updateStatusByAdmin(
+            @PathVariable String id,
+            @RequestBody Map<String, String> statusUpdate) {
+        try {
+            BookingStatus status = BookingStatus.valueOf(statusUpdate.get("status"));
+            BookingResponse response = bookingService.updateStatusForAdmin(id, status);
+            return ResponseEntity.ok(ApiResponse.<BookingResponse>builder()
+                    .success(true)
+                    .message("Booking status updated by admin")
+                    .data(response)
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(ApiResponse.<BookingResponse>builder()
+                    .success(false)
+                    .message(e.getMessage())
+                    .build());
+        }
+    }
+
     private String getCurrentUserEmail() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {

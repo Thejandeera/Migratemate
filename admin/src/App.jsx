@@ -4,6 +4,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import SignIn from './Pages/SignIn'
 import ViewUsers from './Pages/ViewUsers'
 import Reports from './Pages/Reports'
+import Bookings from './Pages/Bookings'
 import { isAuthenticated } from './utils/auth'
 
 const ProtectedRoute = ({ children }) => {
@@ -40,6 +41,12 @@ const App = () => {
       <Route path="/reports" element={
         <ProtectedRoute>
           <Reports />
+        </ProtectedRoute>
+      } />
+
+      <Route path="/bookings" element={
+        <ProtectedRoute>
+          <Bookings />
         </ProtectedRoute>
       } />
 
