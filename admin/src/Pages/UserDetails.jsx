@@ -2,7 +2,42 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { getAuthData } from '../utils/auth';
-import { ArrowLeft, Mail, Phone, MapPin, Globe, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, MapPin, Globe, CheckCircle, XCircle, ZoomIn } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const ImageModal = ({ src, alt, onClose }) => {
+    if (!src) return null;
+
+    return (
+        <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 cursor-zoom-out"
+        >
+            <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="relative max-w-4xl max-h-[90vh] w-full h-full flex items-center justify-center"
+                onClick={(e) => e.stopPropagation()}
+            >
+                <img
+                    src={src}
+                    alt={alt}
+                    className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+                />
+                <button
+                    onClick={onClose}
+                    className="absolute top-4 right-4 p-2 bg-white/10 hover:bg-white/20 text-white rounded-full transition-colors"
+                >
+                    <XCircle size={32} />
+                </button>
+            </motion.div>
+        </motion.div>
+    );
+};
 
 const UserDetails = () => {
     const { id } = useParams();
@@ -10,6 +45,7 @@ const UserDetails = () => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [selectedImage, setSelectedImage] = useState(null);
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -32,6 +68,10 @@ const UserDetails = () => {
         fetchUser();
     }, [id]);
 
+    const openImage = (url) => {
+        if (url) setSelectedImage(url);
+    };
+
     if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div></div>;
     if (error) return <div className="min-h-screen flex items-center justify-center text-red-600">{error}</div>;
     if (!user) return <div className="min-h-screen flex items-center justify-center">User not found</div>;
@@ -39,6 +79,17 @@ const UserDetails = () => {
     return (
         <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
             <Navbar />
+
+            <AnimatePresence>
+                {selectedImage && (
+                    <ImageModal
+                        src={selectedImage}
+                        alt="Enlarged view"
+                        onClose={() => setSelectedImage(null)}
+                    />
+                )}
+            </AnimatePresence>
+
             <div className="max-w-5xl mx-auto py-12 px-4 sm:px-6 lg:px-8 pt-24">
                 <button onClick={() => navigate(-1)} className="flex items-center text-gray-600 hover:text-gray-900 mb-6 transition-colors">
                     <ArrowLeft size={20} className="mr-2" /> Back
@@ -51,11 +102,16 @@ const UserDetails = () => {
                     <div className="px-8 pb-8">
                         <div className="relative flex justify-between items-end -mt-12 mb-6">
                             <div className="flex items-end">
-                                <img
-                                    src={user.avatarUrl || `https://ui-avatars.com/api/?name=${user.fullName}`}
-                                    alt=""
-                                    className="w-32 h-32 rounded-full border-4 border-white shadow-lg object-cover bg-white"
-                                />
+                                <div className="relative group cursor-pointer" onClick={() => openImage(user.avatarUrl)}>
+                                    <img
+                                        src={user.avatarUrl || `https://ui-avatars.com/api/?name=${user.fullName}`}
+                                        alt=""
+                                        className="w-32 h-32 rounded-full border-4 border-white shadow-lg object-cover bg-white group-hover:opacity-90 transition-opacity"
+                                    />
+                                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <ZoomIn className="text-white drop-shadow-md" size={32} />
+                                    </div>
+                                </div>
                                 <div className="ml-6 mb-2">
                                     <h1 className="text-3xl font-bold text-gray-900">{user.fullName}</h1>
                                     <div className="flex items-center gap-2 mt-1">
@@ -86,17 +142,33 @@ const UserDetails = () => {
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                         <div className="border rounded-xl p-4 hover:shadow-md transition-shadow">
                                             <p className="text-sm font-semibold text-gray-500 uppercase mb-2">Passport / ID</p>
-                                            <div className="h-48 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
+                                            <div
+                                                className="h-48 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center cursor-pointer group relative"
+                                                onClick={() => user.passportImageUrl && openImage(user.passportImageUrl)}
+                                            >
                                                 {user.passportImageUrl ? (
-                                                    <img src={user.passportImageUrl} alt="Passport" className="h-full w-full object-cover" />
+                                                    <>
+                                                        <img src={user.passportImageUrl} alt="Passport" className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                                                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                            <ZoomIn className="text-white" size={32} />
+                                                        </div>
+                                                    </>
                                                 ) : <span className="text-gray-400 text-sm">No Document</span>}
                                             </div>
                                         </div>
                                         <div className="border rounded-xl p-4 hover:shadow-md transition-shadow">
                                             <p className="text-sm font-semibold text-gray-500 uppercase mb-2">Selfie</p>
-                                            <div className="h-48 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center">
+                                            <div
+                                                className="h-48 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center cursor-pointer group relative"
+                                                onClick={() => user.selfieImageUrl && openImage(user.selfieImageUrl)}
+                                            >
                                                 {user.selfieImageUrl ? (
-                                                    <img src={user.selfieImageUrl} alt="Selfie" className="h-full w-full object-cover" />
+                                                    <>
+                                                        <img src={user.selfieImageUrl} alt="Selfie" className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                                                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                            <ZoomIn className="text-white" size={32} />
+                                                        </div>
+                                                    </>
                                                 ) : <span className="text-gray-400 text-sm">No Selfie</span>}
                                             </div>
                                         </div>
