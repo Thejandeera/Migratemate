@@ -31,4 +31,9 @@ public class JourneyController {
             @PathVariable String userId) {
         return ResponseEntity.ok(journeyService.getUserPlans(userId));
     }
+
+    @GetMapping("/all")
+    public ResponseEntity<java.util.List<com.example.migratemate.JourneyManagement.Model.JourneyPlanEntity>> getAllPlans() {
+        return ResponseEntity.ok(journeyService.getAllPlans());
+    }
 }

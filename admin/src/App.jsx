@@ -3,6 +3,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 
 import SignIn from './Pages/SignIn'
 import ViewUsers from './Pages/ViewUsers'
+import Reports from './Pages/Reports'
 import { isAuthenticated } from './utils/auth'
 
 const ProtectedRoute = ({ children }) => {
@@ -38,7 +39,7 @@ const App = () => {
 
       <Route path="/reports" element={
         <ProtectedRoute>
-          <div className="p-20 pt-24">Reports Page (Placeholder)</div>
+          <Reports />
         </ProtectedRoute>
       } />
 

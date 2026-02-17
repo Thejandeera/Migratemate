@@ -66,7 +66,7 @@ const Navbar = () => {
                     {isLoggedIn && (
                         <div className="hidden md:flex items-center space-x-8">
                             <Link to="/users" className="text-sm font-medium text-gray-500 hover:text-gray-900">View Users</Link>
-                            <Link to="/reports" className="text-sm font-medium text-gray-500 hover:text-gray-900">Reports</Link>
+                            <Link to="/reports" className="text-sm font-medium text-gray-500 hover:text-gray-900 border-b-2 border-transparent hover:border-gray-900 transition-all">Reports</Link>
                             <Link to="/settings" className="text-sm font-medium text-gray-500 hover:text-gray-900">Settings</Link>
                             <Link to="/logs" className="text-sm font-medium text-gray-500 hover:text-gray-900">Logs</Link>
                             <Link to="/notifications" className="text-sm font-medium text-gray-500 hover:text-gray-900">Notifications</Link>
