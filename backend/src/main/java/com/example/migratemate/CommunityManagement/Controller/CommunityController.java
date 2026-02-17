@@ -61,6 +61,42 @@ public class CommunityController {
     }
 
     /**
+     * Update a community
+     */
+    @PutMapping("/{communityId}")
+    public ResponseEntity<ApiResponse<CommunityResponse>> updateCommunity(
+            @PathVariable String communityId,
+            @RequestBody CreateCommunityRequest request) {
+        try {
+            CommunityResponse community = communityService.updateCommunity(communityId, request);
+            return ResponseEntity.ok(ApiResponse.<CommunityResponse>builder()
+                    .success(true)
+                    .message("Community updated successfully")
+                    .data(community)
+                    .build());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.<CommunityResponse>builder()
+                    .success(false)
+                    .message(e.getMessage())
+                    .build());
+        } catch (IOException e) {
+            log.error("Image upload failed during community update", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<CommunityResponse>builder()
+                            .success(false)
+                            .message("Failed to upload image: " + e.getMessage())
+                            .build());
+        } catch (Exception e) {
+            log.error("Unexpected error during community update", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<CommunityResponse>builder()
+                            .success(false)
+                            .message("Failed to update community: " + e.getMessage())
+                            .build());
+        }
+    }
+
+    /**
      * Delete a community
      */
     @DeleteMapping("/{communityId}")
@@ -88,10 +124,24 @@ public class CommunityController {
     /**
      * Get all active communities
      */
+    /**
+     * Get all active communities
+     */
     @GetMapping
     public ResponseEntity<ApiResponse<List<CommunityResponse>>> getAllCommunities() {
         try {
-            String email = getCurrentUserEmail();
+            // Check if user is authenticated to customize response (e.g. isJoined)
+            String email = null;
+            try {
+                Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+                if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
+                    email = auth.getName();
+                }
+            } catch (Exception e) {
+                // Ignore auth errors for public list
+                log.debug("No authenticated user found for community list");
+            }
+
             List<CommunityResponse> communities = communityService.getAllCommunities(email);
             return ResponseEntity.ok(ApiResponse.<List<CommunityResponse>>builder()
                     .success(true)

@@ -164,6 +164,10 @@ public class JourneyService {
         journeyPlanRepository.deleteById(planId);
     }
 
+    public List<JourneyPlanEntity> getAllPlans() {
+        return journeyPlanRepository.findAll();
+    }
+
     private String callGemini(String prompt) {
         try {
             ObjectMapper mapper = new ObjectMapper();

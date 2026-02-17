@@ -3,6 +3,13 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 
 import SignIn from './Pages/SignIn'
 import ViewUsers from './Pages/ViewUsers'
+import Reports from './Pages/Reports'
+import Bookings from './Pages/Bookings'
+import BookingDetails from './Pages/BookingDetails'
+import UserDetails from './Pages/UserDetails'
+import GigDetails from './Pages/GigDetails';
+import CommunityManagement from './Pages/CommunityManagement';
+import CommunityChat from './Pages/CommunityChat';
 import { isAuthenticated } from './utils/auth'
 
 const ProtectedRoute = ({ children }) => {
@@ -36,9 +43,45 @@ const App = () => {
         </ProtectedRoute>
       } />
 
+      <Route path="/communities" element={
+        <ProtectedRoute>
+          <CommunityManagement />
+        </ProtectedRoute>
+      } />
+
+      <Route path="/communities/chat/:id" element={
+        <ProtectedRoute>
+          <CommunityChat />
+        </ProtectedRoute>
+      } />
+
       <Route path="/reports" element={
         <ProtectedRoute>
-          <div className="p-20 pt-24">Reports Page (Placeholder)</div>
+          <Reports />
+        </ProtectedRoute>
+      } />
+
+      <Route path="/bookings" element={
+        <ProtectedRoute>
+          <Bookings />
+        </ProtectedRoute>
+      } />
+
+      <Route path="/bookings/:id" element={
+        <ProtectedRoute>
+          <BookingDetails />
+        </ProtectedRoute>
+      } />
+
+      <Route path="/gig/:id" element={ // Added new route for /gig/:id
+        <ProtectedRoute>
+          <GigDetails />
+        </ProtectedRoute>
+      } />
+
+      <Route path="/users/:id" element={
+        <ProtectedRoute>
+          <UserDetails />
         </ProtectedRoute>
       } />
 

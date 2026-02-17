@@ -92,13 +92,25 @@ public class CommunityService {
          * Get all communities
          */
         public List<CommunityResponse> getAllCommunities(String userEmail) {
-                User user = userRepository.findByEmail(userEmail)
-                                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                String userId = null;
+                if (userEmail != null) {
+                        try {
+                                User user = userRepository.findByEmail(userEmail).orElse(null);
+                                if (user != null) {
+                                        userId = user.getId();
+                                }
+                        } catch (Exception e) {
+                                log.warn("Error finding user by email in getAllCommunities", e);
+                        }
+                }
 
                 List<Community> communities = communityRepository.findByIsActiveTrue();
 
+                // Need final variable for lambda
+                final String finalUserId = userId;
+
                 return communities.stream()
-                                .map(community -> mapToCommunityResponse(community, user.getId()))
+                                .map(community -> mapToCommunityResponse(community, finalUserId))
                                 .collect(Collectors.toList());
         }
 
@@ -308,6 +320,71 @@ public class CommunityService {
                 // For now just deleting community entity
                 communityRepository.delete(community);
                 log.info("Community deleted: {}", communityId);
+        }
+
+        /**
+         * Update a community
+         */
+        @Transactional
+        public CommunityResponse updateCommunity(String communityId, CreateCommunityRequest request)
+                        throws IOException {
+                Community community = communityRepository.findById(communityId)
+                                .orElseThrow(() -> new IllegalArgumentException("Community not found"));
+
+                // Update fields
+                if (request.getName() != null)
+                        community.setName(request.getName());
+                if (request.getDescription() != null)
+                        community.setDescription(request.getDescription());
+                if (request.getRules() != null)
+                        community.setRules(request.getRules());
+
+                // Origin/Destination update - check for duplicates if changed
+                boolean routeChanged = false;
+                if (request.getOriginCountry() != null
+                                && !request.getOriginCountry().equals(community.getOriginCountry())) {
+                        community.setOriginCountry(request.getOriginCountry());
+                        routeChanged = true;
+                }
+                if (request.getDestinationCountry() != null
+                                && !request.getDestinationCountry().equals(community.getDestinationCountry())) {
+                        community.setDestinationCountry(request.getDestinationCountry());
+                        routeChanged = true;
+                }
+
+                if (routeChanged) {
+                        communityRepository.findByOriginCountryAndDestinationCountry(
+                                        community.getOriginCountry(),
+                                        community.getDestinationCountry())
+                                        .filter(c -> !c.getId().equals(communityId)) // Exclude self
+                                        .ifPresent(c -> {
+                                                throw new IllegalArgumentException(
+                                                                "Another community already exists for this route");
+                                        });
+                }
+
+                // Update Image
+                if (request.getCoverImageBase64() != null && !request.getCoverImageBase64().isEmpty()) {
+                        try {
+                                // Delete old image if exists? (Optional, good practice)
+                                if (community.getCoverImageUrl() != null) {
+                                        cloudinaryService.deleteImage(community.getCoverImageUrl());
+                                }
+                                String newImageUrl = cloudinaryService.uploadImageFromBase64(
+                                                request.getCoverImageBase64(),
+                                                "migratemate/communities");
+                                community.setCoverImageUrl(newImageUrl);
+                        } catch (IOException e) {
+                                log.error("Failed to update community cover image", e);
+                                throw new IOException("Failed to upload cover image: " + e.getMessage());
+                        }
+                }
+
+                community.setUpdatedAt(LocalDateTime.now());
+                community = communityRepository.save(community);
+                log.info("Community updated: {}", communityId);
+
+                return mapToCommunityResponse(community, null);
         }
 
         /**

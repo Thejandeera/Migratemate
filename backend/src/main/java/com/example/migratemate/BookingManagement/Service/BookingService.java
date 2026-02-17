@@ -31,10 +31,10 @@ public class BookingService {
 
         User provider = userRepository.findById(service.getProviderId())
                 .orElseThrow(() -> new RuntimeException("Provider not found"));
-        
+
         // Prevent booking own service
-        if(customer.getId().equals(provider.getId())) {
-             throw new RuntimeException("You cannot book your own service.");
+        if (customer.getId().equals(provider.getId())) {
+            throw new RuntimeException("You cannot book your own service.");
         }
 
         Booking booking = Booking.builder()
@@ -77,7 +77,7 @@ public class BookingService {
     public BookingResponse updateStatus(String bookingId, String email, BookingStatus newStatus) {
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Booking not found"));
-        
+
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -98,6 +98,35 @@ public class BookingService {
         return mapToResponse(savedBooking);
     }
 
+    public List<BookingResponse> getAllBookings() {
+        return bookingRepository.findAll().stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    public void deleteBooking(String bookingId) {
+        if (!bookingRepository.existsById(bookingId)) {
+            throw new RuntimeException("Booking not found");
+        }
+        bookingRepository.deleteById(bookingId);
+    }
+
+    public BookingResponse updateStatusForAdmin(String bookingId, BookingStatus newStatus) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+        booking.setStatus(newStatus);
+
+        Booking savedBooking = bookingRepository.save(booking);
+        return mapToResponse(savedBooking);
+    }
+
+    public BookingResponse getBookingById(String bookingId) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+        return mapToResponse(booking);
+    }
+
     private BookingResponse mapToResponse(Booking booking) {
         BookingResponse.BookingResponseBuilder builder = BookingResponse.builder()
                 .id(booking.getId())
@@ -116,18 +145,22 @@ public class BookingService {
                 .status(booking.getStatus())
                 .createdAt(booking.getCreatedAt() != null ? java.sql.Timestamp.valueOf(booking.getCreatedAt()) : null);
 
-        // Fetch and populate contact details ONLY if booking is confirmed
+        // For admin, we might want to verify user existence for consistent data,
+        // but for now, we follow the same pattern: fetch details if confirmed (or
+        // always for admin?)
+        // Let's keep it consistent: fetch if confirmed (ACCEPTED/COMPLETED)
+        // OR if needed for admin view.
+        // Assuming admin wants to see contact info regardless of status?
+        // Let's stick to the existing logic for now to avoid n+1 issues on list view
+        // unless necessary.
+
         if (booking.getStatus() == BookingStatus.ACCEPTED || booking.getStatus() == BookingStatus.COMPLETED) {
-            System.out.println("Booking " + booking.getId() + " is confirmed. Fetching contact details...");
-            
             userRepository.findById(booking.getCustomerId()).ifPresent(customer -> {
-                System.out.println("Found customer: " + customer.getEmail() + ", Phone: " + customer.getPhone());
                 builder.customerEmail(customer.getEmail());
                 builder.customerPhone(customer.getPhone());
             });
 
             userRepository.findById(booking.getProviderId()).ifPresent(provider -> {
-                System.out.println("Found provider: " + provider.getEmail() + ", Phone: " + provider.getPhone());
                 builder.providerEmail(provider.getEmail());
                 builder.providerPhone(provider.getPhone());
             });
