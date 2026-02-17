@@ -145,14 +145,15 @@ const ManageGigs = () => {
             service.providerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             service.id?.toLowerCase().includes(searchTerm.toLowerCase());
 
-        const matchesStatus = filterStatus === 'all' || service.status === filterStatus;
+        const serviceStatus = service.status || 'INREVIEW';
+        const matchesStatus = filterStatus === 'all' || serviceStatus === filterStatus;
         const matchesCategory = filterCategory === 'all' || service.category === filterCategory;
 
         return matchesSearch && matchesStatus && matchesCategory;
     });
 
     const getStatusBadge = (status) => {
-        const config = STATUS_CONFIG[status] || STATUS_CONFIG.INREVIEW;
+        const config = STATUS_CONFIG[status || 'INREVIEW'] || STATUS_CONFIG.INREVIEW;
         return (
             <span className={`px-2.5 py-1 inline-flex items-center gap-1.5 text-xs font-semibold rounded-full ${config.bg} ${config.text}`}>
                 <span className={`w-1.5 h-1.5 rounded-full ${config.dot}`}></span>
@@ -163,7 +164,8 @@ const ManageGigs = () => {
 
     // Count services by status for quick stats
     const statusCounts = services.reduce((acc, s) => {
-        acc[s.status] = (acc[s.status] || 0) + 1;
+        const status = s.status || 'INREVIEW';
+        acc[status] = (acc[status] || 0) + 1;
         return acc;
     }, {});
 
@@ -225,7 +227,7 @@ const ManageGigs = () => {
                     <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
                         <div
                             onClick={() => setFilterStatus('all')}
-                            className={`bg-white rounded-xl p-4 shadow-sm border cursor-pointer transition-all hover:shadow-md ${filterStatus === 'all' ? 'border-gray-900 ring-1 ring-gray-900' : 'border-gray-100'}`}
+                            className={`bg-white rounded-xl p-4 shadow-sm border cursor-pointer transition-all hover:shadow-md ${filterStatus === 'all' ? 'border-green-500 ring-1 ring-green-500' : 'border-gray-100'}`}
                         >
                             <div className="text-2xl font-bold text-gray-900">{services.length}</div>
                             <div className="text-xs text-gray-500 uppercase font-semibold mt-1">Total</div>
@@ -234,7 +236,7 @@ const ManageGigs = () => {
                             <div
                                 key={key}
                                 onClick={() => setFilterStatus(filterStatus === key ? 'all' : key)}
-                                className={`bg-white rounded-xl p-4 shadow-sm border cursor-pointer transition-all hover:shadow-md ${filterStatus === key ? 'border-gray-900 ring-1 ring-gray-900' : 'border-gray-100'}`}
+                                className={`bg-white rounded-xl p-4 shadow-sm border cursor-pointer transition-all hover:shadow-md ${filterStatus === key ? 'border-green-500 ring-1 ring-green-500' : 'border-gray-100'}`}
                             >
                                 <div className="text-2xl font-bold text-gray-900">{statusCounts[key] || 0}</div>
                                 <div className={`text-xs uppercase font-semibold mt-1 ${config.text}`}>{config.label}</div>
@@ -499,8 +501,8 @@ const ManageGigs = () => {
                                     <label
                                         key={reason}
                                         className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${deleteModal.reason === reason
-                                                ? 'border-red-300 bg-red-50'
-                                                : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                            ? 'border-red-300 bg-red-50'
+                                            : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
                                             }`}
                                     >
                                         <input
@@ -540,8 +542,8 @@ const ManageGigs = () => {
                                     onClick={handleDeleteService}
                                     disabled={deleteModal.loading || !deleteModal.reason || (deleteModal.reason === 'Other' && !deleteModal.customReason.trim())}
                                     className={`flex-1 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium text-sm flex items-center justify-center gap-2 ${deleteModal.loading || !deleteModal.reason || (deleteModal.reason === 'Other' && !deleteModal.customReason.trim())
-                                            ? 'opacity-50 cursor-not-allowed'
-                                            : ''
+                                        ? 'opacity-50 cursor-not-allowed'
+                                        : ''
                                         }`}
                                 >
                                     {deleteModal.loading ? (
