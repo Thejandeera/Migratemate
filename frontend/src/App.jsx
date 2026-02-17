@@ -12,6 +12,8 @@ import SosPage from './Pages/SosPage'
 
 import ErrorBoundary from './components/ErrorBoundary';
 import JourneyPlanner from './Pages/JourneyPlanner';
+import Community from './Pages/Community';
+import CommunityDetails from './Pages/CommunityDetails';
 
 const App = () => {
   return (
@@ -30,6 +32,8 @@ const App = () => {
         </ErrorBoundary>
       } />
       <Route path="/journey-planner" element={<JourneyPlanner />} />
+      <Route path="/community" element={<Community />} />
+      <Route path="/community/:id" element={<CommunityDetails />} />
     </Routes>
   )
 }
