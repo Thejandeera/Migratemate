@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Send, ArrowLeft, Users, MoreVertical, LogOut, Loader, Image as ImageIcon, MapPin } from 'lucide-react';
+import { Send, ArrowLeft, Users, MoreVertical, LogOut, Loader, Image as ImageIcon, MapPin, CheckCircle, Clock } from 'lucide-react';
 import { API_URL } from '../utils/api';
 import { getAuthData, isAuthenticated } from '../utils/auth';
 import Navbar from '../components/Navbar';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, isAfter, subMinutes } from 'date-fns';
 
 const CommunityDetails = () => {
     const { id: communityId } = useParams();
@@ -14,7 +14,8 @@ const CommunityDetails = () => {
     const [members, setMembers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [newMessage, setNewMessage] = useState('');
-    const [showMembers, setShowMembers] = useState(false); // Toggle for mobile/sidebar
+    const [activeTab, setActiveTab] = useState('chat'); // 'chat' or 'members'
+
     const messagesEndRef = useRef(null);
     const [userData, setUserData] = useState(null);
     const pollingInterval = useRef(null);
@@ -38,8 +39,10 @@ const CommunityDetails = () => {
     }, [communityId]);
 
     useEffect(() => {
-        scrollToBottom();
-    }, [messages]);
+        if (activeTab === 'chat') {
+            scrollToBottom();
+        }
+    }, [messages, activeTab]);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -65,16 +68,12 @@ const CommunityDetails = () => {
     const fetchMessages = async () => {
         try {
             const authData = getAuthData();
-            // Assuming pagination exists but for now fetching default page
             const response = await fetch(`${API_URL}/messages/community/${communityId}?size=100`, {
                 headers: { 'Authorization': `Bearer ${authData.token}` }
             });
             if (response.ok) {
                 const json = await response.json();
-                // Ensure unique messages if appending, or just replace for simple polling
                 if (json.success) {
-                    // Sort by timestamp if functionality requires
-                    // data is usually sorted by backend, ensuring valid order here
                     const sorted = (json.data || []).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
                     setMessages(sorted);
                 }
@@ -127,7 +126,6 @@ const CommunityDetails = () => {
             if (response.ok) {
                 fetchMessages(); // Refresh immediately
             } else {
-                console.error("Failed to send message");
                 setNewMessage(tempMsg); // Restore on failure
             }
         } catch (error) {
@@ -136,25 +134,14 @@ const CommunityDetails = () => {
         }
     };
 
-    const handleLeaveCommunity = async () => {
-        if (!window.confirm("Are you sure you want to leave this community?")) return;
-
-        try {
-            const authData = getAuthData();
-            const response = await fetch(`${API_URL}/communities/${communityId}/leave/${authData.id || authData.userId}`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${authData.token}` }
-            });
-
-            if (response.ok) {
-                navigate('/community');
-            } else {
-                alert("Failed to leave community");
-            }
-        } catch (error) {
-            console.error("Error leaving community:", error);
-        }
+    const isUserOnline = (lastActiveAt) => {
+        if (!lastActiveAt) return false;
+        const fiveMinutesAgo = subMinutes(new Date(), 5);
+        return isAfter(new Date(lastActiveAt), fiveMinutesAgo);
     };
+
+    const onlineMembers = members.filter(m => isUserOnline(m.lastActiveAt));
+    const offlineMembers = members.filter(m => !isUserOnline(m.lastActiveAt));
 
     if (loading) {
         return (
@@ -179,214 +166,224 @@ const CommunityDetails = () => {
     }
 
     return (
-        <div className="flex flex-col h-screen bg-gray-50 overflow-hidden font-sans">
+        <div className="min-h-screen bg-gray-50 font-sans text-gray-900 pb-10">
             <Navbar />
 
-            {/* Main Content Area - constrained to be below navbar with padding-top to avoid overlap */}
-            <div className="flex-1 flex pt-20 h-screen overflow-hidden">
-                {/* Chat Area */}
-                <div className={`flex-1 flex flex-col bg-white relative shadow-xl rounded-tl-2xl overflow-hidden transition-all duration-300 border-t border-l border-gray-200 ${showMembers ? 'mr-0 md:mr-80' : ''}`}>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24">
+                {/* Back Button */}
+                <button
+                    onClick={() => navigate('/community')}
+                    className="mb-6 flex items-center gap-2 text-gray-500 hover:text-green-600 transition-colors w-fit px-3 py-2 rounded-lg hover:bg-white/50"
+                >
+                    <ArrowLeft className="w-5 h-5" />
+                    Back to Communities
+                </button>
 
-                    {/* Chat Header */}
-                    <div className="h-20 border-b border-gray-100 flex items-center justify-between px-6 bg-white/95 backdrop-blur-md z-10 sticky top-0 shadow-sm">
-                        <div className="flex items-center gap-4">
-                            {/* Back Button for everyone */}
-                            <button
-                                onClick={() => navigate('/community')}
-                                className="flex items-center gap-2 text-gray-500 hover:text-green-600 hover:bg-green-50 px-3 py-2 rounded-lg transition-all group"
-                            >
-                                <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-                                <span className="hidden sm:inline font-medium">Back</span>
-                            </button>
-
-                            <div className="relative group cursor-pointer flex items-center gap-3">
-                                <div className="relative">
-                                    <img
-                                        src={community.coverImageUrl || "https://ui-avatars.com/api/?name=" + community.name}
-                                        alt={community.name}
-                                        className="w-10 h-10 rounded-full object-cover shadow-sm ring-2 ring-white group-hover:ring-green-100 transition-all"
-                                    />
-                                    <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full animate-pulse"></span>
-                                </div>
-                                <div className="hidden sm:block">
-                                    <h2 className="font-bold text-gray-900 text-lg truncate max-w-[200px] sm:max-w-md">{community.name}</h2>
-                                    <p className="text-xs text-green-600 font-medium bg-green-50 px-2 py-0.5 rounded-full inline-block">
-                                        {community.memberCount} members active
-                                    </p>
-                                </div>
+                {/* Hero Header */}
+                <div className="relative h-64 md:h-80 rounded-3xl overflow-hidden shadow-lg mb-8 group">
+                    <img
+                        src={community.coverImageUrl || "https://via.placeholder.com/1200x400"}
+                        alt={community.name}
+                        className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end p-8">
+                        <div className="flex items-center gap-3 mb-2">
+                            <span className="bg-white/20 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border border-white/10">
+                                {community.originCountry} → {community.destinationCountry}
+                            </span>
+                        </div>
+                        <h1 className="text-3xl md:text-5xl font-bold text-white mb-2 shadow-sm">{community.name}</h1>
+                        <p className="text-gray-200 max-w-2xl text-lg line-clamp-2 mb-4">{community.description}</p>
+                        <div className="flex items-center gap-6 text-sm font-medium text-gray-300">
+                            <div className="flex items-center gap-2 bg-black/30 px-3 py-1.5 rounded-full backdrop-blur-sm">
+                                <Users className="w-4 h-4" />
+                                {community.memberCount} Members
+                            </div>
+                            <div className="flex items-center gap-2 bg-black/30 px-3 py-1.5 rounded-full backdrop-blur-sm">
+                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                                {onlineMembers.length} Online
                             </div>
                         </div>
-                        <div className="flex items-center gap-3">
+                    </div>
+                </div>
+
+                {/* Main Content Layout */}
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+
+                    {/* Left Column: Navigation/Tabs (Desktop) or Top Bar (Mobile) */}
+                    <div className="lg:col-span-1">
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-2 sticky top-24">
                             <button
-                                onClick={() => setShowMembers(!showMembers)}
-                                className={`p-2.5 rounded-full transition-all duration-200 ${showMembers ? 'bg-green-50 text-green-600' : 'text-gray-400 hover:bg-gray-100'}`}
-                                title="Toggle Members"
+                                onClick={() => setActiveTab('chat')}
+                                className={`w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 transition-all mb-1 ${activeTab === 'chat'
+                                        ? 'bg-green-50 text-green-700 font-bold shadow-sm'
+                                        : 'text-gray-600 hover:bg-gray-50'
+                                    }`}
+                            >
+                                <Send className="w-5 h-5" />
+                                Public Chat
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('members')}
+                                className={`w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 transition-all ${activeTab === 'members'
+                                        ? 'bg-green-50 text-green-700 font-bold shadow-sm'
+                                        : 'text-gray-600 hover:bg-gray-50'
+                                    }`}
                             >
                                 <Users className="w-5 h-5" />
+                                Members
+                                <span className="ml-auto bg-gray-100 text-gray-500 text-xs py-0.5 px-2 rounded-full">{members.length}</span>
                             </button>
-                            <button
-                                onClick={handleLeaveCommunity}
-                                className="hidden md:flex items-center gap-2 text-xs font-bold text-red-500 hover:bg-red-50 px-4 py-2 rounded-full transition-all border border-red-100 hover:border-red-200"
-                            >
-                                <LogOut className="w-4 h-4" />
-                                Leave
-                            </button>
+                        </div>
+
+                        {/* About Block */}
+                        <div className="mt-6 bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sticky top-60 hidden lg:block">
+                            <h3 className="font-bold text-gray-900 mb-4">About Community</h3>
+                            <p className="text-gray-600 text-sm leading-relaxed mb-4">{community.description}</p>
+                            <div className="space-y-3">
+                                <div className="flex items-center gap-3 text-sm text-gray-500">
+                                    <MapPin className="w-4 h-4" />
+                                    <span>From: <span className="font-medium text-gray-900">{community.originCountry}</span></span>
+                                </div>
+                                <div className="flex items-center gap-3 text-sm text-gray-500">
+                                    <MapPin className="w-4 h-4" />
+                                    <span>To: <span className="font-medium text-gray-900">{community.destinationCountry}</span></span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Messages List */}
-                    <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 bg-gray-50/50 scroll-smooth">
-                        {messages.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center h-full text-center space-y-4">
-                                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-4 animate-bounce">
-                                    <Send className="w-8 h-8 text-green-600 ml-1" />
+                    {/* Right Column: Content */}
+                    <div className="lg:col-span-3">
+                        {activeTab === 'chat' ? (
+                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 h-[600px] flex flex-col overflow-hidden">
+                                {/* Chat Header */}
+                                <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/30">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                                        <span className="font-bold text-gray-700">Community Chat</span>
+                                    </div>
+                                    <span className="text-xs text-gray-400">Real-time</span>
                                 </div>
-                                <h3 className="text-xl font-bold text-gray-800">Welcome to {community.name}!</h3>
-                                <p className="text-gray-500 max-w-xs">{community.description || "Start the conversation by sending a friendly message."}</p>
+
+                                {/* Messages */}
+                                <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/50">
+                                    {messages.length === 0 ? (
+                                        <div className="h-full flex flex-col items-center justify-center text-gray-400">
+                                            <Send className="w-12 h-12 mb-2 opacity-20" />
+                                            <p>No messages yet. Say hello!</p>
+                                        </div>
+                                    ) : (
+                                        messages.map((msg, idx) => {
+                                            const isMe = msg.senderId === (userData?.id || userData?.userId);
+                                            return (
+                                                <div key={idx} className={`flex gap-3 ${isMe ? 'flex-row-reverse' : ''}`}>
+                                                    <img
+                                                        src={msg.senderAvatar || `https://ui-avatars.com/api/?name=${msg.senderName}`}
+                                                        alt={msg.senderName}
+                                                        className="w-8 h-8 rounded-full shadow-sm mt-1"
+                                                    />
+                                                    <div className={`max-w-[70%] space-y-1 ${isMe ? 'items-end flex flex-col' : ''}`}>
+                                                        <div className="flex items-center gap-2">
+                                                            {!isMe && <span className="text-xs font-bold text-gray-700">{msg.senderName}</span>}
+                                                            <span className="text-[10px] text-gray-400">{formatDistanceToNow(new Date(msg.timestamp), { addSuffix: true })}</span>
+                                                        </div>
+                                                        <div className={`px-4 py-2 rounded-2xl text-sm leading-relaxed ${isMe ? 'bg-green-600 text-white rounded-tr-none' : 'bg-white border border-gray-100 rounded-tl-none shadow-sm text-gray-800'
+                                                            }`}>
+                                                            {msg.content}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )
+                                        })
+                                    )}
+                                    <div ref={messagesEndRef} />
+                                </div>
+
+                                {/* Input */}
+                                <div className="p-4 bg-white border-t border-gray-100">
+                                    <form onSubmit={handleSendMessage} className="flex gap-3 items-center">
+                                        <input
+                                            type="text"
+                                            value={newMessage}
+                                            onChange={(e) => setNewMessage(e.target.value)}
+                                            placeholder="Type a message..."
+                                            className="flex-1 bg-gray-100 border-0 rounded-xl px-4 py-3 focus:ring-2 focus:ring-green-500 focus:bg-white transition-all outline-none"
+                                        />
+                                        <button
+                                            type="submit"
+                                            disabled={!newMessage.trim()}
+                                            className="bg-green-600 hover:bg-green-700 text-white p-3 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg active:scale-95"
+                                        >
+                                            <Send className="w-5 h-5" />
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
                         ) : (
-                            messages.map((msg, index) => {
-                                const isMe = msg.senderId === (userData?.id || userData?.userId);
-                                return (
-                                    <div key={msg.id || index} className={`flex gap-4 group ${isMe ? 'flex-row-reverse' : ''} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
-                                        <img
-                                            src={msg.senderAvatar || `https://ui-avatars.com/api/?name=${msg.senderName || 'U'}`}
-                                            alt={msg.senderName}
-                                            className="w-10 h-10 rounded-full object-cover shadow-sm self-end mb-1 border-2 border-white"
-                                        />
-                                        <div className={`flex flex-col max-w-[75%] sm:max-w-[60%] ${isMe ? 'items-end' : 'items-start'}`}>
-                                            <div className="flex items-center gap-2 mb-1 px-1">
-                                                {!isMe && <span className="text-xs font-bold text-gray-700">{msg.senderName}</span>}
-                                                <span className="text-[10px] text-gray-400">
-                                                    {msg.timestamp ? formatDistanceToNow(new Date(msg.timestamp), { addSuffix: true }) : 'Just now'}
-                                                </span>
-                                            </div>
-                                            <div
-                                                className={`px-5 py-3 rounded-2xl text-sm leading-relaxed shadow-sm transition-all hover:shadow-md ${isMe
-                                                    ? 'bg-gradient-to-br from-green-500 to-green-600 text-white rounded-tr-none'
-                                                    : 'bg-white text-gray-800 rounded-tl-none border border-gray-100'
-                                                    }`}
-                                            >
-                                                <p className="whitespace-pre-wrap break-words">{msg.content}</p>
-                                            </div>
+                            <div className="space-y-6">
+                                {/* Online Members */}
+                                {onlineMembers.length > 0 && (
+                                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                                        <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                            Online <span className="text-green-500">●</span>
+                                            <span className="text-gray-400 text-sm font-normal">({onlineMembers.length})</span>
+                                        </h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {onlineMembers.map(member => (
+                                                <div key={member.userId} className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl transition-colors border border-transparent hover:border-gray-100 cursor-pointer">
+                                                    <div className="relative">
+                                                        <img
+                                                            src={member.avatarUrl || `https://ui-avatars.com/api/?name=${member.fullName}`}
+                                                            alt={member.fullName}
+                                                            className="w-12 h-12 rounded-full object-cover"
+                                                        />
+                                                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                                                    </div>
+                                                    <div>
+                                                        <h4 className="font-bold text-sm text-gray-900 flex items-center gap-1">
+                                                            {member.fullName}
+                                                            {member.isVerified && <CheckCircle className="w-3 h-3 text-blue-500" />}
+                                                        </h4>
+                                                        <p className="text-xs text-gray-500">{member.isHelper ? 'Helper' : 'Member'}</p>
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
-                                );
-                            })
+                                )}
+
+                                {/* Offline Members */}
+                                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                                    <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                        Offline <span className="text-gray-400">●</span>
+                                        <span className="text-gray-400 text-sm font-normal">({offlineMembers.length})</span>
+                                    </h3>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {offlineMembers.map(member => (
+                                            <div key={member.userId} className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl transition-colors border border-transparent hover:border-gray-100 cursor-pointer opacity-80 hover:opacity-100">
+                                                <div className="relative">
+                                                    <img
+                                                        src={member.avatarUrl || `https://ui-avatars.com/api/?name=${member.fullName}`}
+                                                        alt={member.fullName}
+                                                        className="w-12 h-12 rounded-full object-cover grayscale"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <h4 className="font-bold text-sm text-gray-900 flex items-center gap-1">
+                                                        {member.fullName}
+                                                        {member.isVerified && <CheckCircle className="w-3 h-3 text-blue-500" />}
+                                                    </h4>
+                                                    <p className="text-xs text-gray-500">{member.isHelper ? 'Helper' : 'Member'}</p>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
                         )}
-                        <div ref={messagesEndRef} />
-                    </div>
-
-                    {/* Input Area */}
-                    <div className="p-4 sm:p-5 bg-white border-t border-gray-100 shadow-[0_-5px_20px_rgba(0,0,0,0.03)] z-20">
-                        <form onSubmit={handleSendMessage} className="flex items-end gap-3 max-w-4xl mx-auto">
-                            <button type="button" className="p-3 text-gray-400 hover:text-green-600 rounded-full hover:bg-green-50 transition-all">
-                                <ImageIcon className="w-6 h-6" />
-                            </button>
-                            <div className="flex-1 bg-gray-100 rounded-3xl flex items-center shadow-inner focus-within:ring-2 focus-within:ring-green-500/50 focus-within:bg-white transition-all">
-                                <input
-                                    type="text"
-                                    value={newMessage}
-                                    onChange={(e) => setNewMessage(e.target.value)}
-                                    placeholder="Type your message..."
-                                    className="flex-1 bg-transparent text-gray-900 placeholder-gray-400 border-0 rounded-3xl px-6 py-4 focus:ring-0"
-                                    disabled={loading}
-                                />
-                                <button
-                                    type="submit"
-                                    disabled={!newMessage.trim()}
-                                    className="mr-2 p-2.5 bg-green-600 text-white rounded-full hover:bg-green-700 disabled:opacity-50 disabled:scale-90 transition-all shadow-md transform active:scale-95"
-                                >
-                                    <Send className="w-5 h-5 ml-0.5" />
-                                </button>
-                            </div>
-                        </form>
                     </div>
                 </div>
-
-                {/* Sidebar - Desktop Layout: Fixed width, Mobile: Slide over */}
-                <div className={`fixed inset-y-0 right-0 w-80 bg-white shadow-2xl transform transition-transform duration-300 ease-in-out z-40 pt-16
-                    ${showMembers ? 'translate-x-0' : 'translate-x-full'} 
-                    md:relative md:translate-x-0 md:shadow-none md:border-l md:border-gray-100 md:pt-0
-                    ${!showMembers && 'md:hidden'} 
-                `}>
-                    <div className="h-full flex flex-col">
-                        <div className="h-20 border-b border-gray-100 flex items-center justify-between px-6 bg-white">
-                            <div>
-                                <h3 className="font-bold text-gray-900 text-lg">Community Info</h3>
-                                <p className="text-xs text-gray-500">View members & details</p>
-                            </div>
-                            <button onClick={() => setShowMembers(false)} className="md:hidden p-2 hover:bg-gray-100 rounded-full">
-                                <ArrowLeft className="w-5 h-5 text-gray-500" />
-                            </button>
-                        </div>
-
-                        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                            {/* Community Details Block */}
-                            <div className="bg-gray-50 rounded-xl p-4 border border-gray-100">
-                                <h4 className="font-semibold text-gray-800 mb-2">About</h4>
-                                <p className="text-sm text-gray-600 leading-relaxed mb-3">
-                                    {community.description || "A safe space for migrants to connect and share experiences."}
-                                </p>
-                                <div className="flex flex-wrap gap-2">
-                                    {community.originCountry && <span className="text-xs font-medium bg-white px-2 py-1 rounded border border-gray-200 text-gray-600">From: {community.originCountry}</span>}
-                                    {community.destinationCountry && <span className="text-xs font-medium bg-white px-2 py-1 rounded border border-gray-200 text-gray-600">To: {community.destinationCountry}</span>}
-                                </div>
-                            </div>
-
-                            {/* Members List */}
-                            <div>
-                                <div className="flex items-center justify-between mb-4">
-                                    <h4 className="font-bold text-gray-800 text-sm uppercase tracking-wider">Members</h4>
-                                    <span className="bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded-full">{members.length}</span>
-                                </div>
-                                <div className="space-y-3">
-                                    {members.map(member => (
-                                        <div key={member.userId} className="flex items-center gap-3 group hover:bg-gray-50 p-2 rounded-lg transition-colors cursor-pointer">
-                                            <div className="relative">
-                                                <img
-                                                    src={member.avatarUrl || `https://ui-avatars.com/api/?name=${member.fullName || 'User'}`}
-                                                    alt={member.fullName}
-                                                    className="w-10 h-10 rounded-full object-cover border-2 border-transparent group-hover:border-green-200 transition-all"
-                                                />
-                                                {/* Status dot placeholder */}
-                                                <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-gray-300 border-2 border-white rounded-full"></span>
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-sm font-semibold text-gray-900 truncate">
-                                                    {member.fullName || "Unknown User"}
-                                                </p>
-                                                <p className="text-xs text-gray-500 truncate flex items-center gap-1">
-                                                    <MapPin className="w-3 h-3" />
-                                                    {member.location || "Global"}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Mobile Footer */}
-                        <div className="p-6 border-t border-gray-100 md:hidden">
-                            <button
-                                onClick={handleLeaveCommunity}
-                                className="w-full flex items-center justify-center gap-2 text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 py-3 rounded-xl transition-colors"
-                            >
-                                <LogOut className="w-4 h-4" />
-                                Leave Community
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Overlay for mobile sidebar */}
-                {showMembers && (
-                    <div
-                        className="fixed inset-0 bg-black/20 backdrop-blur-sm z-30 md:hidden"
-                        onClick={() => setShowMembers(false)}
-                    />
-                )}
             </div>
         </div>
     );

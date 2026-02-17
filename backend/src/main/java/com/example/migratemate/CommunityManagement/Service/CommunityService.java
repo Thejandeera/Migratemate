@@ -323,6 +323,71 @@ public class CommunityService {
         }
 
         /**
+         * Update a community
+         */
+        @Transactional
+        public CommunityResponse updateCommunity(String communityId, CreateCommunityRequest request)
+                        throws IOException {
+                Community community = communityRepository.findById(communityId)
+                                .orElseThrow(() -> new IllegalArgumentException("Community not found"));
+
+                // Update fields
+                if (request.getName() != null)
+                        community.setName(request.getName());
+                if (request.getDescription() != null)
+                        community.setDescription(request.getDescription());
+                if (request.getRules() != null)
+                        community.setRules(request.getRules());
+
+                // Origin/Destination update - check for duplicates if changed
+                boolean routeChanged = false;
+                if (request.getOriginCountry() != null
+                                && !request.getOriginCountry().equals(community.getOriginCountry())) {
+                        community.setOriginCountry(request.getOriginCountry());
+                        routeChanged = true;
+                }
+                if (request.getDestinationCountry() != null
+                                && !request.getDestinationCountry().equals(community.getDestinationCountry())) {
+                        community.setDestinationCountry(request.getDestinationCountry());
+                        routeChanged = true;
+                }
+
+                if (routeChanged) {
+                        communityRepository.findByOriginCountryAndDestinationCountry(
+                                        community.getOriginCountry(),
+                                        community.getDestinationCountry())
+                                        .filter(c -> !c.getId().equals(communityId)) // Exclude self
+                                        .ifPresent(c -> {
+                                                throw new IllegalArgumentException(
+                                                                "Another community already exists for this route");
+                                        });
+                }
+
+                // Update Image
+                if (request.getCoverImageBase64() != null && !request.getCoverImageBase64().isEmpty()) {
+                        try {
+                                // Delete old image if exists? (Optional, good practice)
+                                if (community.getCoverImageUrl() != null) {
+                                        cloudinaryService.deleteImage(community.getCoverImageUrl());
+                                }
+                                String newImageUrl = cloudinaryService.uploadImageFromBase64(
+                                                request.getCoverImageBase64(),
+                                                "migratemate/communities");
+                                community.setCoverImageUrl(newImageUrl);
+                        } catch (IOException e) {
+                                log.error("Failed to update community cover image", e);
+                                throw new IOException("Failed to upload cover image: " + e.getMessage());
+                        }
+                }
+
+                community.setUpdatedAt(LocalDateTime.now());
+                community = communityRepository.save(community);
+                log.info("Community updated: {}", communityId);
+
+                return mapToCommunityResponse(community, null);
+        }
+
+        /**
          * Map Community entity to CommunityResponse DTO
          */
         private CommunityResponse mapToCommunityResponse(Community community, String userId) {
