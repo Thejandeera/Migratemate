@@ -4,7 +4,7 @@ import Navbar from '../components/Navbar';
 import { getAuthData } from '../utils/auth';
 import {
     ArrowLeft, Calendar, User, Briefcase, DollarSign, CheckCircle,
-    XCircle, AlertCircle, Clock, FileText, Mail, Phone
+    XCircle, AlertCircle, Clock, FileText, Mail, Phone, Copy, ExternalLink
 } from 'lucide-react';
 
 const BookingDetails = () => {
@@ -83,14 +83,26 @@ const BookingDetails = () => {
                                 <Briefcase className="mr-2 text-blue-500" size={20} /> Service Details
                             </h2>
                             <div className="bg-blue-50 rounded-xl p-6 border border-blue-100">
-                                <h3 className="text-xl font-bold text-blue-900 mb-2">{booking.serviceTitle}</h3>
+                                <div className="flex justify-between items-start">
+                                    <Link
+                                        to={`/gig/${booking.serviceId}`}
+                                        className="text-xl font-bold text-blue-900 mb-2 hover:text-blue-700 hover:underline flex items-center gap-2 group"
+                                    >
+                                        {booking.serviceTitle}
+                                        <ExternalLink className="w-4 h-4 opacity-50 group-hover:opacity-100 transition-opacity" />
+                                    </Link>
+                                    <span className="text-xs bg-blue-200 text-blue-800 px-2 py-1 rounded font-mono">
+                                        ID: {booking.serviceId}
+                                    </span>
+                                </div>
+
                                 <div className="flex items-center text-blue-800 mb-4">
                                     <Calendar size={18} className="mr-2 opacity-70" />
                                     Requested Date: <span className="font-semibold ml-1">{new Date(booking.requestedDate).toLocaleDateString()}</span>
                                 </div>
                                 <div className="bg-white rounded-lg p-4 border border-blue-100">
                                     <p className="text-sm font-semibold text-gray-500 uppercase mb-1">Notes</p>
-                                    <p className="text-gray-700">{booking.notes || 'No additonal notes provided.'}</p>
+                                    <p className="text-gray-700">{booking.notes || 'No additional notes provided.'}</p>
                                 </div>
                             </div>
                         </div>
