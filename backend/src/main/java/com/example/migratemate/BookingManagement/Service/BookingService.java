@@ -121,6 +121,12 @@ public class BookingService {
         return mapToResponse(savedBooking);
     }
 
+    public BookingResponse getBookingById(String bookingId) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+        return mapToResponse(booking);
+    }
+
     private BookingResponse mapToResponse(Booking booking) {
         BookingResponse.BookingResponseBuilder builder = BookingResponse.builder()
                 .id(booking.getId())

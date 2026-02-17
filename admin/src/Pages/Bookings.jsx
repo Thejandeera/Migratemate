@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getAuthData } from '../utils/auth';
@@ -145,8 +146,8 @@ const Bookings = () => {
                                 key={status}
                                 onClick={() => setStatusFilter(status)}
                                 className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${statusFilter === status
-                                        ? 'bg-blue-600 text-white'
-                                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                                     }`}
                             >
                                 {status.charAt(0) + status.slice(1).toLowerCase()}
@@ -184,39 +185,52 @@ const Bookings = () => {
                                             animate={{ opacity: 1 }}
                                             className="hover:bg-gray-50 transition-colors"
                                         >
-                                            <td className="px-6 py-4">
-                                                <div className="text-sm font-medium text-gray-900">{booking.serviceTitle}</div>
-                                                <div className="text-xs text-gray-500 font-mono mt-1">{booking.id.substring(0, 8)}...</div>
-                                            </td>
-                                            <td className="px-6 py-4">
+                                            <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex items-center">
-                                                    {booking.customerAvatar ? (
-                                                        <img src={booking.customerAvatar} alt="" className="h-8 w-8 rounded-full mr-3" />
-                                                    ) : (
-                                                        <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center mr-3 text-blue-600 text-xs font-bold">
-                                                            {booking.customerName?.charAt(0)}
+                                                    <div className="flex-shrink-0 h-10 w-10 flex items-center justify-center bg-blue-100/50 rounded-lg text-blue-600">
+                                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                                        </svg>
+                                                    </div>
+                                                    <div className="ml-4">
+                                                        <Link to={`/bookings/${booking.id}`} className="text-sm font-medium text-gray-900 hover:text-blue-600 transition-colors">
+                                                            {booking.serviceTitle}
+                                                        </Link>
+                                                        <div className="text-xs text-gray-500 font-mono">
+                                                            ID: {booking.id.substring(0, 8)}...
                                                         </div>
-                                                    )}
-                                                    <div>
-                                                        <div className="text-sm font-medium text-gray-900">{booking.customerName}</div>
-                                                        {booking.customerEmail && <div className="text-xs text-gray-500">{booking.customerEmail}</div>}
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center">
-                                                    {booking.providerAvatar ? (
-                                                        <img src={booking.providerAvatar} alt="" className="h-8 w-8 rounded-full mr-3" />
-                                                    ) : (
-                                                        <div className="h-8 w-8 rounded-full bg-purple-100 flex items-center justify-center mr-3 text-purple-600 text-xs font-bold">
-                                                            {booking.providerName?.charAt(0)}
-                                                        </div>
-                                                    )}
-                                                    <div>
-                                                        <div className="text-sm font-medium text-gray-900">{booking.providerName}</div>
-                                                        {booking.providerEmail && <div className="text-xs text-gray-500">{booking.providerEmail}</div>}
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <Link to={`/users/${booking.customerId}`} className="flex items-center group">
+                                                    <div className="flex-shrink-0 h-8 w-8">
+                                                        <img
+                                                            className="h-8 w-8 rounded-full border border-gray-200 group-hover:border-blue-400 transition-colors"
+                                                            src={booking.customerAvatar || `https://ui-avatars.com/api/?name=${booking.customerName}`}
+                                                            alt=""
+                                                        />
                                                     </div>
-                                                </div>
+                                                    <div className="ml-3">
+                                                        <div className="text-sm font-medium text-gray-900 group-hover:text-blue-600 transition-colors">{booking.customerName}</div>
+                                                        <div className="text-xs text-gray-500">Customer</div>
+                                                    </div>
+                                                </Link>
+                                            </td>
+                                            <td className="hidden md:table-cell px-6 py-4 whitespace-nowrap">
+                                                <Link to={`/users/${booking.providerId}`} className="flex items-center group">
+                                                    <div className="flex-shrink-0 h-8 w-8">
+                                                        <img
+                                                            className="h-8 w-8 rounded-full border border-gray-200 group-hover:border-purple-400 transition-colors"
+                                                            src={booking.providerAvatar || `https://ui-avatars.com/api/?name=${booking.providerName}`}
+                                                            alt=""
+                                                        />
+                                                    </div>
+                                                    <div className="ml-3">
+                                                        <div className="text-sm font-medium text-gray-900 group-hover:text-purple-600 transition-colors">{booking.providerName}</div>
+                                                        <div className="text-xs text-gray-500">Provider</div>
+                                                    </div>
+                                                </Link>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap">
                                                 <div className="flex flex-col">
@@ -287,8 +301,8 @@ const Bookings = () => {
                                         key={status}
                                         onClick={() => setNewStatus(status)}
                                         className={`w-full text-left px-4 py-3 rounded-lg border flex justify-between items-center ${newStatus === status
-                                                ? 'border-blue-500 bg-blue-50 text-blue-700'
-                                                : 'border-gray-200 hover:border-gray-300'
+                                            ? 'border-blue-500 bg-blue-50 text-blue-700'
+                                            : 'border-gray-200 hover:border-gray-300'
                                             }`}
                                     >
                                         <span className="font-medium">{status}</span>

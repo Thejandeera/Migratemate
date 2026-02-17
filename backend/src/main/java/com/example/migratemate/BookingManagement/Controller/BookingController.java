@@ -114,6 +114,22 @@ public class BookingController {
         }
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<BookingResponse>> getBookingById(@PathVariable String id) {
+        try {
+            BookingResponse response = bookingService.getBookingById(id);
+            return ResponseEntity.ok(ApiResponse.<BookingResponse>builder()
+                    .success(true)
+                    .data(response)
+                    .build());
+        } catch (Exception e) {
+            return ResponseEntity.status(404).body(ApiResponse.<BookingResponse>builder()
+                    .success(false)
+                    .message(e.getMessage())
+                    .build());
+        }
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteBooking(@PathVariable String id) {
         try {

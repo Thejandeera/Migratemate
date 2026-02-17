@@ -5,6 +5,8 @@ import SignIn from './Pages/SignIn'
 import ViewUsers from './Pages/ViewUsers'
 import Reports from './Pages/Reports'
 import Bookings from './Pages/Bookings'
+import BookingDetails from './Pages/BookingDetails'
+import UserDetails from './Pages/UserDetails'
 import { isAuthenticated } from './utils/auth'
 
 const ProtectedRoute = ({ children }) => {
@@ -47,6 +49,18 @@ const App = () => {
       <Route path="/bookings" element={
         <ProtectedRoute>
           <Bookings />
+        </ProtectedRoute>
+      } />
+
+      <Route path="/bookings/:id" element={
+        <ProtectedRoute>
+          <BookingDetails />
+        </ProtectedRoute>
+      } />
+
+      <Route path="/users/:id" element={
+        <ProtectedRoute>
+          <UserDetails />
         </ProtectedRoute>
       } />
 
