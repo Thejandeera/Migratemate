@@ -9,6 +9,7 @@ import BookingDetails from './Pages/BookingDetails'
 import UserDetails from './Pages/UserDetails'
 import GigDetails from './Pages/GigDetails';
 import CommunityManagement from './Pages/CommunityManagement';
+import CommunityChat from './Pages/CommunityChat';
 import { isAuthenticated } from './utils/auth'
 
 const ProtectedRoute = ({ children }) => {
@@ -45,6 +46,12 @@ const App = () => {
       <Route path="/communities" element={
         <ProtectedRoute>
           <CommunityManagement />
+        </ProtectedRoute>
+      } />
+
+      <Route path="/communities/chat/:id" element={
+        <ProtectedRoute>
+          <CommunityChat />
         </ProtectedRoute>
       } />
 

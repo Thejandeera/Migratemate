@@ -207,9 +207,9 @@ const CommunityManagement = () => {
                                         </div>
                                         <div className="flex gap-1">
                                             <button
-                                                onClick={() => window.open(`http://localhost:5173/community/${community.id}`, '_blank')}
+                                                onClick={() => navigate(`/communities/chat/${community.id}`)}
                                                 className="text-gray-400 hover:text-blue-600 p-2 rounded-lg hover:bg-blue-50 transition"
-                                                title="View Chat (User Side)"
+                                                title="View Chat"
                                             >
                                                 <MessageSquare className="w-4 h-4" />
                                             </button>
