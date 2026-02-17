@@ -68,9 +68,7 @@ const Navbar = () => {
                             <Link to="/users" className="text-sm font-medium text-gray-500 hover:text-gray-900">View Users</Link>
                             <Link to="/reports" className="text-sm font-medium text-gray-500 hover:text-gray-900">Reports</Link>
                             <Link to="/bookings" className="text-sm font-medium text-gray-500 hover:text-gray-900 border-b-2 border-transparent hover:border-gray-900 transition-all">Bookings</Link>
-                            <Link to="/settings" className="text-sm font-medium text-gray-500 hover:text-gray-900">Settings</Link>
-                            <Link to="/logs" className="text-sm font-medium text-gray-500 hover:text-gray-900">Logs</Link>
-                            <Link to="/notifications" className="text-sm font-medium text-gray-500 hover:text-gray-900">Notifications</Link>
+
                         </div>
                     )}
 
@@ -114,9 +112,7 @@ const Navbar = () => {
                                 <>
                                     <Link to="/users" className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">View Users</Link>
                                     <Link to="/reports" className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">Reports</Link>
-                                    <Link to="/settings" className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">Settings</Link>
-                                    <Link to="/logs" className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">Logs</Link>
-                                    <Link to="/notifications" className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">Notifications</Link>
+
                                 </>
                             )}
 
