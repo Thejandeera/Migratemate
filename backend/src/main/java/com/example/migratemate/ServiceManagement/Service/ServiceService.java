@@ -229,6 +229,19 @@ public class ServiceService {
         ServiceEntity updatedService = serviceRepository.save(service);
         log.info("Service status updated: {} -> {}", serviceId, status);
 
+        // Send approval email when service is approved
+        if ("APPROVED".equals(status)) {
+            try {
+                User provider = userRepository.findById(service.getProviderId())
+                        .orElse(null);
+                if (provider != null) {
+                    emailService.sendServiceApprovalEmail(provider.getEmail(), service.getTitle());
+                }
+            } catch (Exception e) {
+                log.error("Failed to send approval email for service: {}", serviceId, e);
+            }
+        }
+
         return mapToResponse(updatedService);
     }
 

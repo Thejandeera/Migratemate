@@ -422,4 +422,91 @@ public class EmailService {
                 "</body>" +
                 "</html>";
     }
+
+    /**
+     * Send service approval email
+     */
+    @Async
+    public void sendServiceApprovalEmail(String email, String serviceTitle) {
+        try {
+            String subject = "Your Service Has Been Approved! ✅ - " + appName;
+            String htmlBody = buildServiceApprovalEmailTemplate(serviceTitle);
+
+            EmailDTO emailDTO = EmailDTO.builder()
+                    .to(email)
+                    .subject(subject)
+                    .htmlBody(htmlBody)
+                    .build();
+
+            sendHtmlEmail(emailDTO);
+        } catch (Exception e) {
+            log.error("❌ Failed to send service approval email to: {}", email, e);
+        }
+    }
+
+    /**
+     * Build service approval email HTML template
+     */
+    private String buildServiceApprovalEmailTemplate(String serviceTitle) {
+        return "<!DOCTYPE html>" +
+                "<html>" +
+                "<head>" +
+                "    <meta charset='UTF-8'>" +
+                "    <meta name='viewport' content='width=device-width, initial-scale=1.0'>" +
+                "    <style>" +
+                "        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4; margin: 0; padding: 0; }"
+                +
+                "        .container { max-width: 600px; margin: 20px auto; background: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow: hidden; }"
+                +
+                "        .header { background: linear-gradient(135deg, #38a169 0%, #2f855a 100%); color: white; padding: 40px 20px; text-align: center; }"
+                +
+                "        .header h1 { margin: 0; font-size: 28px; font-weight: 600; }" +
+                "        .content { padding: 40px 30px; }" +
+                "        .content h2 { color: #38a169; margin-top: 0; }" +
+                "        .content p { margin: 15px 0; color: #555; }" +
+                "        .service-box { background: #f0fff4; border-left: 4px solid #38a169; padding: 15px 20px; margin: 20px 0; border-radius: 0 8px 8px 0; }"
+                +
+                "        .service-title { font-size: 18px; font-weight: 600; color: #2f855a; margin: 0; }" +
+                "        .checkmark { font-size: 48px; margin-bottom: 10px; }" +
+                "        .next-steps { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }" +
+                "        .next-steps ul { list-style: none; padding: 0; margin: 0; }" +
+                "        .next-steps li { padding: 8px 0; color: #555; }" +
+                "        .next-steps li:before { content: '✓ '; color: #38a169; font-weight: bold; margin-right: 10px; }"
+                +
+                "        .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #777; font-size: 14px; }"
+                +
+                "    </style>" +
+                "</head>" +
+                "<body>" +
+                "    <div class='container'>" +
+                "        <div class='header'>" +
+                "            <div class='checkmark'>✅</div>" +
+                "            <h1>Service Approved!</h1>" +
+                "        </div>" +
+                "        <div class='content'>" +
+                "            <h2>Congratulations!</h2>" +
+                "            <p>Great news! Your service has been reviewed and approved by our admin team. It is now live and visible to all users on "
+                + appName + ".</p>" +
+                "            <div class='service-box'>" +
+                "                <p class='service-title'>" + serviceTitle + "</p>" +
+                "            </div>" +
+                "            <div class='next-steps'>" +
+                "                <h3>What happens next?</h3>" +
+                "                <ul>" +
+                "                    <li>Your service is now visible in the marketplace</li>" +
+                "                    <li>Users can browse and book your service</li>" +
+                "                    <li>You will be notified when someone makes a booking</li>" +
+                "                    <li>Keep your service details up to date for best results</li>" +
+                "                </ul>" +
+                "            </div>" +
+                "            <p>Thank you for being a valued service provider on " + appName + "!</p>" +
+                "            <p style='margin-top: 30px;'><strong>The " + appName + " Team</strong></p>" +
+                "        </div>" +
+                "        <div class='footer'>" +
+                "            <p>&copy; 2024 " + appName + ". All rights reserved.</p>" +
+                "        </div>" +
+                "    </div>" +
+                "</body>" +
+                "</html>";
+    }
 }
