@@ -82,6 +82,16 @@ const GigDetails = () => {
     const [error, setError] = useState(null);
     const [notification, setNotification] = useState({ show: false, message: '', type: '' });
     const [updatingStatus, setUpdatingStatus] = useState(false);
+    const [deleteModal, setDeleteModal] = useState({ show: false, reason: '', customReason: '', loading: false });
+
+    const DELETE_REASONS = [
+        'Violation of terms of service',
+        'Inappropriate or offensive content',
+        'Duplicate listing',
+        'Fraudulent or misleading information',
+        'Inactive or unresponsive provider',
+        'Other'
+    ];
 
     useEffect(() => {
         fetchServiceDetails();
@@ -147,6 +157,34 @@ const GigDetails = () => {
             showNotification('Failed to update status', 'error');
         } finally {
             setUpdatingStatus(false);
+        }
+    };
+
+    const handleDeleteService = async () => {
+        const reason = deleteModal.reason === 'Other' ? deleteModal.customReason : deleteModal.reason;
+        if (!reason.trim()) {
+            showNotification('Please select or enter a reason', 'error');
+            return;
+        }
+        setDeleteModal(prev => ({ ...prev, loading: true }));
+        try {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/services/admin/${id}`, {
+                method: 'DELETE',
+                headers: getHeaders(),
+                body: JSON.stringify({ reason })
+            });
+            const data = await response.json();
+            if (data.success) {
+                showNotification('Service deleted and provider notified via email', 'success');
+                setTimeout(() => navigate('/gigs'), 1500);
+            } else {
+                showNotification(data.message || 'Failed to delete service', 'error');
+                setDeleteModal(prev => ({ ...prev, loading: false }));
+            }
+        } catch (err) {
+            console.error(err);
+            showNotification('Failed to delete service', 'error');
+            setDeleteModal(prev => ({ ...prev, loading: false }));
         }
     };
 
@@ -468,12 +506,12 @@ const GigDetails = () => {
                                 )}
                                 {service.status !== 'REJECTED' && (
                                     <button
-                                        onClick={() => handleStatusUpdate('REJECTED')}
+                                        onClick={() => setDeleteModal({ show: true, reason: '', customReason: '', loading: false })}
                                         disabled={updatingStatus}
                                         className={`w-full py-2.5 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors font-medium text-sm flex items-center justify-center gap-2 border border-red-200 ${updatingStatus ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                         <XCircle className="w-4 h-4" />
-                                        Reject
+                                        Delete Service
                                     </button>
                                 )}
                                 {service.status !== 'ADVICED' && (
@@ -527,6 +565,105 @@ const GigDetails = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Delete Reason Modal */}
+            <AnimatePresence>
+                {deleteModal.show && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[300] flex items-center justify-center p-4"
+                        onClick={() => !deleteModal.loading && setDeleteModal({ show: false, reason: '', customReason: '', loading: false })}
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6"
+                        >
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                                    <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-bold text-gray-900">Delete Service</h3>
+                                    <p className="text-sm text-gray-500 line-clamp-1">{service?.title}</p>
+                                </div>
+                            </div>
+
+                            <p className="text-sm text-gray-600 mb-4">
+                                This will permanently delete the service and send an email notification to the provider with the reason.
+                            </p>
+
+                            <div className="space-y-2 mb-4">
+                                <label className="text-sm font-semibold text-gray-700">Select a reason</label>
+                                {DELETE_REASONS.map((reason) => (
+                                    <label
+                                        key={reason}
+                                        className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${deleteModal.reason === reason
+                                            ? 'border-red-300 bg-red-50'
+                                            : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                            }`}
+                                    >
+                                        <input
+                                            type="radio"
+                                            name="deleteReasonGig"
+                                            value={reason}
+                                            checked={deleteModal.reason === reason}
+                                            onChange={(e) => setDeleteModal(prev => ({ ...prev, reason: e.target.value, customReason: '' }))}
+                                            className="w-4 h-4 text-red-600 focus:ring-red-500"
+                                        />
+                                        <span className="text-sm text-gray-700">{reason}</span>
+                                    </label>
+                                ))}
+                            </div>
+
+                            {deleteModal.reason === 'Other' && (
+                                <div className="mb-4">
+                                    <textarea
+                                        value={deleteModal.customReason}
+                                        onChange={(e) => setDeleteModal(prev => ({ ...prev, customReason: e.target.value }))}
+                                        placeholder="Enter the reason for deletion..."
+                                        rows={3}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none text-sm text-gray-900 placeholder-gray-400 resize-none"
+                                    />
+                                </div>
+                            )}
+
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setDeleteModal({ show: false, reason: '', customReason: '', loading: false })}
+                                    disabled={deleteModal.loading}
+                                    className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleDeleteService}
+                                    disabled={deleteModal.loading || !deleteModal.reason || (deleteModal.reason === 'Other' && !deleteModal.customReason.trim())}
+                                    className={`flex-1 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium text-sm flex items-center justify-center gap-2 ${deleteModal.loading || !deleteModal.reason || (deleteModal.reason === 'Other' && !deleteModal.customReason.trim())
+                                        ? 'opacity-50 cursor-not-allowed'
+                                        : ''
+                                        }`}
+                                >
+                                    {deleteModal.loading ? (
+                                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                                    ) : (
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    )}
+                                    Delete Service
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };
