@@ -50,7 +50,7 @@ const ServiceCard = ({ service }) => {
         title,
         category,
         price,
-        currency = 'AUD',
+        currency,
         averageRating = 0,
         totalReviews = 0,
         destination,
@@ -69,7 +69,7 @@ const ServiceCard = ({ service }) => {
     const displayImage = imageUrls?.[0] || 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80&w=1000';
 
     // Format price display
-    const priceDisplay = `$${price?.toFixed(0) || 0}`;
+    const priceDisplay = currency ? `${price?.toFixed(0) || 0} ${currency}` : `${price?.toFixed(0) || 0}`;
 
     // Get provider initial
     const providerInitial = providerName?.charAt(0)?.toUpperCase() || 'P';
