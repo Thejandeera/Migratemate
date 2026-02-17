@@ -108,6 +108,7 @@ public class SecurityConfig {
                 frontendUrl,
                 "http://localhost:5173",
                 "http://localhost:5174",
+                "https://mi-admin.netlify.app",
                 "http://localhost:3000");
 
         config.setAllowedOrigins(allowedOrigins);
