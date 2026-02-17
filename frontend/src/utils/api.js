@@ -79,3 +79,85 @@ export const createNotification = async (userId, title, description, color = 'GR
         console.error("Error creating notification", error);
     }
 };
+
+export const generateJourneyPlan = async (planRequest) => {
+    try {
+        const response = await fetch(`${API_URL}/journey/plan`, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify(planRequest)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to generate plan');
+        }
+
+        return data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const saveJourneyPlan = async (planEntity) => {
+    try {
+        const response = await fetch(`${API_URL}/journey/save`, {
+            method: 'POST',
+            headers: getHeaders(),
+            body: JSON.stringify(planEntity)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to save plan');
+        }
+
+        return data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const getUserJourneyPlans = async (userId) => {
+    try {
+        const response = await fetch(`${API_URL}/journey/user/${userId}`, {
+            headers: getHeaders()
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to fetch user plans');
+        }
+
+
+        return data;
+    } catch (error) {
+        throw error;
+    }
+};
+
+export const deleteJourneyPlan = async (planId) => {
+    try {
+        const response = await fetch(`${API_URL}/journey/${planId}`, {
+            method: 'DELETE',
+            headers: getHeaders()
+        });
+
+        if (response.status === 204) {
+            return true;
+        }
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Failed to delete plan');
+        }
+
+        return data;
+    } catch (error) {
+        throw error;
+    }
+};

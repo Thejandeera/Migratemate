@@ -11,6 +11,7 @@ import LiveARScanner from './components/Scanner/LiveARScanner'
 import SosPage from './Pages/SosPage'
 
 import ErrorBoundary from './components/ErrorBoundary';
+import JourneyPlanner from './Pages/JourneyPlanner';
 
 const App = () => {
   return (
@@ -28,6 +29,7 @@ const App = () => {
           <SosPage />
         </ErrorBoundary>
       } />
+      <Route path="/journey-planner" element={<JourneyPlanner />} />
     </Routes>
   )
 }
