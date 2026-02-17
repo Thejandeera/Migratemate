@@ -7,7 +7,6 @@ import { getAuthData } from '../utils/auth';
 const STATUS_CONFIG = {
     INREVIEW: { label: 'In Review', bg: 'bg-yellow-100', text: 'text-yellow-800', dot: 'bg-yellow-500' },
     APPROVED: { label: 'Approved', bg: 'bg-green-100', text: 'text-green-800', dot: 'bg-green-500' },
-    REJECTED: { label: 'Rejected', bg: 'bg-red-100', text: 'text-red-800', dot: 'bg-red-500' },
     ADVICED: { label: 'Adviced', bg: 'bg-blue-100', text: 'text-blue-800', dot: 'bg-blue-500' },
 };
 
@@ -35,6 +34,7 @@ const ManageGigs = () => {
     const [filterCategory, setFilterCategory] = useState('all');
     const [updatingId, setUpdatingId] = useState(null);
     const [deleteModal, setDeleteModal] = useState({ show: false, serviceId: null, serviceTitle: '', reason: '', customReason: '', loading: false });
+    const [adviceModal, setAdviceModal] = useState({ show: false, serviceId: null, serviceTitle: '', reason: '', customReason: '', loading: false });
 
     const DELETE_REASONS = [
         'Violation of terms of service',
@@ -42,6 +42,16 @@ const ManageGigs = () => {
         'Duplicate listing',
         'Fraudulent or misleading information',
         'Inactive or unresponsive provider',
+        'Other'
+    ];
+
+    const ADVICE_REASONS = [
+        'Incomplete or unclear service description',
+        'Pricing information needs to be updated',
+        'Service images are missing or low quality',
+        'Contact information is incomplete',
+        'Service category is incorrect',
+        'Service details do not match our guidelines',
         'Other'
     ];
 
@@ -108,6 +118,39 @@ const ManageGigs = () => {
 
     const openDeleteModal = (service) => {
         setDeleteModal({ show: true, serviceId: service.id, serviceTitle: service.title, reason: '', customReason: '', loading: false });
+    };
+
+    const openAdviceModal = (service) => {
+        setAdviceModal({ show: true, serviceId: service.id, serviceTitle: service.title, reason: '', customReason: '', loading: false });
+    };
+
+    const handleAdviceService = async () => {
+        const reason = adviceModal.reason === 'Other' ? adviceModal.customReason : adviceModal.reason;
+        if (!reason.trim()) {
+            showNotification('Please select or enter a reason', 'error');
+            return;
+        }
+        setAdviceModal(prev => ({ ...prev, loading: true }));
+        try {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/services/admin/${adviceModal.serviceId}/status`, {
+                method: 'PATCH',
+                headers: getHeaders(),
+                body: JSON.stringify({ status: 'ADVICED', reason })
+            });
+            const data = await response.json();
+            if (data.success) {
+                setServices(services.map(s => s.id === adviceModal.serviceId ? { ...s, status: 'ADVICED' } : s));
+                showNotification('Advice sent and provider notified via email', 'success');
+                setAdviceModal({ show: false, serviceId: null, serviceTitle: '', reason: '', customReason: '', loading: false });
+            } else {
+                showNotification(data.message || 'Failed to send advice', 'error');
+                setAdviceModal(prev => ({ ...prev, loading: false }));
+            }
+        } catch (err) {
+            console.error(err);
+            showNotification('Failed to send advice', 'error');
+            setAdviceModal(prev => ({ ...prev, loading: false }));
+        }
     };
 
     const handleDeleteService = async () => {
@@ -270,7 +313,7 @@ const ManageGigs = () => {
                                     <option value="all">All Status</option>
                                     <option value="INREVIEW">In Review</option>
                                     <option value="APPROVED">Approved</option>
-                                    <option value="REJECTED">Rejected</option>
+
                                     <option value="ADVICED">Adviced</option>
                                 </select>
                                 <select
@@ -428,9 +471,8 @@ const ManageGigs = () => {
                                                     {/* Advice */}
                                                     {service.status !== 'ADVICED' && (
                                                         <button
-                                                            onClick={() => handleStatusUpdate(service.id, 'ADVICED')}
-                                                            disabled={updatingId === service.id}
-                                                            className={`p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all ${updatingId === service.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                            onClick={() => openAdviceModal(service)}
+                                                            className="p-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-all"
                                                             title="Advice"
                                                         >
                                                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -554,6 +596,111 @@ const ManageGigs = () => {
                                         </svg>
                                     )}
                                     Delete Service
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Advice Reason Modal */}
+            <AnimatePresence>
+                {adviceModal.show && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[300] flex items-center justify-center p-4"
+                        onClick={() => !adviceModal.loading && setAdviceModal({ show: false, serviceId: null, serviceTitle: '', reason: '', customReason: '', loading: false })}
+                    >
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            onClick={(e) => e.stopPropagation()}
+                            className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6"
+                        >
+                            <div className="flex items-center gap-3 mb-4">
+                                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                </div>
+                                <div>
+                                    <h3 className="text-lg font-bold text-gray-900">Send Advice</h3>
+                                    <p className="text-sm text-gray-500 line-clamp-1">{adviceModal.serviceTitle}</p>
+                                </div>
+                            </div>
+
+                            <p className="text-sm text-gray-600 mb-2">
+                                This will notify the provider to review and update their listing accordingly.
+                            </p>
+                            <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
+                                <p className="text-xs text-amber-800 font-medium mb-1">⚠️ Disclaimer</p>
+                                <p className="text-xs text-amber-700">
+                                    This notice is part of our routine quality and compliance review process. Providers are requested to review and update their listings accordingly. Continued non-compliance may lead to restricted visibility or removal of the service from the platform.
+                                </p>
+                            </div>
+
+                            <div className="space-y-2 mb-4">
+                                <label className="text-sm font-semibold text-gray-700">Select an issue</label>
+                                {ADVICE_REASONS.map((reason) => (
+                                    <label
+                                        key={reason}
+                                        className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${adviceModal.reason === reason
+                                            ? 'border-blue-300 bg-blue-50'
+                                            : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                                            }`}
+                                    >
+                                        <input
+                                            type="radio"
+                                            name="adviceReason"
+                                            value={reason}
+                                            checked={adviceModal.reason === reason}
+                                            onChange={(e) => setAdviceModal(prev => ({ ...prev, reason: e.target.value, customReason: '' }))}
+                                            className="w-4 h-4 text-blue-600 focus:ring-blue-500"
+                                        />
+                                        <span className="text-sm text-gray-700">{reason}</span>
+                                    </label>
+                                ))}
+                            </div>
+
+                            {adviceModal.reason === 'Other' && (
+                                <div className="mb-4">
+                                    <textarea
+                                        value={adviceModal.customReason}
+                                        onChange={(e) => setAdviceModal(prev => ({ ...prev, customReason: e.target.value }))}
+                                        placeholder="Describe the issue..."
+                                        rows={3}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm text-gray-900 placeholder-gray-400 resize-none"
+                                    />
+                                </div>
+                            )}
+
+                            <div className="flex gap-3">
+                                <button
+                                    onClick={() => setAdviceModal({ show: false, serviceId: null, serviceTitle: '', reason: '', customReason: '', loading: false })}
+                                    disabled={adviceModal.loading}
+                                    className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleAdviceService}
+                                    disabled={adviceModal.loading || !adviceModal.reason || (adviceModal.reason === 'Other' && !adviceModal.customReason.trim())}
+                                    className={`flex-1 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm flex items-center justify-center gap-2 ${adviceModal.loading || !adviceModal.reason || (adviceModal.reason === 'Other' && !adviceModal.customReason.trim())
+                                        ? 'opacity-50 cursor-not-allowed'
+                                        : ''
+                                        }`}
+                                >
+                                    {adviceModal.loading ? (
+                                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                                    ) : (
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                        </svg>
+                                    )}
+                                    Send Advice
                                 </button>
                             </div>
                         </motion.div>

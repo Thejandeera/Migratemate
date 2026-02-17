@@ -109,6 +109,7 @@ public class ServiceController {
             @RequestBody java.util.Map<String, String> request) {
         try {
             String status = request.get("status");
+            String reason = request.get("reason");
             if (status == null || status.isEmpty()) {
                 return ResponseEntity.badRequest()
                         .body(ApiResponse.<ServiceResponse>builder()
@@ -116,7 +117,7 @@ public class ServiceController {
                                 .message("Status is required")
                                 .build());
             }
-            ServiceResponse response = serviceService.updateServiceStatus(id, status);
+            ServiceResponse response = serviceService.updateServiceStatus(id, status, reason);
             return ResponseEntity.ok(ApiResponse.<ServiceResponse>builder()
                     .success(true)
                     .message("Service status updated to " + status)

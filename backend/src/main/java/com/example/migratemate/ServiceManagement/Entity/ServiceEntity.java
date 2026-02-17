@@ -56,7 +56,7 @@ public class ServiceEntity {
     private Integer totalReviews;
 
     // Status
-    private String status; // INREVIEW, APPROVED, REJECTED, ADVICED
+    private String status; // INREVIEW, APPROVED, ADVICED
 
     // Timestamps
     private LocalDateTime createdAt;

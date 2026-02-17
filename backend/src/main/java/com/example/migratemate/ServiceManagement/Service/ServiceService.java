@@ -211,7 +211,7 @@ public class ServiceService {
     }
 
     // Update service status (admin only)
-    public ServiceResponse updateServiceStatus(String serviceId, String status) {
+    public ServiceResponse updateServiceStatus(String serviceId, String status, String reason) {
         ServiceEntity service = serviceRepository.findById(serviceId)
                 .orElseThrow(() -> new RuntimeException("Service not found"));
 
@@ -220,7 +220,7 @@ public class ServiceService {
             ServiceStatus.valueOf(status);
         } catch (IllegalArgumentException e) {
             throw new RuntimeException(
-                    "Invalid status: " + status + ". Valid values are: INREVIEW, APPROVED, REJECTED, ADVICED");
+                    "Invalid status: " + status + ". Valid values are: INREVIEW, APPROVED, ADVICED");
         }
 
         service.setStatus(status);
@@ -229,17 +229,19 @@ public class ServiceService {
         ServiceEntity updatedService = serviceRepository.save(service);
         log.info("Service status updated: {} -> {}", serviceId, status);
 
-        // Send approval email when service is approved
-        if ("APPROVED".equals(status)) {
-            try {
-                User provider = userRepository.findById(service.getProviderId())
-                        .orElse(null);
-                if (provider != null) {
+        // Send email notifications based on status
+        try {
+            User provider = userRepository.findById(service.getProviderId())
+                    .orElse(null);
+            if (provider != null) {
+                if ("APPROVED".equals(status)) {
                     emailService.sendServiceApprovalEmail(provider.getEmail(), service.getTitle());
+                } else if ("ADVICED".equals(status) && reason != null && !reason.isEmpty()) {
+                    emailService.sendServiceAdviceEmail(provider.getEmail(), service.getTitle(), reason);
                 }
-            } catch (Exception e) {
-                log.error("Failed to send approval email for service: {}", serviceId, e);
             }
+        } catch (Exception e) {
+            log.error("Failed to send status email for service: {}", serviceId, e);
         }
 
         return mapToResponse(updatedService);
