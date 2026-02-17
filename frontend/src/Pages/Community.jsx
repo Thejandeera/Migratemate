@@ -48,10 +48,6 @@ const CommunityCard = ({ community, onJoin, isJoined }) => {
                     alt={community.name}
                     className="w-full h-full object-cover"
                 />
-                <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-md text-xs font-semibold text-gray-700 flex items-center gap-1 shadow-sm">
-                    <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                    {Math.floor(Math.random() * 50) + 5} online
-                </div>
             </div>
             <div className="p-5 flex flex-col flex-grow">
                 <div className="flex justify-between items-start mb-2">

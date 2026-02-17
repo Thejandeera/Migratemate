@@ -181,7 +181,7 @@ const CommunityManagement = () => {
                             <div key={community.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow group flex flex-col h-full">
                                 <div className="h-40 bg-gray-100 relative overflow-hidden group-hover:opacity-90 transition-opacity">
                                     <img
-                                        src={community.coverImageUrl || "https://via.placeholder.com/400x200"}
+                                        src={community.coverImageUrl || "https://placehold.co/600x400"}
                                         alt={community.name}
                                         className="w-full h-full object-cover"
                                     />
@@ -207,9 +207,9 @@ const CommunityManagement = () => {
                                         </div>
                                         <div className="flex gap-1">
                                             <button
-                                                onClick={() => navigate(`/communities/${community.id}/chat`)} // Ideally a route in Admin or external link
+                                                onClick={() => window.open(`http://localhost:5173/community/${community.id}`, '_blank')}
                                                 className="text-gray-400 hover:text-blue-600 p-2 rounded-lg hover:bg-blue-50 transition"
-                                                title="View Chat"
+                                                title="View Chat (User Side)"
                                             >
                                                 <MessageSquare className="w-4 h-4" />
                                             </button>

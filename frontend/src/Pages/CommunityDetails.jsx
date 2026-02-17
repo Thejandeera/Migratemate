@@ -4,6 +4,7 @@ import { Send, ArrowLeft, Users, MoreVertical, LogOut, Loader, Image as ImageIco
 import { API_URL } from '../utils/api';
 import { getAuthData, isAuthenticated } from '../utils/auth';
 import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
 import { formatDistanceToNow, isAfter, subMinutes } from 'date-fns';
 
 const CommunityDetails = () => {
@@ -216,8 +217,8 @@ const CommunityDetails = () => {
                             <button
                                 onClick={() => setActiveTab('chat')}
                                 className={`w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 transition-all mb-1 ${activeTab === 'chat'
-                                        ? 'bg-green-50 text-green-700 font-bold shadow-sm'
-                                        : 'text-gray-600 hover:bg-gray-50'
+                                    ? 'bg-green-50 text-green-700 font-bold shadow-sm'
+                                    : 'text-gray-600 hover:bg-gray-50'
                                     }`}
                             >
                                 <Send className="w-5 h-5" />
@@ -226,8 +227,8 @@ const CommunityDetails = () => {
                             <button
                                 onClick={() => setActiveTab('members')}
                                 className={`w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 transition-all ${activeTab === 'members'
-                                        ? 'bg-green-50 text-green-700 font-bold shadow-sm'
-                                        : 'text-gray-600 hover:bg-gray-50'
+                                    ? 'bg-green-50 text-green-700 font-bold shadow-sm'
+                                    : 'text-gray-600 hover:bg-gray-50'
                                     }`}
                             >
                                 <Users className="w-5 h-5" />
@@ -385,7 +386,8 @@ const CommunityDetails = () => {
                     </div>
                 </div>
             </div>
-        </div>
+            <Footer />
+        </div >
     );
 };
 
