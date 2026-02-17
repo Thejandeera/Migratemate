@@ -88,10 +88,24 @@ public class CommunityController {
     /**
      * Get all active communities
      */
+    /**
+     * Get all active communities
+     */
     @GetMapping
     public ResponseEntity<ApiResponse<List<CommunityResponse>>> getAllCommunities() {
         try {
-            String email = getCurrentUserEmail();
+            // Check if user is authenticated to customize response (e.g. isJoined)
+            String email = null;
+            try {
+                Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+                if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
+                    email = auth.getName();
+                }
+            } catch (Exception e) {
+                // Ignore auth errors for public list
+                log.debug("No authenticated user found for community list");
+            }
+
             List<CommunityResponse> communities = communityService.getAllCommunities(email);
             return ResponseEntity.ok(ApiResponse.<List<CommunityResponse>>builder()
                     .success(true)

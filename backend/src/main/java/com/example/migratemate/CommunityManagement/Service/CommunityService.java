@@ -92,13 +92,25 @@ public class CommunityService {
          * Get all communities
          */
         public List<CommunityResponse> getAllCommunities(String userEmail) {
-                User user = userRepository.findByEmail(userEmail)
-                                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                String userId = null;
+                if (userEmail != null) {
+                        try {
+                                User user = userRepository.findByEmail(userEmail).orElse(null);
+                                if (user != null) {
+                                        userId = user.getId();
+                                }
+                        } catch (Exception e) {
+                                log.warn("Error finding user by email in getAllCommunities", e);
+                        }
+                }
 
                 List<Community> communities = communityRepository.findByIsActiveTrue();
 
+                // Need final variable for lambda
+                final String finalUserId = userId;
+
                 return communities.stream()
-                                .map(community -> mapToCommunityResponse(community, user.getId()))
+                                .map(community -> mapToCommunityResponse(community, finalUserId))
                                 .collect(Collectors.toList());
         }
 
