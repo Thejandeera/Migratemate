@@ -137,7 +137,7 @@ const Login = () => {
                                             value={credentials.email}
                                             onChange={handleChange}
                                             className="block w-full pl-11 pr-4 py-3.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 focus:bg-white transition-all text-sm"
-                                            placeholder="you@example.com"
+                                            placeholder="your-email@example.com"
                                         />
                                     </div>
                                 </div>
