@@ -3,15 +3,29 @@ import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getAuthData } from '../utils/auth';
-
+import {
+    Search,
+    Filter,
+    RefreshCw,
+    MoreVertical,
+    Eye,
+    Edit2,
+    Trash2,
+    CheckCircle,
+    XCircle,
+    User,
+    Shield,
+    Phone,
+    Mail
+} from 'lucide-react';
 
 // Enhanced ZoomableImage with better responsive behavior
 const ZoomableImage = ({ src, alt, className }) => {
     const [isHovered, setIsHovered] = useState(false);
 
     if (!src) return (
-        <div className={`bg-gray-100 flex items-center justify-center text-gray-400 text-xs ${className}`}>
-            No Image
+        <div className={`bg-gray-50 flex items-center justify-center text-gray-400 text-xs ${className} rounded-full`}>
+            <User size={16} />
         </div>
     );
 
@@ -26,7 +40,7 @@ const ZoomableImage = ({ src, alt, className }) => {
             <img
                 src={src}
                 alt={alt}
-                className={`${className} object-cover cursor-pointer transition-all duration-300 ${isHovered ? 'scale-95 opacity-80' : 'scale-100 opacity-100'}`}
+                className={`${className} object-cover cursor-pointer transition-all duration-300 ${isHovered ? 'scale-110' : 'scale-100'}`}
             />
             {isHovered && (
                 <motion.div
@@ -39,14 +53,13 @@ const ZoomableImage = ({ src, alt, className }) => {
                         left: '50%',
                         transform: 'translate(-50%, -50%)',
                         width: 'auto',
-                        maxWidth: 'min(90vw, 600px)',
-                        maxHeight: 'min(90vh, 600px)',
+                        maxWidth: 'min(90vw, 400px)',
                     }}
                 >
                     <img
                         src={src}
                         alt={alt}
-                        className="w-auto h-auto max-w-full max-h-full object-contain rounded-xl shadow-2xl bg-white border-4 border-white"
+                        className="w-full h-auto rounded-2xl shadow-2xl bg-white p-2"
                     />
                 </motion.div>
             )}
@@ -182,7 +195,7 @@ const ViewUsers = () => {
     };
 
     return (
-        <div className="min-h-screen">
+        <div className="min-h-screen font-sans text-gray-900">
             <Navbar />
 
             {/* Notification */}
@@ -192,71 +205,55 @@ const ViewUsers = () => {
                         initial={{ opacity: 0, y: -50 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -50 }}
-                        className={`fixed top-20 right-4 left-4 md:left-auto md:right-6 p-4 rounded-xl shadow-2xl z-[200] text-white backdrop-blur-sm ${notification.type === 'success'
-                            ? 'bg-gradient-to-r from-green-500 to-emerald-600'
-                            : 'bg-gradient-to-r from-red-500 to-pink-600'
+                        className={`fixed top-24 right-4 z-[200] max-w-sm w-full p-4 rounded-2xl shadow-2xl backdrop-blur-md border border-white/20 ${notification.type === 'success'
+                            ? 'bg-emerald-500/90 text-white'
+                            : 'bg-red-500/90 text-white'
                             }`}
                     >
                         <div className="flex items-center justify-between">
-                            <span>{notification.message}</span>
-                            <button
-                                onClick={() => setNotification({ show: false, message: '', type: '' })}
-                                className="ml-4 text-white/80 hover:text-white"
-                            >
-                                ✕
-                            </button>
+                            <span className="font-medium">{notification.message}</span>
+                            <button onClick={() => setNotification({ show: false, message: '', type: '' })} className="ml-4 text-white/80 hover:text-white transition-colors">✕</button>
                         </div>
                     </motion.div>
                 )}
             </AnimatePresence>
 
-            <div className="max-w-7xl mx-auto py-6 px-3 sm:px-4 lg:px-6 pt-24">
-                {/* Header Section */}
-                <div className="mb-8">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                        <div>
-                            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
-                                User Management
-                            </h1>
-                            <p className="text-gray-600">
-                                Manage and monitor all registered users
-                            </p>
-                        </div>
-                        <div className="flex flex-wrap gap-3">
-                            <button
-                                onClick={fetchUsers}
-                                className="px-4 py-2.5 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:shadow-lg transition-all duration-300 font-medium text-sm flex items-center gap-2"
-                            >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                                </svg>
-                                Refresh
-                            </button>
-                        </div>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
+                {/* Header */}
+                <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+                    <div>
+                        <h1 className="text-3xl font-bold text-gray-900 mb-2">User Management</h1>
+                        <p className="text-gray-500">Overview of all registered users and helpers</p>
                     </div>
+                    <button
+                        onClick={fetchUsers}
+                        className="flex items-center gap-2 px-5 py-2.5 bg-white text-gray-700 hover:text-blue-600 border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all font-medium"
+                    >
+                        <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
+                        <span>Refresh List</span>
+                    </button>
+                </div>
 
-                    {/* Filters Section */}
-                    <div className="bg-white rounded-2xl shadow-lg p-4 mb-6 border border-gray-100">
-                        <div className="flex flex-col md:flex-row gap-4">
-                            <div className="flex-1">
-                                <div className="relative">
-                                    <svg className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                    </svg>
-                                    <input
-                                        type="text"
-                                        placeholder="Search users by name, email, or phone..."
-                                        value={searchTerm}
-                                        onChange={(e) => setSearchTerm(e.target.value)}
-                                        className="w-full pl-10 pr-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all text-gray-900 placeholder-gray-400"
-                                    />
-                                </div>
-                            </div>
-                            <div className="flex gap-3">
+                {/* Filters */}
+                <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-2 mb-8 sticky top-24 z-30">
+                    <div className="flex flex-col md:flex-row gap-2">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                            <input
+                                type="text"
+                                placeholder="Search by name, email, or phone..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-0 focus:bg-gray-100 transition-all text-gray-900 placeholder-gray-400"
+                            />
+                        </div>
+                        <div className="flex gap-2">
+                            <div className="relative">
+                                <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                                 <select
                                     value={filterRole}
                                     onChange={(e) => setFilterRole(e.target.value)}
-                                    className="px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none text-gray-900"
+                                    className="pl-12 pr-8 py-3 bg-gray-50 border-none rounded-2xl focus:ring-0 focus:bg-gray-100 transition-all text-gray-900 appearance-none cursor-pointer min-w-[160px]"
                                 >
                                     <option value="all">All Roles</option>
                                     <option value="helper">Helpers</option>
@@ -267,182 +264,146 @@ const ViewUsers = () => {
                     </div>
                 </div>
 
-                {/* Users Table */}
+                {/* Content */}
                 {loading ? (
-                    <div className="flex flex-col items-center justify-center p-12">
-                        <div className="animate-spin rounded-full h-16 w-16 border-4 border-green-500 border-t-transparent mb-4"></div>
-                        <p className="text-gray-600">Loading users...</p>
+                    <div className="flex flex-col items-center justify-center py-20">
+                        <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent mb-4"></div>
+                        <p className="text-gray-500 font-medium">Loading users...</p>
                     </div>
                 ) : error ? (
-                    <div className="bg-red-50 text-red-700 p-6 rounded-2xl border border-red-200">
-                        <div className="flex items-center gap-3">
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <span>{error}</span>
-                        </div>
+                    <div className="bg-red-50 text-red-600 p-6 rounded-3xl text-center border border-red-100">
+                        <p className="font-medium">{error}</p>
+                        <button onClick={fetchUsers} className="mt-4 text-sm underline hover:text-red-700">Try Again</button>
                     </div>
                 ) : (
-                    <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100">
+                    <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
                         <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-50">
-                                    <tr>
-                                        <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                            <div className="flex items-center gap-2">
-                                                <span>User</span>
-                                            </div>
-                                        </th>
-                                        <th className="hidden md:table-cell px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                            Contact
-                                        </th>
-                                        <th className="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                            Status
-                                        </th>
-                                        <th className="hidden sm:table-cell px-4 sm:px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                            Role
-                                        </th>
-                                        <th className="px-4 sm:px-6 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                            Actions
-                                        </th>
+                            <table className="w-full whitespace-nowrap">
+                                <thead>
+                                    <tr className="bg-gray-50 border-b border-gray-100 text-left">
+                                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">User Profile</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Contact Info</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Role & Status</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
+                                <tbody className="divide-y divide-gray-100">
                                     {filteredUsers.map((user) => (
                                         <motion.tr
                                             key={user.id}
-                                            initial={{ opacity: 0, y: 20 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            className="hover:bg-gray-50 transition-colors"
+                                            initial={{ opacity: 0 }}
+                                            animate={{ opacity: 1 }}
+                                            className="group hover:bg-gray-50/50 transition-colors"
                                         >
-                                            <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                                                <div className="flex items-center">
-                                                    <div className="flex-shrink-0 h-12 w-12">
-                                                        <ZoomableImage
-                                                            src={user.avatarUrl}
-                                                            alt="Avatar"
-                                                            className="h-12 w-12 rounded-full border-2 border-white shadow"
-                                                        />
-                                                    </div>
-                                                    <div className="ml-3 sm:ml-4">
-                                                        <div className="text-sm font-semibold text-gray-900">
-                                                            {user.fullName || 'No Name'}
-                                                        </div>
-                                                        <div className="text-xs text-gray-500">
-                                                            Joined {new Date(user.createdAt).toLocaleDateString()}
-                                                        </div>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-4">
+                                                    <ZoomableImage
+                                                        src={user.avatarUrl || `https://ui-avatars.com/api/?name=${user.fullName}&background=random`}
+                                                        alt={user.fullName}
+                                                        className="w-12 h-12 rounded-full ring-4 ring-white shadow-lg"
+                                                    />
+                                                    <div>
+                                                        <div className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{user.fullName}</div>
+                                                        <div className="text-xs text-gray-400">Joined {new Date(user.createdAt).toLocaleDateString()}</div>
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td className="hidden md:table-cell px-4 sm:px-6 py-4 whitespace-nowrap">
-                                                <div className="text-sm text-gray-900">{user.email}</div>
-                                                <div className="text-xs text-gray-500">{user.phone || 'No phone'}</div>
+                                            <td className="px-6 py-4">
+                                                <div className="flex flex-col gap-1">
+                                                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                                                        <Mail size={14} className="text-gray-400" />
+                                                        {user.email}
+                                                    </div>
+                                                    {user.phone && (
+                                                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                                                            <Phone size={14} className="text-gray-400" />
+                                                            {user.phone}
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </td>
-                                            <td className="px-4 sm:px-6 py-4 whitespace-nowrap">
-                                                <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${user.isVerified
-                                                    ? 'bg-green-100 text-green-800'
-                                                    : 'bg-red-100 text-red-800'}`}>
-                                                    {user.isVerified ? (
-                                                        <span className="flex items-center gap-1">
-                                                            <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                                            </svg>
-                                                            Verified
-                                                        </span>
-                                                    ) : 'Unverified'}
-                                                </span>
-                                            </td>
-                                            <td className="hidden sm:table-cell px-4 sm:px-6 py-4 whitespace-nowrap">
+                                            <td className="px-6 py-4">
                                                 <div className="flex items-center gap-2">
-                                                    <span className={`px-3 py-1 text-xs font-medium rounded-full ${user.isHelper
-                                                        ? 'bg-purple-100 text-purple-800'
-                                                        : 'bg-blue-100 text-blue-800'}`}>
+                                                    <span className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 ${user.isHelper
+                                                        ? 'bg-purple-100 text-purple-700 ring-1 ring-purple-200'
+                                                        : 'bg-blue-100 text-blue-700 ring-1 ring-blue-200'
+                                                        }`}>
+                                                        {user.isHelper ? <Shield size={12} /> : <User size={12} />}
                                                         {user.isHelper ? 'Helper' : 'User'}
                                                     </span>
+                                                    {user.isVerified ? (
+                                                        <span className="bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200 p-1 rounded-full" title="Verified">
+                                                            <CheckCircle size={14} />
+                                                        </span>
+                                                    ) : (
+                                                        <span className="bg-gray-100 text-gray-500 ring-1 ring-gray-200 p-1 rounded-full" title="Unverified">
+                                                            <XCircle size={14} />
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </td>
-                                            <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                                <div className="flex justify-end flex-wrap gap-2">
+                                            <td className="px-6 py-4 text-right">
+                                                <div className="flex justify-end gap-2">
                                                     <button
-                                                        onClick={() => handleViewProfile(user)}
-                                                        className="p-2 text-gray-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all"
+                                                        onClick={() => navigate(`/users/${user.id}`)}
+                                                        className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
                                                         title="View Profile"
                                                     >
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                        </svg>
+                                                        <Eye size={18} />
                                                     </button>
                                                     <button
-                                                        onClick={() => handleEditUser(user)}
-                                                        className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                                        onClick={() => navigate(`/users/${user.id}/edit`)}
+                                                        className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
                                                         title="Edit User"
                                                     >
-                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                        </svg>
+                                                        <Edit2 size={18} />
                                                     </button>
                                                     <button
                                                         onClick={() => handleToggleVerification(user)}
-                                                        disabled={verifyingId === user.id}
-                                                        className={`p-2 rounded-lg transition-all ${user.isVerified
-                                                            ? 'text-orange-600 hover:text-orange-700 hover:bg-orange-50'
-                                                            : 'text-green-600 hover:text-green-700 hover:bg-green-50'} ${verifyingId === user.id ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                                        title={user.isVerified ? 'Revoke Verification' : 'Verify User'}
+                                                        className={`p-2 rounded-xl transition-all ${user.isVerified
+                                                            ? 'text-emerald-600 hover:text-red-600 hover:bg-red-50'
+                                                            : 'text-gray-400 hover:text-emerald-600 hover:bg-emerald-50'
+                                                            }`}
+                                                        title={user.isVerified ? "Revoke Verification" : "Verify User"}
                                                     >
                                                         {verifyingId === user.id ? (
-                                                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent"></div>
-                                                        ) : user.isVerified ? (
-                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                                                            </svg>
+                                                            <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                                                         ) : (
-                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                                            </svg>
+                                                            <CheckCircle size={18} />
                                                         )}
                                                     </button>
                                                     <button
                                                         onClick={() => handleDeleteUser(user.id)}
-                                                        disabled={deletingId === user.id}
-                                                        className={`p-2 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-all ${deletingId === user.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
                                                         title="Delete User"
                                                     >
                                                         {deletingId === user.id ? (
-                                                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-current border-t-transparent"></div>
+                                                            <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                                                         ) : (
-                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                                            </svg>
+                                                            <Trash2 size={18} />
                                                         )}
                                                     </button>
                                                 </div>
                                             </td>
                                         </motion.tr>
                                     ))}
+                                    {filteredUsers.length === 0 && (
+                                        <tr>
+                                            <td colspan="4" className="px-6 py-12 text-center text-gray-400">
+                                                <div className="flex flex-col items-center gap-3">
+                                                    <div className="p-4 bg-gray-50 rounded-full">
+                                                        <Search size={24} />
+                                                    </div>
+                                                    <p>No users found matching your criteria.</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
                                 </tbody>
                             </table>
-
-                            {filteredUsers.length === 0 && (
-                                <div className="text-center py-12">
-                                    <svg className="w-16 h-16 mx-auto text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                    <p className="mt-4 text-gray-500">
-                                        {searchTerm || filterRole !== 'all'
-                                            ? 'No users match your search criteria'
-                                            : 'No users found'}
-                                    </p>
-                                </div>
-                            )}
                         </div>
                     </div>
                 )}
-
-                {/* Profile View Modal Removed in favor of navigation */}
-
-                {/* Edit Modal */}
-
             </div>
         </div>
     );

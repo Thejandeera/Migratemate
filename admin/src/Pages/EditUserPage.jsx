@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import { getAuthData } from '../utils/auth';
-import { ArrowLeft, Save, X } from 'lucide-react';
+import { ArrowLeft, Save, X, User, Mail, Phone, MapPin, Globe, FileText, Briefcase } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const EditUserPage = () => {
@@ -113,11 +113,26 @@ const EditUserPage = () => {
         }
     };
 
-    if (loading) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div></div>;
-    if (error) return <div className="min-h-screen flex items-center justify-center text-red-600">{error}</div>;
+    if (loading) return (
+        <div className="min-h-screen flex flex-col font-sans">
+            <Navbar />
+            <div className="flex-1 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
+            </div>
+        </div>
+    );
+
+    if (error) return (
+        <div className="min-h-screen flex flex-col font-sans">
+            <Navbar />
+            <div className="flex-1 flex items-center justify-center text-red-600 font-medium">
+                {error}
+            </div>
+        </div>
+    );
 
     return (
-        <div className="min-h-screen font-sans text-gray-900">
+        <div className="min-h-screen font-sans text-gray-900 bg-gray-50/30">
             <Navbar />
 
             {/* Notification */}
@@ -127,7 +142,7 @@ const EditUserPage = () => {
                         initial={{ opacity: 0, y: -50 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -50 }}
-                        className={`fixed top-24 right-4 z-[200] max-w-sm w-full p-4 rounded-xl shadow-2xl backdrop-blur-md border border-white/20 ${notification.type === 'success'
+                        className={`fixed top-24 right-4 z-[200] max-w-sm w-full p-4 rounded-2xl shadow-2xl backdrop-blur-md border border-white/20 ${notification.type === 'success'
                             ? 'bg-emerald-500/90 text-white'
                             : 'bg-red-500/90 text-white'
                             }`}
@@ -140,19 +155,19 @@ const EditUserPage = () => {
                 )}
             </AnimatePresence>
 
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24 pb-12">
                 {/* Header */}
-                <div className="flex items-center justify-between mb-8">
-                    <button
-                        onClick={() => navigate(-1)}
-                        className="group flex items-center text-gray-500 hover:text-blue-600 transition-colors duration-200"
-                    >
-                        <div className="p-2 rounded-full bg-white shadow-sm group-hover:shadow-md mr-3 transition-all">
-                            <ArrowLeft size={20} />
-                        </div>
-                        <span className="font-medium">Back to Profile</span>
-                    </button>
-                    <h1 className="text-2xl font-bold text-gray-900">Edit User Profile</h1>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+                    <div>
+                        <button
+                            onClick={() => navigate(-1)}
+                            className="group flex items-center text-gray-500 hover:text-gray-900 transition-colors mb-2"
+                        >
+                            <ArrowLeft size={18} className="mr-2 group-hover:-translate-x-1 transition-transform" />
+                            <span className="font-medium">Back to Profile</span>
+                        </button>
+                        <h1 className="text-3xl font-bold text-gray-900">Edit User Profile</h1>
+                    </div>
                 </div>
 
                 <motion.div
@@ -160,112 +175,129 @@ const EditUserPage = () => {
                     animate={{ opacity: 1, y: 0 }}
                     className="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100"
                 >
-                    <div className="h-2 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
+                    <div className="h-1.5 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
 
-                    <form onSubmit={handleSubmit} className="p-8">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <form onSubmit={handleSubmit} className="p-6 md:p-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-8">
                             {/* Personal Info */}
-                            <div className="space-y-6">
-                                <h3 className="text-lg font-bold text-gray-900 border-b pb-2">Personal Information</h3>
-
-                                <div>
-                                    <label htmlFor="firstName" className="block text-sm font-semibold text-gray-700 mb-2">First Name</label>
-                                    <input
-                                        type="text"
-                                        name="firstName"
-                                        id="firstName"
-                                        value={formData.firstName}
-                                        onChange={handleChange}
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label htmlFor="lastName" className="block text-sm font-semibold text-gray-700 mb-2">Last Name</label>
-                                    <input
-                                        type="text"
-                                        name="lastName"
-                                        id="lastName"
-                                        value={formData.lastName}
-                                        onChange={handleChange}
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label htmlFor="bio" className="block text-sm font-semibold text-gray-700 mb-2">Bio</label>
-                                    <textarea
-                                        name="bio"
-                                        id="bio"
-                                        rows="4"
-                                        value={formData.bio}
-                                        onChange={handleChange}
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none"
-                                    ></textarea>
+                            <div className="md:col-span-2">
+                                <h3 className="text-lg font-bold text-gray-900 border-b border-gray-100 pb-3 mb-6 flex items-center gap-2">
+                                    <User className="text-blue-500" size={20} />
+                                    Personal Information
+                                </h3>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label htmlFor="firstName" className="block text-sm font-bold text-gray-700 mb-2">First Name</label>
+                                        <input
+                                            type="text"
+                                            name="firstName"
+                                            id="firstName"
+                                            value={formData.firstName}
+                                            onChange={handleChange}
+                                            className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-medium text-gray-900 placeholder-gray-400"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="lastName" className="block text-sm font-bold text-gray-700 mb-2">Last Name</label>
+                                        <input
+                                            type="text"
+                                            name="lastName"
+                                            id="lastName"
+                                            value={formData.lastName}
+                                            onChange={handleChange}
+                                            className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-medium text-gray-900 placeholder-gray-400"
+                                        />
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <label htmlFor="bio" className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                                            <FileText size={16} className="text-gray-400" /> Bio
+                                        </label>
+                                        <textarea
+                                            name="bio"
+                                            id="bio"
+                                            rows="3"
+                                            value={formData.bio}
+                                            onChange={handleChange}
+                                            className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-medium text-gray-900 placeholder-gray-400 resize-none"
+                                        ></textarea>
+                                    </div>
                                 </div>
                             </div>
 
                             {/* Contact & Location */}
-                            <div className="space-y-6">
-                                <h3 className="text-lg font-bold text-gray-900 border-b pb-2">Contact & Location</h3>
+                            <div className="md:col-span-2">
+                                <h3 className="text-lg font-bold text-gray-900 border-b border-gray-100 pb-3 mb-6 flex items-center gap-2 pt-2">
+                                    <Briefcase className="text-indigo-500" size={20} />
+                                    Contact & Location
+                                </h3>
 
-                                <div>
-                                    <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
-                                    <input
-                                        type="email"
-                                        name="email"
-                                        id="email"
-                                        value={formData.email}
-                                        onChange={handleChange}
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-2">Phone Number</label>
-                                    <input
-                                        type="text"
-                                        name="phone"
-                                        id="phone"
-                                        value={formData.phone}
-                                        onChange={handleChange}
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label htmlFor="location" className="block text-sm font-semibold text-gray-700 mb-2">Current Location</label>
-                                    <input
-                                        type="text"
-                                        name="location"
-                                        id="location"
-                                        value={formData.location}
-                                        onChange={handleChange}
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-                                    />
-                                </div>
-
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
-                                        <label htmlFor="countryOfOrigin" className="block text-sm font-semibold text-gray-700 mb-2">Origin</label>
+                                        <label htmlFor="email" className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                                            <Mail size={16} className="text-gray-400" /> Email
+                                        </label>
+                                        <input
+                                            type="email"
+                                            name="email"
+                                            id="email"
+                                            value={formData.email}
+                                            onChange={handleChange}
+                                            className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-medium text-gray-900 placeholder-gray-400"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label htmlFor="phone" className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                                            <Phone size={16} className="text-gray-400" /> Phone
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="phone"
+                                            id="phone"
+                                            value={formData.phone}
+                                            onChange={handleChange}
+                                            className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-medium text-gray-900 placeholder-gray-400"
+                                        />
+                                    </div>
+
+                                    <div className="md:col-span-2">
+                                        <label htmlFor="location" className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                                            <MapPin size={16} className="text-gray-400" /> Current Location
+                                        </label>
+                                        <input
+                                            type="text"
+                                            name="location"
+                                            id="location"
+                                            value={formData.location}
+                                            onChange={handleChange}
+                                            className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-medium text-gray-900 placeholder-gray-400"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label htmlFor="countryOfOrigin" className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                                            <Globe size={16} className="text-gray-400" /> Origin
+                                        </label>
                                         <input
                                             type="text"
                                             name="countryOfOrigin"
                                             id="countryOfOrigin"
                                             value={formData.countryOfOrigin}
                                             onChange={handleChange}
-                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                                            className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-medium text-gray-900 placeholder-gray-400"
                                         />
                                     </div>
                                     <div>
-                                        <label htmlFor="destinationCountry" className="block text-sm font-semibold text-gray-700 mb-2">Destination</label>
+                                        <label htmlFor="destinationCountry" className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2">
+                                            <Globe size={16} className="text-gray-400" /> Destination
+                                        </label>
                                         <input
                                             type="text"
                                             name="destinationCountry"
                                             id="destinationCountry"
                                             value={formData.destinationCountry}
                                             onChange={handleChange}
-                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                                            className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all font-medium text-gray-900 placeholder-gray-400"
                                         />
                                     </div>
                                 </div>
@@ -273,27 +305,27 @@ const EditUserPage = () => {
                         </div>
 
                         {/* Action Buttons */}
-                        <div className="mt-10 pt-6 border-t border-gray-100 flex items-center justify-end gap-4">
+                        <div className="mt-10 pt-6 border-t border-gray-100 flex items-center justify-end gap-3 sticky bottom-0 bg-white z-10">
                             <button
                                 type="button"
                                 onClick={() => navigate(-1)}
-                                className="px-6 py-3 bg-white text-gray-700 border border-gray-200 rounded-xl hover:bg-gray-50 font-semibold transition-all shadow-sm"
+                                className="px-6 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 font-bold transition-all"
                             >
                                 Cancel
                             </button>
                             <button
                                 type="submit"
                                 disabled={saving}
-                                className={`px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center ${saving ? 'opacity-75 cursor-not-allowed' : ''}`}
+                                className={`px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2 ${saving ? 'opacity-75 cursor-not-allowed' : ''}`}
                             >
                                 {saving ? (
                                     <>
-                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></div>
+                                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                                         Saving...
                                     </>
                                 ) : (
                                     <>
-                                        <Save size={20} className="mr-2" /> Save Changes
+                                        <Save size={20} /> Save Changes
                                     </>
                                 )}
                             </button>
