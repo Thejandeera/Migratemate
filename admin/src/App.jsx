@@ -11,6 +11,7 @@ import GigDetails from './Pages/GigDetails';
 import ManageGigs from './Pages/ManageGigs';
 import CommunityManagement from './Pages/CommunityManagement';
 import CommunityChat from './Pages/CommunityChat';
+import EditUserPage from './Pages/EditUserPage';
 import { isAuthenticated } from './utils/auth'
 
 const ProtectedRoute = ({ children }) => {
@@ -89,6 +90,12 @@ const App = () => {
       <Route path="/users/:id" element={
         <ProtectedRoute>
           <UserDetails />
+        </ProtectedRoute>
+      } />
+
+      <Route path="/users/:id/edit" element={
+        <ProtectedRoute>
+          <EditUserPage />
         </ProtectedRoute>
       } />
 

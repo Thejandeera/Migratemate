@@ -4,6 +4,7 @@ import Navbar from '../components/Navbar';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getAuthData } from '../utils/auth';
 
+
 // Enhanced ZoomableImage with better responsive behavior
 const ZoomableImage = ({ src, alt, className }) => {
     const [isHovered, setIsHovered] = useState(false);
@@ -57,9 +58,7 @@ const ViewUsers = () => {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [selectedUser, setSelectedUser] = useState(null);
-    // const [showDocumentModal, setShowDocumentModal] = useState(false); // Removed in favor of navigation
-    const [showEditModal, setShowEditModal] = useState(false);
+
     const [verifyingId, setVerifyingId] = useState(null);
     const [deletingId, setDeletingId] = useState(null);
     const [notification, setNotification] = useState({ show: false, message: '', type: '' });
@@ -119,8 +118,7 @@ const ViewUsers = () => {
     };
 
     const handleEditUser = (user) => {
-        setSelectedUser({ ...user });
-        setShowEditModal(true);
+        navigate(`/users/${user.id}/edit`);
     };
 
     const handleDeleteUser = async (userId) => {
@@ -176,36 +174,7 @@ const ViewUsers = () => {
         }
     };
 
-    const handleUpdateUser = async (e) => {
-        e.preventDefault();
-        try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/users/${selectedUser.id}/admin-update`, {
-                method: 'PUT',
-                headers: getHeaders(),
-                body: JSON.stringify({
-                    firstName: selectedUser.firstName,
-                    lastName: selectedUser.lastName,
-                    email: selectedUser.email,
-                    phone: selectedUser.phone,
-                    location: selectedUser.location,
-                    bio: selectedUser.bio,
-                    countryOfOrigin: selectedUser.countryOfOrigin,
-                    destinationCountry: selectedUser.destinationCountry
-                })
-            });
-            const data = await response.json();
-            if (data.success) {
-                setUsers(users.map(u => u.id === selectedUser.id ? { ...u, ...data.data } : u));
-                setShowEditModal(false);
-                showNotification('User updated successfully', 'success');
-            } else {
-                showNotification(data.message || 'Update failed', 'error');
-            }
-        } catch (err) {
-            console.error(err);
-            showNotification('Failed to update user', 'error');
-        }
-    };
+
 
     const showNotification = (message, type) => {
         setNotification({ show: true, message, type });
@@ -473,142 +442,7 @@ const ViewUsers = () => {
                 {/* Profile View Modal Removed in favor of navigation */}
 
                 {/* Edit Modal */}
-                <AnimatePresence>
-                    {showEditModal && selectedUser && (
-                        <div className="fixed inset-0 z-[100] overflow-y-auto" onClick={() => setShowEditModal(false)}>
-                            <div className="flex items-center justify-center min-h-screen px-3 sm:px-4 py-4">
-                                <motion.div
-                                    initial={{ opacity: 0 }}
-                                    animate={{ opacity: 1 }}
-                                    exit={{ opacity: 0 }}
-                                    className="fixed inset-0 bg-black/50 backdrop-blur-sm"
-                                />
-                                <motion.div
-                                    initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                                    exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                                    onClick={(e) => e.stopPropagation()}
-                                    className="inline-block w-full max-w-xl bg-white rounded-2xl shadow-2xl overflow-hidden relative"
-                                >
-                                    <form onSubmit={handleUpdateUser}>
-                                        <div className="p-4 sm:p-6">
-                                            <div className="flex justify-between items-center mb-6">
-                                                <h3 className="text-xl font-bold text-gray-900">
-                                                    Edit User Details
-                                                </h3>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setShowEditModal(false)}
-                                                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                                                >
-                                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                                    </svg>
-                                                </button>
-                                            </div>
 
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                        First Name
-                                                    </label>
-                                                    <input
-                                                        type="text"
-                                                        value={selectedUser.firstName || ''}
-                                                        onChange={(e) => setSelectedUser({ ...selectedUser, firstName: e.target.value })}
-                                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                        Last Name
-                                                    </label>
-                                                    <input
-                                                        type="text"
-                                                        value={selectedUser.lastName || ''}
-                                                        onChange={(e) => setSelectedUser({ ...selectedUser, lastName: e.target.value })}
-                                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
-                                                    />
-                                                </div>
-                                                <div className="sm:col-span-2">
-                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                        Phone
-                                                    </label>
-                                                    <input
-                                                        type="text"
-                                                        value={selectedUser.phone || ''}
-                                                        onChange={(e) => setSelectedUser({ ...selectedUser, phone: e.target.value })}
-                                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
-                                                    />
-                                                </div>
-                                                <div className="sm:col-span-2">
-                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                        Location
-                                                    </label>
-                                                    <input
-                                                        type="text"
-                                                        value={selectedUser.location || ''}
-                                                        onChange={(e) => setSelectedUser({ ...selectedUser, location: e.target.value })}
-                                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
-                                                    />
-                                                </div>
-                                                <div className="sm:col-span-2">
-                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                        Bio
-                                                    </label>
-                                                    <textarea
-                                                        value={selectedUser.bio || ''}
-                                                        onChange={(e) => setSelectedUser({ ...selectedUser, bio: e.target.value })}
-                                                        rows="3"
-                                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all resize-none"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                        Country of Origin
-                                                    </label>
-                                                    <input
-                                                        type="text"
-                                                        value={selectedUser.countryOfOrigin || ''}
-                                                        onChange={(e) => setSelectedUser({ ...selectedUser, countryOfOrigin: e.target.value })}
-                                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                        Destination Country
-                                                    </label>
-                                                    <input
-                                                        type="text"
-                                                        value={selectedUser.destinationCountry || ''}
-                                                        onChange={(e) => setSelectedUser({ ...selectedUser, destinationCountry: e.target.value })}
-                                                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="bg-gray-50 px-4 sm:px-6 py-4 flex flex-col sm:flex-row-reverse gap-3">
-                                            <button
-                                                type="submit"
-                                                className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:shadow-lg transition-all duration-300 font-medium text-sm w-full sm:w-auto"
-                                            >
-                                                Save Changes
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowEditModal(false)}
-                                                className="px-6 py-3 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-300 font-medium text-sm w-full sm:w-auto"
-                                            >
-                                                Cancel
-                                            </button>
-                                        </div>
-                                    </form>
-                                </motion.div>
-                            </div>
-                        </div>
-                    )}
-                </AnimatePresence>
             </div>
         </div>
     );
