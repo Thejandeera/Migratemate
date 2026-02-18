@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, ChevronRight, ChevronLeft, Upload, Image, Check, Loader2 } from 'lucide-react';
+import TimeInput from './TimeInput';
 
 // Category options
 const CATEGORIES = [
@@ -584,17 +585,33 @@ const CreateGigForm = ({ isOpen, onClose, onSuccess, editGig = null }) => {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
                                     Available Time Slot
                                 </label>
-                                <input
-                                    type="text"
-                                    name="availableTimeSlot"
-                                    value={formData.availableTimeSlot}
-                                    onChange={handleInputChange}
-                                    placeholder="e.g., 9:00 AM - 5:00 PM"
-                                    className="w-full px-4 py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
-                                />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 bg-white p-4 rounded-xl border border-gray-200">
+                                    <TimeInput
+                                        label="Start Time"
+                                        value={formData.availableTimeSlot ? formData.availableTimeSlot.split(' - ')[0] : '09:00 AM'}
+                                        onChange={(newTime) => {
+                                            const endTime = formData.availableTimeSlot ? formData.availableTimeSlot.split(' - ')[1] : '05:00 PM';
+                                            setFormData(prev => ({ ...prev, availableTimeSlot: `${newTime} - ${endTime}` }));
+                                        }}
+                                    />
+                                    <div className="hidden md:flex items-center justify-center pt-6">
+                                        <span className="text-gray-400 font-medium">to</span>
+                                    </div>
+                                    <TimeInput
+                                        label="End Time"
+                                        value={formData.availableTimeSlot ? formData.availableTimeSlot.split(' - ')[1] : '05:00 PM'}
+                                        onChange={(newTime) => {
+                                            const startTime = formData.availableTimeSlot ? formData.availableTimeSlot.split(' - ')[0] : '09:00 AM';
+                                            setFormData(prev => ({ ...prev, availableTimeSlot: `${startTime} - ${newTime}` }));
+                                        }}
+                                    />
+                                </div>
+                                <p className="text-xs text-gray-500 mt-2 text-center">
+                                    Selected: <span className="font-medium text-green-600">{formData.availableTimeSlot || '09:00 AM - 05:00 PM'}</span>
+                                </p>
                             </div>
                         </div>
                     )}
