@@ -91,7 +91,7 @@ const ManageGigs = () => {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/services/all`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/services/admin/all`, {
                 headers: getHeaders()
             });
             const data = await response.json();
@@ -295,8 +295,8 @@ const ManageGigs = () => {
                                             key={cat}
                                             onClick={() => setCategoryFilter(cat)}
                                             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all border ${categoryFilter === cat
-                                                    ? 'bg-blue-50 text-blue-700 border-blue-200'
-                                                    : 'bg-white text-gray-500 border-gray-100 hover:border-gray-200'
+                                                ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                                : 'bg-white text-gray-500 border-gray-100 hover:border-gray-200'
                                                 }`}
                                         >
                                             {cat !== 'ALL' && <Icon size={12} />}
@@ -394,14 +394,14 @@ const ManageGigs = () => {
                                                 <td className="px-6 py-4 text-right">
                                                     <div className="flex justify-end gap-2">
                                                         <button
-                                                            onClick={() => navigate(`/gigs/${service.id}`)}
+                                                            onClick={() => navigate(`/gig/${service.id}`)}
                                                             className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
                                                             title="View Details"
                                                         >
                                                             <Eye size={18} />
                                                         </button>
 
-                                                        {service.status === 'INREVIEW' && (
+                                                        {service.status !== 'APPROVED' && (
                                                             <button
                                                                 onClick={() => handleStatusUpdate(service.id, 'APPROVED')}
                                                                 className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all"
