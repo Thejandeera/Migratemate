@@ -260,17 +260,73 @@ const ProfileInfo = () => {
                 <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">Account Status</h3>
                     <div className="space-y-4">
-                        <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-100">
+                        {/* Identity Verification Status */}
+                        <div className={`flex items-center justify-between p-3 rounded-lg border ${user.isVerified
+                                ? 'bg-green-50 border-green-100'
+                                : 'bg-yellow-50 border-yellow-100'
+                            }`}>
                             <div className="flex items-center gap-3">
-                                <div className="p-2 bg-green-100 rounded-full text-green-600">
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                <div className={`p-2 rounded-full ${user.isVerified ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600'
+                                    }`}>
+                                    {user.isVerified ? (
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    ) : (
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                                    )}
                                 </div>
                                 <div>
-                                    <div className="text-sm font-semibold text-gray-900">Identity Verified</div>
-                                    <div className="text-xs text-green-700">Your account is fully verified</div>
+                                    <div className="text-sm font-semibold text-gray-900">Identity Verification</div>
+                                    <div className={`text-xs ${user.isVerified ? 'text-green-700' : 'text-yellow-700'}`}>
+                                        {user.isVerified ? 'Your account is fully verified' : 'Action required: Please complete KYC'}
+                                    </div>
                                 </div>
                             </div>
-                            <span className="text-xs font-bold text-green-600 bg-white px-2 py-1 rounded border border-green-200">ACTIVE</span>
+                            <span className={`text-xs font-bold px-2 py-1 rounded border ${user.isVerified
+                                    ? 'text-green-600 bg-white border-green-200'
+                                    : 'text-yellow-600 bg-white border-yellow-200'
+                                }`}>
+                                {user.isVerified ? 'VERIFIED' : 'PENDING'}
+                            </span>
+                        </div>
+
+                        {/* Uploaded Documents Preview */}
+                        <div className="pt-4 border-t border-gray-100">
+                            <h4 className="text-sm font-semibold text-gray-900 mb-3">KYC Documents</h4>
+                            <div className="grid grid-cols-2 gap-4">
+                                {/* Passport */}
+                                <div className="p-3 border border-gray-100 rounded-lg">
+                                    <div className="text-xs text-gray-500 mb-2">Passport/ID</div>
+                                    {user.passportImageUrl ? (
+                                        <a href={user.passportImageUrl} target="_blank" rel="noopener noreferrer" className="block relative aspect-video bg-gray-100 rounded overflow-hidden group">
+                                            <img src={user.passportImageUrl} alt="Passport" className="w-full h-full object-cover" />
+                                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                <span className="text-white text-xs font-bold">View</span>
+                                            </div>
+                                        </a>
+                                    ) : (
+                                        <div className="aspect-video bg-gray-50 rounded flex items-center justify-center text-gray-400 text-xs text-center p-2">
+                                            Not Uploaded
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Selfie */}
+                                <div className="p-3 border border-gray-100 rounded-lg">
+                                    <div className="text-xs text-gray-500 mb-2">Selfie</div>
+                                    {user.selfieImageUrl ? (
+                                        <a href={user.selfieImageUrl} target="_blank" rel="noopener noreferrer" className="block relative aspect-video bg-gray-100 rounded overflow-hidden group">
+                                            <img src={user.selfieImageUrl} alt="Selfie" className="w-full h-full object-cover" />
+                                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                                <span className="text-white text-xs font-bold">View</span>
+                                            </div>
+                                        </a>
+                                    ) : (
+                                        <div className="aspect-video bg-gray-50 rounded flex items-center justify-center text-gray-400 text-xs text-center p-2">
+                                            Not Uploaded
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                         </div>
 
                         <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
