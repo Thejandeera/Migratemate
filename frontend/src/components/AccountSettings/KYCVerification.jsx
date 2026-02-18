@@ -1,201 +1,213 @@
 import React from 'react';
 import { getUserData } from '../../utils/auth';
+import { Check, Clock, AlertTriangle, Shield, User, FileText, Camera } from 'lucide-react';
 
 const KYCVerification = () => {
     const user = getUserData();
-    // Default mock behavior if no user data, but in profile context user should exist
     const passportUrl = user?.passportImageUrl;
     const selfieUrl = user?.selfieImageUrl;
     const isPassportUploaded = !!passportUrl;
     const isSelfieUploaded = !!selfieUrl;
     const isVerified = !!user?.isVerified;
 
-    // Calculate progress
-    let progress = 33; // Account created
+    let progress = 33;
     if (isPassportUploaded) progress += 33;
     if (isSelfieUploaded) progress += 34;
-    // Cap at 100 if verified, or just sum
-    if (isVerified) progress = 100;
+    // Visually cap at 98 perct if not verified by admin yet but uploaded
+    const visualProgress = isVerified ? 100 : Math.min(progress, 95);
+
+    const steps = [
+        {
+            title: 'Create Account',
+            description: 'Basic details registered',
+            icon: User,
+            completed: true,
+            current: false
+        },
+        {
+            title: 'Upload ID Document',
+            description: 'Passport or National ID',
+            icon: FileText,
+            completed: isPassportUploaded,
+            current: !isPassportUploaded
+        },
+        {
+            title: 'Biometric Verification',
+            description: 'Live selfie check',
+            icon: Camera,
+            completed: isSelfieUploaded,
+            current: isPassportUploaded && !isSelfieUploaded
+        }
+    ];
 
     return (
-        <div className="space-y-6">
-            <div className={`border rounded-xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 ${isVerified ? 'bg-green-50 border-green-100' : 'bg-yellow-50 border-yellow-100'
-                }`}>
-                <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white shadow-sm ${isVerified ? 'bg-green-500' : 'bg-yellow-500'
+        <div className="space-y-8 animate-fade-in-up">
+            {/* Status Banner */}
+            <div className={`rounded-3xl p-6 border-2 flex flex-col md:flex-row items-center justify-between gap-6 transition-all ${isVerified
+                    ? 'bg-green-50 border-green-100 shadow-green-100'
+                    : 'bg-orange-50 border-orange-100 shadow-orange-100'
+                } shadow-lg`}>
+                <div className="flex items-center gap-5">
+                    <div className={`w-16 h-16 rounded-full flex items-center justify-center shadow-md border-4 border-white ${isVerified ? 'bg-green-500 text-white' : 'bg-orange-500 text-white'
                         }`}>
-                        {isVerified ? (
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                        ) : (
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                        )}
+                        {isVerified ? <Shield className="w-8 h-8" /> : <Clock className="w-8 h-8 animate-pulse" />}
                     </div>
                     <div>
-                        <h3 className="text-lg font-bold text-gray-900">Identity Verification</h3>
-                        <p className={`text-sm ${isVerified ? 'text-green-700' : 'text-yellow-700'}`}>
-                            {isVerified ? 'Your identity has been verified' : 'Verification Pending / Incomplete'}
+                        <h3 className="text-xl font-bold text-gray-900 mb-1">
+                            {isVerified ? 'Identity Verified' : 'Verification Required'}
+                        </h3>
+                        <p className={`font-medium ${isVerified ? 'text-green-700' : 'text-orange-700'}`}>
+                            {isVerified
+                                ? 'Your account is fully verified and secure.'
+                                : 'Complete the steps below to unlock full access.'}
                         </p>
                     </div>
                 </div>
-                <div className="flex items-center gap-2">
-                    <span className={`px-3 py-1 text-white text-xs font-bold rounded-full shadow-sm ${isVerified ? 'bg-green-500' : 'bg-yellow-500'
-                        }`}>
-                        {isVerified ? 'Verified' : 'Pending'}
-                    </span>
-                    <span className="text-sm font-bold text-gray-900">{Math.round(progress)}%</span>
-                </div>
-            </div>
 
-            <div className="bg-white border border-gray-100 rounded-xl overflow-hidden shadow-sm">
-                <div className="p-4 border-b border-gray-100 bg-gray-50">
-                    <h4 className="font-semibold text-gray-900 text-sm">Verification Progress</h4>
-                </div>
-
-                <div className="divide-y divide-gray-100">
-                    {/* Step 1 */}
-                    <div className="p-4 flex items-center justify-between group hover:bg-gray-50 transition">
-                        <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 rounded-full bg-green-100 text-green-600 flex items-center justify-center">
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                            </div>
-                            <div>
-                                <h5 className="font-semibold text-gray-900 text-sm">Personal Information</h5>
-                                <p className="text-xs text-gray-500">Basic details submitted</p>
-                            </div>
-                        </div>
-                        <div className="w-6 h-6 rounded-full bg-green-100 text-green-500 flex items-center justify-center">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
-                        </div>
+                <div className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl shadow-sm border border-gray-100">
+                    <div className="flex flex-col items-end">
+                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Progress</span>
+                        <span className={`text-xl font-black ${isVerified ? 'text-green-600' : 'text-orange-500'}`}>
+                            {Math.round(visualProgress)}%
+                        </span>
                     </div>
-
-                    {/* Step 2 */}
-                    <div className="p-4 flex items-center justify-between group hover:bg-gray-50 transition">
-                        <div className="flex items-center gap-4">
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isPassportUploaded ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
-                                }`}>
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
-                            </div>
-                            <div>
-                                <h5 className="font-semibold text-gray-900 text-sm">ID Document</h5>
-                                <p className="text-xs text-gray-500">
-                                    {isPassportUploaded ? 'Passport/ID uploaded' : 'Please upload your ID'}
-                                </p>
-                            </div>
-                        </div>
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center ${isPassportUploaded ? 'bg-green-100 text-green-500' : 'bg-gray-100 text-gray-300'
-                            }`}>
-                            {isPassportUploaded ? (
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
-                            ) : (
-                                <div className="w-2 h-2 rounded-full bg-gray-300"></div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Step 3 */}
-                    <div className="p-4 flex items-center justify-between group hover:bg-gray-50 transition">
-                        <div className="flex items-center gap-4">
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center ${isSelfieUploaded ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'
-                                }`}>
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                            </div>
-                            <div>
-                                <h5 className="font-semibold text-gray-900 text-sm">Selfie Verification</h5>
-                                <p className="text-xs text-gray-500">
-                                    {isSelfieUploaded ? 'Selfie uploaded' : 'Please upload your selfie'}
-                                </p>
-                            </div>
-                        </div>
-                        <div className={`w-6 h-6 rounded-full flex items-center justify-center ${isSelfieUploaded ? 'bg-green-100 text-green-500' : 'bg-gray-100 text-gray-300'
-                            }`}>
-                            {isSelfieUploaded ? (
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
-                            ) : (
-                                <div className="w-2 h-2 rounded-full bg-gray-300"></div>
-                            )}
-                        </div>
+                    <div className="w-16 h-16 relative">
+                        <svg className="w-full h-full transform -rotate-90">
+                            <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="4" fill="transparent" className="text-gray-100" />
+                            <circle cx="32" cy="32" r="28" stroke="currentColor" strokeWidth="4" fill="transparent"
+                                strokeDasharray={175}
+                                strokeDashoffset={175 - (visualProgress / 100) * 175}
+                                className={`transition-all duration-1000 ease-out ${isVerified ? 'text-green-500' : 'text-orange-500'}`}
+                            />
+                        </svg>
                     </div>
                 </div>
             </div>
 
-            <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Benefits of Verification</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                        <div className="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center mb-3">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-                        </div>
-                        <h4 className="font-semibold text-gray-900 text-sm mb-1">Trust Badge</h4>
-                        <p className="text-xs text-gray-500">Get a verified badge visible to all users</p>
-                    </div>
-                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                        <div className="w-8 h-8 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center mb-3">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 11c0 3.517-1.009 6.799-2.753 9.571m-3.44-2.04l.054-.09A13.916 13.916 0 008 11a4 4 0 118 0c0 1.017-.07 2.019-.203 3m-2.118 6.844A21.88 21.88 0 0015.171 17m3.839 1.132c.645-2.266.99-4.659.99-7.132A8 8 0 008 4.07M3 15.364c.64-1.319 1-2.8 1-4.364 0-1.457.2-2.873.571-4.205" /></svg>
-                        </div>
-                        <h4 className="font-semibold text-gray-900 text-sm mb-1">Full Access</h4>
-                        <p className="text-xs text-gray-500">Access all marketplace features and SOS mode</p>
-                    </div>
-                    <div className="p-4 bg-gray-50 rounded-xl border border-gray-100">
-                        <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mb-3">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                        </div>
-                        <h4 className="font-semibold text-gray-900 text-sm mb-1">Become a Helper</h4>
-                        <p className="text-xs text-gray-500">Offer services and earn money helping others</p>
-                    </div>
-                </div>
-            </div>
+            <div className="grid lg:grid-cols-3 gap-8">
+                {/* Steps Column */}
+                <div className="lg:col-span-2 space-y-6">
+                    <div className="bg-white border border-gray-100 rounded-3xl p-8 shadow-sm">
+                        <h3 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+                            Verification Steps
+                        </h3>
 
-            <div className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Uploaded Documents</h3>
-                <div className="space-y-3">
-                    {/* Passport Section */}
-                    <div className="flex items-center justify-between p-3 border border-gray-100 rounded-lg">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 bg-gray-50 rounded text-gray-500 overflow-hidden w-12 h-12 flex items-center justify-center">
+                        <div className="space-y-8 relative before:absolute before:left-6 before:top-2 before:bottom-2 before:w-0.5 before:bg-gray-100">
+                            {steps.map((step, idx) => (
+                                <div key={idx} className="relative flex items-center gap-6 group">
+                                    <div className={`w-12 h-12 rounded-full flex items-center justify-center border-4 border-white shadow-sm relative z-10 transition-colors ${step.completed ? 'bg-green-500 text-white' :
+                                            step.current ? 'bg-blue-600 text-white ring-4 ring-blue-50' :
+                                                'bg-gray-200 text-gray-400'
+                                        }`}>
+                                        {step.completed ? <Check className="w-6 h-6" /> : <step.icon className="w-5 h-5" />}
+                                    </div>
+                                    <div className={`flex-1 p-4 rounded-xl border transition-all ${step.current ? 'bg-blue-50 border-blue-100 shadow-sm' : 'bg-white border-transparent'
+                                        }`}>
+                                        <h4 className={`font-bold text-base ${step.completed ? 'text-green-700' : 'text-gray-900'}`}>{step.title}</h4>
+                                        <p className="text-sm text-gray-500">{step.description}</p>
+                                    </div>
+                                    {step.completed && (
+                                        <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">Done</span>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Documents Preview */}
+                    <div className="bg-white border border-gray-100 rounded-3xl p-8 shadow-sm">
+                        <h3 className="text-lg font-bold text-gray-900 mb-6">Uploaded Documents</h3>
+                        <div className="grid sm:grid-cols-2 gap-6">
+                            {/* Passport */}
+                            <div className="border border-gray-200 rounded-2xl p-4 hover:border-green-300 transition-colors bg-gray-50/50">
+                                <div className="flex justify-between items-start mb-3">
+                                    <div>
+                                        <h4 className="font-bold text-gray-900 text-sm">Passport / ID</h4>
+                                        <p className="text-xs text-gray-500">{isPassportUploaded ? 'Uploaded on Registration' : 'Not Uploaded'}</p>
+                                    </div>
+                                    {isPassportUploaded ? <Check className="w-5 h-5 text-green-500" /> : <AlertTriangle className="w-5 h-5 text-gray-300" />}
+                                </div>
                                 {passportUrl ? (
-                                    <img src={passportUrl} alt="Passport" className="w-full h-full object-cover" />
+                                    <a href={passportUrl} target="_blank" rel="noopener noreferrer" className="block relative aspect-video bg-gray-200 rounded-lg overflow-hidden group">
+                                        <img src={passportUrl} alt="Passport" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                            <span className="text-white text-xs font-bold bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/30">View Document</span>
+                                        </div>
+                                    </a>
                                 ) : (
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                                    <div className="aspect-video bg-gray-100 rounded-lg flex flex-col items-center justify-center text-gray-400 gap-2 border-2 border-dashed border-gray-200">
+                                        <FileText className="w-8 h-8" />
+                                        <span className="text-xs font-medium">No document</span>
+                                    </div>
                                 )}
                             </div>
-                            <div>
-                                <div className="text-sm font-medium text-gray-900">Passport</div>
-                                <div className="text-xs text-gray-500">
-                                    {passportUrl ? (
-                                        <a href={passportUrl} target="_blank" rel="noopener noreferrer" className="text-green-600 hover:underline">View Document</a>
-                                    ) : 'No document uploaded'}
+
+                            {/* Selfie */}
+                            <div className="border border-gray-200 rounded-2xl p-4 hover:border-green-300 transition-colors bg-gray-50/50">
+                                <div className="flex justify-between items-start mb-3">
+                                    <div>
+                                        <h4 className="font-bold text-gray-900 text-sm">Live Selfie</h4>
+                                        <p className="text-xs text-gray-500">{isSelfieUploaded ? 'Uploaded on Registration' : 'Not Uploaded'}</p>
+                                    </div>
+                                    {isSelfieUploaded ? <Check className="w-5 h-5 text-green-500" /> : <AlertTriangle className="w-5 h-5 text-gray-300" />}
                                 </div>
+                                {selfieUrl ? (
+                                    <a href={selfieUrl} target="_blank" rel="noopener noreferrer" className="block relative aspect-video bg-gray-200 rounded-lg overflow-hidden group">
+                                        <img src={selfieUrl} alt="Selfie" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                            <span className="text-white text-xs font-bold bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/30">View Photo</span>
+                                        </div>
+                                    </a>
+                                ) : (
+                                    <div className="aspect-video bg-gray-100 rounded-lg flex flex-col items-center justify-center text-gray-400 gap-2 border-2 border-dashed border-gray-200">
+                                        <Camera className="w-8 h-8" />
+                                        <span className="text-xs font-medium">No selfie</span>
+                                    </div>
+                                )}
                             </div>
                         </div>
-                        <span className="flex items-center gap-1 text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded border border-green-100">
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
-                            Verified
-                        </span>
+                    </div>
+                </div>
+
+                {/* Sidebar Benefits */}
+                <div className="space-y-6">
+                    <div className="bg-gradient-to-br from-green-600 to-emerald-700 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
+                        <h3 className="text-xl font-bold mb-4 relative z-10">Why Verify?</h3>
+                        <ul className="space-y-4 relative z-10">
+                            {[
+                                { text: 'Trust Badge on Profile', icon: Shield },
+                                { text: 'Unlock SOS Alerts', icon: AlertTriangle },
+                                { text: 'Offer Services', icon: User }
+                            ].map((item, idx) => (
+                                <li key={idx} className="flex items-center gap-3 bg-white/10 p-3 rounded-xl backdrop-blur-sm border border-white/10">
+                                    <item.icon className="w-5 h-5 text-green-200" />
+                                    <span className="font-medium text-sm">{item.text}</span>
+                                </li>
+                            ))}
+                        </ul>
                     </div>
 
-                    {/* Selfie Section */}
-                    <div className="flex items-center justify-between p-3 border border-gray-100 rounded-lg">
-                        <div className="flex items-center gap-3">
-                            <div className="p-2 bg-gray-50 rounded text-gray-500 overflow-hidden w-12 h-12 flex items-center justify-center">
-                                {selfieUrl ? (
-                                    <img src={selfieUrl} alt="Selfie" className="w-full h-full object-cover" />
-                                ) : (
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                                )}
+                    <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-sm">
+                        <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4">Security</h3>
+                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl mb-3">
+                            <div className="bg-green-100 p-2 rounded-lg text-green-600">
+                                <Shield className="w-5 h-5" />
                             </div>
                             <div>
-                                <div className="text-sm font-medium text-gray-900">Selfie Photo</div>
-                                <div className="text-xs text-gray-500">
-                                    {selfieUrl ? (
-                                        <a href={selfieUrl} target="_blank" rel="noopener noreferrer" className="text-green-600 hover:underline">View Photo</a>
-                                    ) : 'No photo uploaded'}
-                                </div>
+                                <h4 className="font-bold text-sm text-gray-900">Data Encryption</h4>
+                                <p className="text-xs text-gray-500">256-bit SSL Protection</p>
                             </div>
                         </div>
-                        <span className="flex items-center gap-1 text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded border border-green-100">
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
-                            Verified
-                        </span>
+                        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                            <div className="bg-blue-100 p-2 rounded-lg text-blue-600">
+                                <Check className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-sm text-gray-900">Manual Review</h4>
+                                <p className="text-xs text-gray-500">Verified by humans</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

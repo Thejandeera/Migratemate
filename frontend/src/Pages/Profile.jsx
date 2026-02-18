@@ -11,6 +11,8 @@ import MyGigs from '../components/AccountSettings/MyGigs';
 import BookingsManager from '../components/AccountSettings/BookingsManager';
 import BookingHistory from '../components/AccountSettings/BookingHistory';
 
+import { User, Shield, Briefcase, Calendar, Clock, Lock } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const Profile = () => {
     const navigate = useNavigate();
@@ -26,38 +28,37 @@ const Profile = () => {
     if (!user) return null;
 
     const tabs = [
-        { id: 'Profile', label: 'Profile', icon: 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' },
-        { id: 'KYC', label: 'KYC', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' },
-        { id: 'MyGigs', label: 'My Gigs', icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4' },
-        { id: 'Bookings', label: 'Client Orders', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
-        { id: 'History', label: 'My Bookings', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
-
+        { id: 'Profile', label: 'Personal Information', icon: User, desc: 'Manage your personal details' },
+        { id: 'KYC', label: 'Identity Verification', icon: Shield, desc: 'Verify your identity badge' },
+        { id: 'MyGigs', label: 'My Services', icon: Briefcase, desc: 'Manage services you offer' },
+        { id: 'Bookings', label: 'Client Orders', icon: Calendar, desc: 'Manage incoming requests' },
+        { id: 'History', label: 'Booking History', icon: Clock, desc: 'View your past bookings' },
     ];
 
     const renderContent = () => {
         const restrictedTabs = ['MyGigs', 'Bookings'];
         if (restrictedTabs.includes(activeTab) && !user?.isVerified) {
             return (
-                <div className="bg-white border border-yellow-200 rounded-2xl p-8 text-center shadow-sm max-w-2xl mx-auto mt-8">
-                    <div className="w-16 h-16 bg-yellow-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg className="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="bg-white border border-yellow-100 rounded-3xl p-10 text-center shadow-sm max-w-2xl mx-auto mt-8 flex flex-col items-center"
+                >
+                    <div className="w-20 h-20 bg-yellow-50 rounded-full flex items-center justify-center mb-6">
+                        <Lock className="w-10 h-10 text-yellow-500" />
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">Verification Required</h3>
-                    <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                        To access <strong>{tabs.find(t => t.id === activeTab)?.label}</strong>, you need to verify your identity first. This helps us prioritize safety and trust in our community.
+                    <h3 className="text-2xl font-bold text-gray-900 mb-3">Verification Required</h3>
+                    <p className="text-gray-500 mb-8 max-w-md">
+                        To access <strong>{tabs.find(t => t.id === activeTab)?.label}</strong>, you need to verify your identity. This ensures a safe environment for everyone.
                     </p>
                     <button
                         onClick={() => setActiveTab('KYC')}
-                        className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 px-6 rounded-lg transition-colors shadow-sm inline-flex items-center gap-2"
+                        className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg shadow-green-200 hover:-translate-y-1 flex items-center gap-2"
                     >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        Complete Verification
+                        <Shield className="w-5 h-5" />
+                        Start Verification
                     </button>
-                </div>
+                </motion.div>
             );
         }
 
@@ -67,54 +68,70 @@ const Profile = () => {
             case 'MyGigs': return <MyGigs />;
             case 'Bookings': return <BookingsManager />;
             case 'History': return <BookingHistory />;
-
             default: return <ProfileInfo />;
         }
     };
 
     return (
-        <div className="min-h-screen bg-white">
+        <div className="min-h-screen bg-gray-50/50 font-sans">
             <Navbar />
 
-            <div className="w-full px-4 sm:px-6 lg:px-8 py-24">
-                <div className="max-w-7xl mx-auto">
-                    {/* Header */}
-                    <div className="mb-8">
-                        <h1 className="text-3xl font-bold text-gray-900">Account Settings</h1>
-                        <p className="text-gray-500 mt-1">Manage your profile, gigs, bookings, and preferences</p>
-                    </div>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+                <div className="flex flex-col lg:flex-row gap-8">
 
-                    {/* Tabs Navigation */}
-                    <div className="bg-gray-50/80 backdrop-blur-sm sticky top-20 z-10 border border-gray-100 rounded-2xl p-2 mb-8 shadow-sm">
-                        <div className="flex gap-1 overflow-x-auto pb-2 justify-start md:justify-center touch-pan-x" role="tablist" aria-label="Account Settings Tabs">
-                            {tabs.map((tab) => (
-                                <button
-                                    key={tab.id}
-                                    role="tab"
-                                    aria-selected={activeTab === tab.id}
-                                    aria-controls={`panel-${tab.id}`}
-                                    id={`tab-${tab.id}`}
-                                    onClick={() => setActiveTab(tab.id)}
-                                    className={`
-                                        flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold whitespace-nowrap transition-all duration-200 flex-shrink-0
-                                        ${activeTab === tab.id
-                                            ? 'bg-white text-gray-900 shadow-sm border border-gray-200/50'
-                                            : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
-                                        }
-                                    `}
-                                >
-                                    <svg className={`w-4 h-4 ${activeTab === tab.id ? 'text-green-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={tab.icon} />
-                                    </svg>
-                                    {tab.label}
-                                </button>
-                            ))}
+                    {/* Sidebar Navigation */}
+                    <div className="lg:w-80 flex-shrink-0">
+                        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-2 sticky top-28">
+                            <div className="p-4 mb-2">
+                                <h2 className="text-xl font-bold text-gray-900">Settings</h2>
+                                <p className="text-sm text-gray-500">Manage your account</p>
+                            </div>
+
+                            <nav className="space-y-1">
+                                {tabs.map((tab) => (
+                                    <button
+                                        key={tab.id}
+                                        onClick={() => setActiveTab(tab.id)}
+                                        className={`w-full flex items-center gap-4 p-4 rounded-2xl text-left transition-all duration-200 group ${activeTab === tab.id
+                                                ? 'bg-green-50 text-green-700 shadow-sm'
+                                                : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                            }`}
+                                    >
+                                        <div className={`p-2 rounded-xl transition-colors ${activeTab === tab.id ? 'bg-white text-green-600' : 'bg-gray-100 text-gray-500 group-hover:bg-white group-hover:text-gray-700'
+                                            }`}>
+                                            <tab.icon className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <span className="block font-bold text-sm">{tab.label}</span>
+                                            <span className={`text-xs block ${activeTab === tab.id ? 'text-green-600/70' : 'text-gray-400'}`}>{tab.desc}</span>
+                                        </div>
+                                    </button>
+                                ))}
+                            </nav>
                         </div>
                     </div>
 
-                    {/* Content Area */}
-                    <div className="animate-fadeIn">
-                        {renderContent()}
+                    {/* Main Content Area */}
+                    <div className="flex-1 min-w-0">
+                        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm min-h-[600px] p-6 sm:p-8">
+                            <div className="mb-6 flex items-center justify-between">
+                                <div>
+                                    <h1 className="text-2xl font-bold text-gray-900">{tabs.find(t => t.id === activeTab)?.label}</h1>
+                                    <p className="text-gray-500 text-sm mt-1">
+                                        {tabs.find(t => t.id === activeTab)?.desc}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <motion.div
+                                key={activeTab}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.3 }}
+                            >
+                                {renderContent()}
+                            </motion.div>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -7,7 +7,6 @@ import {
     Search,
     Filter,
     RefreshCw,
-    MoreVertical,
     Eye,
     Edit2,
     Trash2,
@@ -16,7 +15,9 @@ import {
     User,
     Shield,
     Phone,
-    Mail
+    Mail,
+    MapPin,
+    ArrowRight
 } from 'lucide-react';
 
 // Enhanced ZoomableImage with better responsive behavior
@@ -24,14 +25,14 @@ const ZoomableImage = ({ src, alt, className }) => {
     const [isHovered, setIsHovered] = useState(false);
 
     if (!src) return (
-        <div className={`bg-gray-50 flex items-center justify-center text-gray-400 text-xs ${className} rounded-full`}>
+        <div className={`bg-gray-50 flex items-center justify-center text-gray-400 text-xs ${className} rounded-full border border-gray-100`}>
             <User size={16} />
         </div>
     );
 
     return (
         <div
-            className="relative"
+            className="relative z-10"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             onTouchStart={() => setIsHovered(true)}
@@ -40,29 +41,31 @@ const ZoomableImage = ({ src, alt, className }) => {
             <img
                 src={src}
                 alt={alt}
-                className={`${className} object-cover cursor-pointer transition-all duration-300 ${isHovered ? 'scale-110' : 'scale-100'}`}
+                className={`${className} object-cover cursor-pointer transition-all duration-300 ${isHovered ? 'scale-110 shadow-lg ring-2 ring-offset-2 ring-blue-500' : 'scale-100'}`}
             />
-            {isHovered && (
-                <motion.div
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{ scale: 0.8, opacity: 0 }}
-                    className="fixed z-[9999] pointer-events-none"
-                    style={{
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        width: 'auto',
-                        maxWidth: 'min(90vw, 400px)',
-                    }}
-                >
-                    <img
-                        src={src}
-                        alt={alt}
-                        className="w-full h-auto rounded-2xl shadow-2xl bg-white p-2"
-                    />
-                </motion.div>
-            )}
+            <AnimatePresence>
+                {isHovered && (
+                    <motion.div
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.8, opacity: 0 }}
+                        className="fixed z-[9999] pointer-events-none"
+                        style={{
+                            top: '50%',
+                            left: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            width: 'auto',
+                            maxWidth: 'min(90vw, 400px)',
+                        }}
+                    >
+                        <img
+                            src={src}
+                            alt={alt}
+                            className="w-full h-auto rounded-2xl shadow-2xl bg-white p-2"
+                        />
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };
@@ -77,6 +80,7 @@ const ViewUsers = () => {
     const [notification, setNotification] = useState({ show: false, message: '', type: '' });
     const [searchTerm, setSearchTerm] = useState('');
     const [filterRole, setFilterRole] = useState('all');
+    const [filterVerification, setFilterVerification] = useState('all');
 
     const getHeaders = () => {
         const auth = getAuthData();
@@ -121,18 +125,14 @@ const ViewUsers = () => {
             (filterRole === 'helper' && user.isHelper) ||
             (filterRole === 'user' && !user.isHelper);
 
-        return matchesSearch && matchesRole;
+        const matchesVerification = filterVerification === 'all' ||
+            (filterVerification === 'verified' && user.isVerified) ||
+            (filterVerification === 'unverified' && !user.isVerified);
+
+        return matchesSearch && matchesRole && matchesVerification;
     });
 
     const navigate = useNavigate();
-
-    const handleViewProfile = (user) => {
-        navigate(`/users/${user.id}`);
-    };
-
-    const handleEditUser = (user) => {
-        navigate(`/users/${user.id}/edit`);
-    };
 
     const handleDeleteUser = async (userId) => {
         if (!window.confirm("Are you sure you want to delete this user? This action cannot be undone.")) return;
@@ -187,15 +187,13 @@ const ViewUsers = () => {
         }
     };
 
-
-
     const showNotification = (message, type) => {
         setNotification({ show: true, message, type });
         setTimeout(() => setNotification({ show: false, message: '', type: '' }), 3000);
     };
 
     return (
-        <div className="min-h-screen font-sans text-gray-900">
+        <div className="min-h-screen font-sans text-gray-900 bg-gray-50/30">
             <Navbar />
 
             {/* Notification */}
@@ -223,7 +221,7 @@ const ViewUsers = () => {
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
                     <div>
                         <h1 className="text-3xl font-bold text-gray-900 mb-2">User Management</h1>
-                        <p className="text-gray-500">Overview of all registered users and helpers</p>
+                        <p className="text-gray-500">Overview and control of all registered users on MigrateMate.</p>
                     </div>
                     <button
                         onClick={fetchUsers}
@@ -247,17 +245,29 @@ const ViewUsers = () => {
                                 className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-0 focus:bg-gray-100 transition-all text-gray-900 placeholder-gray-400"
                             />
                         </div>
-                        <div className="flex gap-2">
-                            <div className="relative">
-                                <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                        <div className="flex gap-2 overflow-x-auto pb-1 md:pb-0 hide-scrollbar">
+                            <div className="relative min-w-[140px]">
+                                <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                                 <select
                                     value={filterRole}
                                     onChange={(e) => setFilterRole(e.target.value)}
-                                    className="pl-12 pr-8 py-3 bg-gray-50 border-none rounded-2xl focus:ring-0 focus:bg-gray-100 transition-all text-gray-900 appearance-none cursor-pointer min-w-[160px]"
+                                    className="w-full pl-10 pr-8 py-3 bg-gray-50 border-none rounded-2xl focus:ring-0 focus:bg-gray-100 transition-all text-gray-900 appearance-none cursor-pointer text-sm font-medium"
                                 >
                                     <option value="all">All Roles</option>
-                                    <option value="helper">Helpers</option>
-                                    <option value="user">Users</option>
+                                    <option value="helper">Service Providers</option>
+                                    <option value="user">Regular Users</option>
+                                </select>
+                            </div>
+                            <div className="relative min-w-[140px]">
+                                <Shield className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                                <select
+                                    value={filterVerification}
+                                    onChange={(e) => setFilterVerification(e.target.value)}
+                                    className="w-full pl-10 pr-8 py-3 bg-gray-50 border-none rounded-2xl focus:ring-0 focus:bg-gray-100 transition-all text-gray-900 appearance-none cursor-pointer text-sm font-medium"
+                                >
+                                    <option value="all">Any Status</option>
+                                    <option value="verified">Verified Only</option>
+                                    <option value="unverified">Unverified</option>
                                 </select>
                             </div>
                         </div>
@@ -282,7 +292,7 @@ const ViewUsers = () => {
                                 <thead>
                                     <tr className="bg-gray-50 border-b border-gray-100 text-left">
                                         <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">User Profile</th>
-                                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Contact Info</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Details & Route</th>
                                         <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Role & Status</th>
                                         <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Actions</th>
                                     </tr>
@@ -300,16 +310,16 @@ const ViewUsers = () => {
                                                     <ZoomableImage
                                                         src={user.avatarUrl || `https://ui-avatars.com/api/?name=${user.fullName}&background=random`}
                                                         alt={user.fullName}
-                                                        className="w-12 h-12 rounded-full ring-4 ring-white shadow-lg"
+                                                        className="w-12 h-12 rounded-full ring-4 ring-white shadow-sm"
                                                     />
                                                     <div>
-                                                        <div className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors">{user.fullName}</div>
+                                                        <div className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors text-base">{user.fullName}</div>
                                                         <div className="text-xs text-gray-400">Joined {new Date(user.createdAt).toLocaleDateString()}</div>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <div className="flex flex-col gap-1">
+                                                <div className="flex flex-col gap-1.5">
                                                     <div className="flex items-center gap-2 text-sm text-gray-600">
                                                         <Mail size={14} className="text-gray-400" />
                                                         {user.email}
@@ -320,26 +330,37 @@ const ViewUsers = () => {
                                                             {user.phone}
                                                         </div>
                                                     )}
+                                                    {(user.origin || user.destination) && (
+                                                        <div className="flex items-center gap-2 text-xs text-gray-500 mt-1 bg-gray-50 px-2 py-1 rounded-lg w-fit border border-gray-100">
+                                                            <MapPin size={12} className="text-blue-400" />
+                                                            <span>{user.origin || 'Unknown'}</span>
+                                                            <ArrowRight size={10} className="text-gray-300" />
+                                                            <span>{user.destination || 'Unknown'}</span>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4">
-                                                <div className="flex items-center gap-2">
+                                                <div className="flex flex-col gap-2 items-start">
                                                     <span className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 ${user.isHelper
                                                         ? 'bg-purple-100 text-purple-700 ring-1 ring-purple-200'
                                                         : 'bg-blue-100 text-blue-700 ring-1 ring-blue-200'
                                                         }`}>
-                                                        {user.isHelper ? <Shield size={12} /> : <User size={12} />}
-                                                        {user.isHelper ? 'Helper' : 'User'}
+                                                        {user.isHelper ? <Shield size={12} fill="currentColor" className="opacity-20" /> : <User size={12} fill="currentColor" className="opacity-20" />}
+                                                        {user.isHelper ? 'Service Provider' : 'User'}
                                                     </span>
-                                                    {user.isVerified ? (
-                                                        <span className="bg-emerald-100 text-emerald-700 ring-1 ring-emerald-200 p-1 rounded-full" title="Verified">
-                                                            <CheckCircle size={14} />
-                                                        </span>
-                                                    ) : (
-                                                        <span className="bg-gray-100 text-gray-500 ring-1 ring-gray-200 p-1 rounded-full" title="Unverified">
-                                                            <XCircle size={14} />
-                                                        </span>
-                                                    )}
+
+                                                    <div className="flex items-center gap-2">
+                                                        {user.isVerified ? (
+                                                            <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
+                                                                <CheckCircle size={10} /> Verified
+                                                            </span>
+                                                        ) : (
+                                                            <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md border border-gray-200">
+                                                                <XCircle size={10} /> Unverified
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 text-right">
@@ -389,12 +410,13 @@ const ViewUsers = () => {
                                     ))}
                                     {filteredUsers.length === 0 && (
                                         <tr>
-                                            <td colspan="4" className="px-6 py-12 text-center text-gray-400">
+                                            <td colSpan="4" className="px-6 py-12 text-center text-gray-400">
                                                 <div className="flex flex-col items-center gap-3">
                                                     <div className="p-4 bg-gray-50 rounded-full">
                                                         <Search size={24} />
                                                     </div>
                                                     <p>No users found matching your criteria.</p>
+                                                    <button onClick={() => { setSearchTerm(''); setFilterRole('all'); setFilterVerification('all'); }} className="text-blue-600 hover:underline text-sm font-medium">Clear all filters</button>
                                                 </div>
                                             </td>
                                         </tr>

@@ -13,11 +13,11 @@ import {
     Clock,
     DollarSign,
     Calendar,
-    User,
     Briefcase,
     FileText,
     RefreshCw,
-    Eye
+    Eye,
+    AlertCircle
 } from 'lucide-react';
 
 const STATUS_CONFIG = {
@@ -122,10 +122,8 @@ const Bookings = () => {
             if (data.success) {
                 let updatedBooking = bookings.find(b => b.id === selectedBooking.id);
                 if (data.data) {
-                    // If API returns the updated object use it
                     updatedBooking = data.data;
                 } else {
-                    // Fallback update local state
                     updatedBooking = { ...updatedBooking, status: newStatus };
                 }
 
@@ -160,7 +158,7 @@ const Bookings = () => {
         const config = STATUS_CONFIG[status] || STATUS_CONFIG.PENDING;
         const Icon = config.icon;
         return (
-            <span className={`px-2.5 py-1 inline-flex items-center gap-1.5 text-xs font-bold rounded-lg border ${config.bg} ${config.text} border-current border-opacity-20`}>
+            <span className={`px-2.5 py-1 inline-flex items-center gap-1.5 text-xs font-bold rounded-lg ${config.bg} ${config.text}`}>
                 <Icon size={12} strokeWidth={3} />
                 {config.label}
             </span>
@@ -175,7 +173,7 @@ const Bookings = () => {
     }, { total: 0 });
 
     return (
-        <div className="min-h-screen font-sans text-gray-900">
+        <div className="min-h-screen font-sans text-gray-900 bg-gray-50/30">
             <Navbar />
 
             {/* Notification */}
@@ -198,7 +196,7 @@ const Bookings = () => {
                 )}
             </AnimatePresence>
 
-            <div className="w-full px-4 sm:px-6 lg:px-8 py-8 pt-24">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
                     <div>
@@ -248,9 +246,6 @@ const Bookings = () => {
                                 className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-0 focus:bg-gray-100 transition-all text-gray-900 placeholder-gray-400"
                             />
                         </div>
-                        <div className="flex gap-2 relative overflow-x-auto pb-1 md:pb-0 hide-scrollbar">
-                            {/* Mobile filter scroll container */}
-                        </div>
                     </div>
                 </div>
 
@@ -269,14 +264,14 @@ const Bookings = () => {
                     <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
                         <div className="overflow-x-auto">
                             <table className="w-full whitespace-nowrap">
-                                <thead className="bg-gray-50 border-b border-gray-100">
-                                    <tr>
-                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Service & ID</th>
-                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Customer</th>
-                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Provider</th>
-                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Date & Amount</th>
-                                        <th className="px-6 py-4 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
-                                        <th className="px-6 py-4 text-right text-xs font-bold text-gray-500 uppercase tracking-wider">Actions</th>
+                                <thead>
+                                    <tr className="bg-gray-50 border-b border-gray-100 text-left">
+                                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Service & ID</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Customer</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Provider</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Date & Amount</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
@@ -289,13 +284,13 @@ const Bookings = () => {
                                         >
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-4">
-                                                    <div className="flex-shrink-0 h-12 w-12 bg-blue-50 rounded-xl flex items-center justify-center text-blue-600">
-                                                        <Briefcase size={20} />
+                                                    <div className="flex-shrink-0 h-10 w-10 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600">
+                                                        <Briefcase size={18} />
                                                     </div>
                                                     <div>
                                                         <Link
                                                             to={`/bookings/${booking.id}`}
-                                                            className="font-bold text-gray-900 hover:text-blue-600 transition-colors block mb-0.5"
+                                                            className="font-bold text-gray-900 hover:text-blue-600 transition-colors block mb-0.5 text-sm"
                                                         >
                                                             {booking.serviceTitle}
                                                         </Link>
@@ -308,7 +303,7 @@ const Bookings = () => {
                                             <td className="px-6 py-4">
                                                 <Link to={`/users/${booking.customerId}`} className="flex items-center gap-3 group/user">
                                                     <img
-                                                        className="h-9 w-9 rounded-full border border-gray-100 group-hover/user:border-blue-200 transition-colors"
+                                                        className="h-8 w-8 rounded-full border border-gray-100 group-hover/user:border-blue-200 transition-colors"
                                                         src={booking.customerAvatar || `https://ui-avatars.com/api/?name=${booking.customerName}`}
                                                         alt=""
                                                     />
@@ -318,10 +313,10 @@ const Bookings = () => {
                                                     </div>
                                                 </Link>
                                             </td>
-                                            <td className="hidden md:table-cell px-6 py-4">
+                                            <td className="px-6 py-4">
                                                 <Link to={`/users/${booking.providerId}`} className="flex items-center gap-3 group/provider">
                                                     <img
-                                                        className="h-9 w-9 rounded-full border border-gray-100 group-hover/provider:border-purple-200 transition-colors"
+                                                        className="h-8 w-8 rounded-full border border-gray-100 group-hover/provider:border-purple-200 transition-colors"
                                                         src={booking.providerAvatar || `https://ui-avatars.com/api/?name=${booking.providerName}`}
                                                         alt=""
                                                     />
@@ -354,27 +349,32 @@ const Bookings = () => {
                                                     >
                                                         <Eye size={18} />
                                                     </button>
-                                                    <button
-                                                        onClick={() => {
-                                                            setSelectedBooking(booking);
-                                                            setNewStatus(booking.status);
-                                                            setIsStatusModalOpen(true);
-                                                        }}
-                                                        className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
-                                                        title="Change Status"
-                                                    >
-                                                        <MoreVertical size={18} />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => {
-                                                            setSelectedBooking(booking);
-                                                            setIsDeleteModalOpen(true);
-                                                        }}
-                                                        className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
-                                                        title="Delete Booking"
-                                                    >
-                                                        <Trash2 size={18} />
-                                                    </button>
+                                                    <div className="relative group/more">
+                                                        <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-xl transition-all">
+                                                            <MoreVertical size={18} />
+                                                        </button>
+                                                        <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-20 hidden group-hover/more:block">
+                                                            <button
+                                                                onClick={() => {
+                                                                    setSelectedBooking(booking);
+                                                                    setNewStatus(booking.status);
+                                                                    setIsStatusModalOpen(true);
+                                                                }}
+                                                                className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                                                            >
+                                                                <CheckCircle size={14} /> Update Status
+                                                            </button>
+                                                            <button
+                                                                onClick={() => {
+                                                                    setSelectedBooking(booking);
+                                                                    setIsDeleteModalOpen(true);
+                                                                }}
+                                                                className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                                            >
+                                                                <Trash2 size={14} /> Delete
+                                                            </button>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </td>
                                         </motion.tr>
@@ -387,6 +387,7 @@ const Bookings = () => {
                                                         <FileText size={24} />
                                                     </div>
                                                     <p>No bookings found matching your criteria.</p>
+                                                    <button onClick={() => { setSearchTerm(''); setStatusFilter('ALL'); }} className="text-blue-600 hover:underline text-sm font-medium">Clear all filters</button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -417,7 +418,7 @@ const Bookings = () => {
                         >
                             <h3 className="text-xl font-bold text-gray-900 mb-6">Update Status</h3>
 
-                            <div className="space-y-2 mb-6">
+                            <div className="space-y-2 mb-6 max-h-[60vh] overflow-y-auto">
                                 {Object.keys(STATUS_CONFIG).map(status => {
                                     const config = STATUS_CONFIG[status];
                                     const Icon = config.icon;

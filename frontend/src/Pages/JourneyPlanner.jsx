@@ -1,6 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plane, MapPin, DollarSign, Users, Calendar, ArrowRight, CheckCircle, Smartphone, Home, Briefcase, FileText, Download, Save, List as ListIcon, X, Clock, Sparkles, Trash2 } from 'lucide-react';
+import {
+    Plane, MapPin, DollarSign, Users, Calendar, ArrowRight, CheckCircle,
+    Smartphone, Home, Briefcase, FileText, Download, Save, List as ListIcon,
+    X, Clock, Sparkles, Trash2, ChevronLeft, ChevronRight
+} from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { generateJourneyPlan, saveJourneyPlan, getUserJourneyPlans, deleteJourneyPlan } from '../utils/api';
@@ -17,7 +21,7 @@ const JourneyPlanner = () => {
     const [formData, setFormData] = useState({
         origin: '',
         destination: '',
-        budget: 2000,
+        budget: 5000,
         timelineWeeks: 4,
         familySize: 1,
         additionalInfo: ''
@@ -30,7 +34,7 @@ const JourneyPlanner = () => {
     const [userData, setUserDataState] = useState(null);
 
     const reportRef = useRef(null);
-    const hiddenPrintRef = useRef(null); // For PDF generation
+    const hiddenPrintRef = useRef(null);
 
     useEffect(() => {
         const user = getUserData();
@@ -47,7 +51,7 @@ const JourneyPlanner = () => {
         try {
             const result = await generateJourneyPlan(formData);
             setPlan(result);
-            setStep(4); // Results step
+            setStep(4);
         } catch (error) {
             console.error("Planning failed", error);
             alert("Something went wrong while generating your plan. Please try again.");
@@ -58,7 +62,6 @@ const JourneyPlanner = () => {
 
     const handleSavePlan = async () => {
         if (!planName.trim()) return;
-
         try {
             const planEntity = {
                 userId: userData?.id,
@@ -69,12 +72,11 @@ const JourneyPlanner = () => {
                 origin: formData.origin,
                 destination: formData.destination
             };
-
             await saveJourneyPlan(planEntity);
             setShowSaveModal(false);
             setPlanName('');
             alert('Plan saved successfully!');
-            fetchSavedPlans(); // Refresh list if open
+            fetchSavedPlans();
         } catch (error) {
             console.error("Failed to save plan", error);
             alert("Failed to save plan.");
@@ -101,8 +103,8 @@ const JourneyPlanner = () => {
             origin: savedPlan.origin,
             destination: savedPlan.destination,
             budget: savedPlan.budget,
-            timelineWeeks: 4, // Default or store if needed
-            familySize: 1, // Default or store if needed
+            timelineWeeks: 4,
+            familySize: 1,
             additionalInfo: ''
         });
         setPlan(savedPlan);
@@ -114,7 +116,7 @@ const JourneyPlanner = () => {
         setFormData({
             origin: '',
             destination: '',
-            budget: 2000,
+            budget: 5000,
             timelineWeeks: 4,
             familySize: 1,
             additionalInfo: ''
@@ -124,49 +126,34 @@ const JourneyPlanner = () => {
     };
 
     const downloadPDF = async () => {
-        // Use the hidden print view for better quality
         const element = hiddenPrintRef.current;
         if (!element) return;
-
-        // Temporarily make it visible/absolute to rendering library can capture it properly
         element.style.display = 'block';
-
         try {
             const dataUrl = await toPng(element, { cacheBust: true, backgroundColor: '#ffffff', pixelRatio: 2 });
-
             const pdf = new jsPDF('p', 'mm', 'a4');
             const pdfWidth = pdf.internal.pageSize.getWidth();
             const pdfHeight = pdf.internal.pageSize.getHeight();
-            // Desired bottom margin in mm
             const bottomMargin = 20;
             const contentHeightPerPage = pdfHeight - bottomMargin;
-
             const imgProps = pdf.getImageProperties(dataUrl);
             const imgHeight = (imgProps.height * pdfWidth) / imgProps.width;
-
             let heightLeft = imgHeight;
             let position = 0;
 
-            // First page
             pdf.addImage(dataUrl, 'PNG', 0, position, pdfWidth, imgHeight);
-            // Mask the bottom margin with a white rectangle to create "spacing"
             pdf.setFillColor(255, 255, 255);
             pdf.rect(0, contentHeightPerPage, pdfWidth, bottomMargin, 'F');
-
             heightLeft -= contentHeightPerPage;
 
             while (heightLeft > 0) {
-                position -= contentHeightPerPage; // Shift up by the content height we just printed
+                position -= contentHeightPerPage;
                 pdf.addPage();
                 pdf.addImage(dataUrl, 'PNG', 0, position, pdfWidth, imgHeight);
-
-                // Mask the bottom margin again
                 pdf.setFillColor(255, 255, 255);
                 pdf.rect(0, contentHeightPerPage, pdfWidth, bottomMargin, 'F');
-
                 heightLeft -= contentHeightPerPage;
             }
-
             pdf.save(`MigrateMate_Plan_${formData.destination}.pdf`);
         } catch (err) {
             console.error("PDF Export failed", err);
@@ -180,11 +167,10 @@ const JourneyPlanner = () => {
     const prevStep = () => setStep(prev => prev - 1);
 
     const handleDeletePlan = async (e, planId) => {
-        e.stopPropagation(); // Prevent opening the plan
+        e.stopPropagation();
         if (window.confirm('Are you sure you want to delete this plan?')) {
             try {
                 await deleteJourneyPlan(planId);
-                // Update local state to remove the deleted plan
                 setSavedPlans(prev => prev.filter(p => p.id !== planId));
             } catch (error) {
                 console.error("Failed to delete plan", error);
@@ -193,288 +179,350 @@ const JourneyPlanner = () => {
         }
     };
 
+    // Animation variants
+    const fadeIn = {
+        hidden: { opacity: 0, x: 20 },
+        visible: { opacity: 1, x: 0, transition: { duration: 0.4 } },
+        exit: { opacity: 0, x: -20, transition: { duration: 0.2 } }
+    };
+
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
+        <div className="min-h-screen bg-gray-50/50 font-sans flex flex-col">
             <Navbar />
 
-            {/* Main Content with Modern Background */}
-            <div className="flex-grow pt-24 pb-20 relative overflow-hidden">
-                {/* Background Decor */}
-                <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
-                    <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] bg-green-200/20 rounded-full blur-3xl" />
-                    <div className="absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] bg-blue-200/20 rounded-full blur-3xl" />
-                </div>
+            {/* Background Decoration */}
+            <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+                <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-green-100/30 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2"></div>
+                <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-blue-100/20 rounded-full blur-[120px] translate-y-1/2 -translate-x-1/2"></div>
+            </div>
 
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    {/* Header Section */}
-                    <div className="flex justify-between items-center mb-10">
-                        <div className="hidden sm:block"></div>
+            <main className="flex-grow pt-28 pb-20 relative z-10 px-4 sm:px-6 lg:px-8">
+                <div className="max-w-5xl mx-auto">
+
+                    {/* Header */}
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+                        <div>
+                            <div className="inline-flex items-center gap-2 bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-3">
+                                <Sparkles className="w-3.5 h-3.5" />
+                                AI-Powered
+                            </div>
+                            <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">
+                                Journey Planner
+                            </h1>
+                            <p className="text-gray-500 mt-2 text-lg">
+                                Design your perfect migration timeline in minutes.
+                            </p>
+                        </div>
+
                         {userData && (
-                            <motion.button
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
+                            <button
                                 onClick={handleOpenMyPlans}
-                                className="flex items-center text-gray-600 bg-white px-4 py-2 rounded-full border border-gray-200 shadow-sm hover:border-green-500 hover:text-green-600 transition-all"
+                                className="flex items-center gap-2 px-5 py-2.5 bg-white border border-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-50 hover:border-green-500 hover:text-green-600 transition-all shadow-sm"
                             >
-                                <ListIcon className="mr-2" size={18} />
-                                <span className="font-medium">My Saved Plans</span>
-                            </motion.button>
+                                <ListIcon className="w-4 h-4" />
+                                My Saved Plans
+                            </button>
                         )}
                     </div>
 
-                    <div className="text-center mb-16 relative">
-                        <motion.div
-                            initial={{ opacity: 0, y: -20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="inline-flex items-center px-3 py-1 rounded-full bg-green-100/50 text-green-700 text-sm font-medium mb-4 border border-green-200"
-                        >
-                            <Sparkles size={14} className="mr-2" /> AI-Powered Migration
-                        </motion.div>
-                        <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 tracking-tight mb-6">
-                            Smart <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-500">Journey Planner</span>
-                        </h1>
-                        <p className="text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
-                            Let our advanced AI orchestrate your perfect migration timeline, curated with real services and personalized advice.
-                        </p>
-                    </div>
+                    {/* Progress Bar */}
+                    <div className="mb-12">
+                        <div className="flex items-center justify-between relative">
+                            {/* Line */}
+                            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-gray-200 rounded-full -z-10"></div>
+                            <div
+                                className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-green-500 rounded-full -z-10 transition-all duration-500"
+                                style={{ width: `${((step - 1) / 3) * 100}%` }}
+                            ></div>
 
-                    <div className="max-w-4xl mx-auto">
-                        {/* Progress Steps */}
-                        <div className="mb-8 flex justify-center items-center space-x-2 sm:space-x-4">
                             {[1, 2, 3, 4].map((s) => (
-                                <div key={s} className={`flex items-center ${step >= s ? 'text-green-600' : 'text-gray-400'}`}>
-                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 ${step >= s ? 'border-green-600 bg-green-50' : 'border-gray-300'}`}>
-                                        {step > s ? <CheckCircle size={16} /> : <span className="text-sm font-bold">{s}</span>}
+                                <div key={s} className="flex flex-col items-center gap-2 bg-gray-50/50 px-2">
+                                    <div
+                                        className={`w-10 h-10 rounded-full flex items-center justify-center border-4 transition-all duration-300 ${step >= s
+                                                ? 'bg-green-500 border-green-100 text-white shadow-lg shadow-green-200'
+                                                : 'bg-white border-gray-200 text-gray-400'
+                                            }`}
+                                    >
+                                        {step > s ? <CheckCircle className="w-5 h-5" /> : <span className="font-bold text-sm">{s}</span>}
                                     </div>
-                                    {s < 4 && <div className={`w-8 sm:w-12 h-0.5 mx-1 sm:mx-2 ${step > s ? 'bg-green-600' : 'bg-gray-300'}`} />}
+                                    <span className={`text-xs font-bold uppercase tracking-wider ${step >= s ? 'text-green-600' : 'text-gray-400'}`}>
+                                        {s === 1 ? 'Location' : s === 2 ? 'Details' : s === 3 ? 'Reqs' : 'Plan'}
+                                    </span>
                                 </div>
                             ))}
                         </div>
+                    </div>
 
-                        {/* Step 1: Basics */}
+                    {/* Content Area */}
+                    <AnimatePresence mode="wait">
                         {step === 1 && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-                                className="bg-white rounded-2xl shadow-xl p-6 sm:p-8"
-                            >
-                                <h2 className="text-2xl font-bold mb-6">Where are you going?</h2>
-                                <div className="space-y-6">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <motion.div key="step1" variants={fadeIn} initial="hidden" animate="visible" exit="exit" className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 p-8 md:p-12 overflow-hidden relative">
+                                <div className="absolute top-0 right-0 w-64 h-64 bg-green-50 rounded-bl-full -mr-16 -mt-16 z-0"></div>
+                                <div className="relative z-10">
+                                    <h2 className="text-2xl font-bold text-gray-900 mb-8">Where are you going?</h2>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">Origin Country</label>
-                                            <div className="relative">
-                                                <MapPin className="absolute left-3 top-3 text-gray-400" size={20} />
+                                            <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Origin Country</label>
+                                            <div className="relative group">
+                                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                                    <MapPin className="text-gray-400 group-focus-within:text-green-500 transition-colors" />
+                                                </div>
                                                 <input
-                                                    type="text" name="origin" value={formData.origin} onChange={handleInputChange}
-                                                    className="pl-10 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
-                                                    placeholder="e.g. Sri Lanka"
+                                                    type="text"
+                                                    name="origin"
+                                                    value={formData.origin}
+                                                    onChange={handleInputChange}
+                                                    className="w-full pl-11 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all font-medium text-gray-900 placeholder-gray-400"
+                                                    placeholder="e.g. India"
+                                                    autoFocus
                                                 />
                                             </div>
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">Destination City</label>
-                                            <div className="relative">
-                                                <MapPin className="absolute left-3 top-3 text-green-600" size={20} />
+                                            <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Destination City</label>
+                                            <div className="relative group">
+                                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                                    <Plane className="text-gray-400 group-focus-within:text-green-500 transition-colors" />
+                                                </div>
                                                 <input
-                                                    type="text" name="destination" value={formData.destination} onChange={handleInputChange}
-                                                    className="pl-10 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
-                                                    placeholder="e.g. Melbourne"
+                                                    type="text"
+                                                    name="destination"
+                                                    value={formData.destination}
+                                                    onChange={handleInputChange}
+                                                    className="w-full pl-11 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all font-medium text-gray-900 placeholder-gray-400"
+                                                    placeholder="e.g. Sydney"
                                                 />
                                             </div>
                                         </div>
                                     </div>
                                     <div className="flex justify-end">
-                                        <button onClick={nextStep} disabled={!formData.origin || !formData.destination}
-                                            className="flex items-center bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors w-full sm:w-auto justify-center">
-                                            Next Step <ArrowRight className="ml-2" size={20} />
+                                        <button
+                                            onClick={nextStep}
+                                            disabled={!formData.origin || !formData.destination}
+                                            className="group bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg shadow-green-200 disabled:opacity-50 disabled:shadow-none transition-all flex items-center gap-2 hover:-translate-y-1"
+                                        >
+                                            Next Step <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                         </button>
                                     </div>
                                 </div>
                             </motion.div>
                         )}
 
-                        {/* Step 2: Details */}
                         {step === 2 && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-                                className="bg-white rounded-2xl shadow-xl p-6 sm:p-8"
-                            >
-                                <h2 className="text-2xl font-bold mb-6">Refine your plan</h2>
-                                <div className="space-y-6">
+                            <motion.div key="step2" variants={fadeIn} initial="hidden" animate="visible" exit="exit" className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 p-8 md:p-12">
+                                <h2 className="text-2xl font-bold text-gray-900 mb-8">Refine your details</h2>
+                                <div className="space-y-8 mb-10">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">Total Budget (USD)</label>
-                                        <div className="relative">
-                                            <DollarSign className="absolute left-3 top-3 text-gray-400" size={20} />
-                                            <input
-                                                type="number" name="budget" value={formData.budget} onChange={handleInputChange}
-                                                className="pl-10 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
-                                            />
+                                        <div className="flex justify-between items-center mb-2">
+                                            <label className="text-sm font-bold text-gray-700 uppercase tracking-wide">Total Budget</label>
+                                            <span className="text-green-600 font-bold bg-green-50 px-3 py-1 rounded-lg">${formData.budget.toLocaleString()}</span>
                                         </div>
                                         <input
-                                            type="range" name="budget" min="500" max="20000" step="100"
-                                            value={formData.budget} onChange={handleInputChange}
-                                            className="w-full mt-2 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-600"
+                                            type="range"
+                                            name="budget"
+                                            min="1000"
+                                            max="50000"
+                                            step="500"
+                                            value={formData.budget}
+                                            onChange={handleInputChange}
+                                            className="w-full h-2 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-green-600"
                                         />
+                                        <div className="flex justify-between text-xs text-gray-400 mt-2 font-medium">
+                                            <span>$1,000</span>
+                                            <span>$50,000+</span>
+                                        </div>
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">Timeline (Weeks)</label>
-                                            <div className="relative">
-                                                <Calendar className="absolute left-3 top-3 text-gray-400" size={20} />
+                                            <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Timeline (Weeks)</label>
+                                            <div className="relative group">
+                                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                                    <Calendar className="text-gray-400 group-focus-within:text-green-500 transition-colors" />
+                                                </div>
                                                 <input
-                                                    type="number" name="timelineWeeks" value={formData.timelineWeeks} onChange={handleInputChange}
-                                                    className="pl-10 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
+                                                    type="number"
+                                                    name="timelineWeeks"
+                                                    value={formData.timelineWeeks}
+                                                    onChange={handleInputChange}
+                                                    className="w-full pl-11 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all font-medium text-gray-900 placeholder-gray-400"
                                                 />
                                             </div>
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">Family Size</label>
-                                            <div className="relative">
-                                                <Users className="absolute left-3 top-3 text-gray-400" size={20} />
+                                            <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Family Size</label>
+                                            <div className="relative group">
+                                                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                                    <Users className="text-gray-400 group-focus-within:text-green-500 transition-colors" />
+                                                </div>
                                                 <input
-                                                    type="number" name="familySize" value={formData.familySize} onChange={handleInputChange}
-                                                    className="pl-10 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
+                                                    type="number"
+                                                    name="familySize"
+                                                    value={formData.familySize}
+                                                    onChange={handleInputChange}
+                                                    className="w-full pl-11 pr-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all font-medium text-gray-900 placeholder-gray-400"
                                                 />
                                             </div>
                                         </div>
                                     </div>
-
-                                    <div className="flex justify-between pt-4">
-                                        <button onClick={prevStep} className="text-gray-600 hover:text-gray-900 font-medium px-4 py-2">
-                                            Back
-                                        </button>
-                                        <button onClick={nextStep}
-                                            className="flex items-center bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors shadow-lg shadow-green-200">
-                                            Next <ArrowRight className="ml-2" size={20} />
-                                        </button>
-                                    </div>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <button
+                                        onClick={prevStep}
+                                        className="text-gray-500 font-bold hover:text-gray-700 px-4 py-2 hover:bg-gray-50 rounded-lg transition-colors"
+                                    >
+                                        Back
+                                    </button>
+                                    <button
+                                        onClick={nextStep}
+                                        className="group bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg shadow-green-200 transition-all flex items-center gap-2 hover:-translate-y-1"
+                                    >
+                                        Next Step <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                    </button>
                                 </div>
                             </motion.div>
                         )}
 
-                        {/* Step 3: Additional Info */}
                         {step === 3 && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-                                className="bg-white rounded-2xl shadow-xl p-6 sm:p-8"
-                            >
-                                <h2 className="text-2xl font-bold mb-6">Final Details</h2>
-                                <div className="space-y-6">
+                            <motion.div key="step3" variants={fadeIn} initial="hidden" animate="visible" exit="exit" className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 p-8 md:p-12">
+                                <h2 className="text-2xl font-bold text-gray-900 mb-8">Personalize the Results</h2>
+                                <div className="space-y-6 mb-10">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-2">Any specific requirements or notes?</label>
-                                        <div className="relative">
-                                            <FileText className="absolute left-3 top-3 text-gray-400" size={20} />
+                                        <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Specific Requirements</label>
+                                        <div className="relative group">
                                             <textarea
-                                                name="additionalInfo" value={formData.additionalInfo} onChange={handleInputChange}
-                                                rows="4"
-                                                className="pl-10 w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-all"
-                                                placeholder="e.g. I need pet-friendly housing, looking for schools near CBD, prefer public transport..."
+                                                name="additionalInfo"
+                                                value={formData.additionalInfo}
+                                                onChange={handleInputChange}
+                                                rows="5"
+                                                className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all font-medium text-gray-900 placeholder-gray-400 resize-none"
+                                                placeholder="e.g. 'I need pet-friendly housing', 'Looking for schools near CBD', 'Prefer public transport over driving'..."
                                             />
                                         </div>
-                                        <p className="text-xs text-gray-500 mt-2">Our AI will key this into consideration when planning your journey.</p>
+                                        <p className="text-xs text-gray-500 mt-2 font-medium flex items-center gap-1">
+                                            <Sparkles className="w-3 h-3 text-green-500" />
+                                            Our AI uses this to tailor recommendations specifically for you.
+                                        </p>
                                     </div>
-
-                                    <div className="flex justify-between pt-4">
-                                        <button onClick={prevStep} className="text-gray-600 hover:text-gray-900 font-medium px-4 py-2">
-                                            Back
-                                        </button>
-                                        <button onClick={handleSubmit} disabled={loading}
-                                            className="flex items-center bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 disabled:opacity-70 transition-colors shadow-lg shadow-green-200 w-full sm:w-auto justify-center">
-                                            {loading ? (
-                                                <>
-                                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                                                    Orchestrating...
-                                                </>
-                                            ) : (
-                                                <>Generate Plan <Plane className="ml-2" size={20} /></>
-                                            )}
-                                        </button>
-                                    </div>
+                                </div>
+                                <div className="flex justify-between items-center">
+                                    <button
+                                        onClick={prevStep}
+                                        className="text-gray-500 font-bold hover:text-gray-700 px-4 py-2 hover:bg-gray-50 rounded-lg transition-colors"
+                                    >
+                                        Back
+                                    </button>
+                                    <button
+                                        onClick={handleSubmit}
+                                        disabled={loading}
+                                        className="group bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg shadow-green-200 transition-all flex items-center gap-2 hover:-translate-y-1 disabled:opacity-70 disabled:shadow-none"
+                                    >
+                                        {loading ? (
+                                            <>
+                                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                                                Generating Plan...
+                                            </>
+                                        ) : (
+                                            <>Generate Plan <Sparkles className="w-5 h-5" /></>
+                                        )}
+                                    </button>
                                 </div>
                             </motion.div>
                         )}
 
-                        {/* Step 4: Results */}
                         {step === 4 && plan && (
-                            <motion.div
-                                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                                className="space-y-8"
-                            >
-                                {/* Actions Toolbar */}
-                                <div className="flex flex-wrap gap-3 justify-end items-center">
-                                    <button onClick={resetPlanner} className="text-gray-500 hover:text-red-500 font-medium px-3 py-2 mr-auto transition-colors">
-                                        Start New Plan
+                            <motion.div key="step4" initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="space-y-8">
+                                {/* Toolbar */}
+                                <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex flex-wrap gap-4 items-center justify-between sticky top-24 z-20">
+                                    <button onClick={resetPlanner} className="text-gray-500 hover:text-red-500 font-bold px-4 py-2 rounded-lg hover:bg-red-50 transition-colors flex items-center gap-2 text-sm">
+                                        <Trash2 className="w-4 h-4" /> Start Over
                                     </button>
-                                    <button onClick={() => setShowSaveModal(true)} className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-5 py-2 rounded-full hover:bg-gray-50 transition-colors shadow-sm">
-                                        <Save size={18} /> Save Plan
-                                    </button>
-                                    <button onClick={downloadPDF} className="flex items-center gap-2 bg-gray-900 text-white px-6 py-2 rounded-full hover:bg-gray-800 transition-colors shadow-lg">
-                                        <Download size={18} /> Download PDF
-                                    </button>
+                                    <div className="flex gap-3">
+                                        <button onClick={() => setShowSaveModal(true)} className="flex items-center gap-2 bg-gray-100 hover:bg-gray-200 text-gray-800 px-5 py-2.5 rounded-xl font-bold shadow-sm transition-all text-sm">
+                                            <Save className="w-4 h-4" /> Save
+                                        </button>
+                                        <button onClick={downloadPDF} className="flex items-center gap-2 bg-gray-900 hover:bg-black text-white px-6 py-2.5 rounded-xl font-bold shadow-lg transition-all text-sm hover:-translate-y-0.5">
+                                            <Download className="w-4 h-4" /> Download PDF
+                                        </button>
+                                    </div>
                                 </div>
 
-                                {/* View Ref (Screen) */}
-                                <div ref={reportRef} className="bg-white p-6 sm:p-8 rounded-2xl shadow-sm">
-                                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 border-b pb-4 gap-4">
+                                {/* Report View */}
+                                <div ref={reportRef} className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 p-8 sm:p-12">
+                                    {/* Report Header */}
+                                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 pb-6 border-b border-gray-100">
                                         <div>
-                                            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Migration Plan</h1>
-                                            <p className="text-gray-500">Generated by MigrateMate AI</p>
+                                            <h1 className="text-3xl font-extrabold text-gray-900 mb-1">Migration Strategy</h1>
+                                            <p className="text-gray-500 font-medium">Prepared for {userData?.firstName || 'User'}</p>
                                         </div>
-                                        <div className="text-left sm:text-right">
-                                            <div className="text-green-600 font-bold text-lg sm:text-xl">
-                                                {formData.origin} <ArrowRight className="inline mx-2" size={16} /> {formData.destination}
+                                        <div className="text-left sm:text-right mt-4 sm:mt-0 bg-green-50 p-4 rounded-xl border border-green-100">
+                                            <div className="text-green-700 font-bold text-lg flex items-center gap-2">
+                                                {formData.origin} <ArrowRight className="w-4 h-4" /> {formData.destination}
                                             </div>
-                                            <p className="text-sm text-gray-500">Budget: ${formData.budget}</p>
+                                            <p className="text-sm text-green-600/80 font-medium mt-1">Budget: ${formData.budget.toLocaleString()}</p>
                                         </div>
                                     </div>
 
-                                    {/* Summary */}
-                                    <div className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl shadow-lg p-6 text-white mb-8">
-                                        <h2 className="text-xl sm:text-2xl font-bold mb-4">Executive Summary</h2>
-                                        <p className="text-green-50 text-base sm:text-lg leading-relaxed">{plan.summary}</p>
+                                    {/* Executive Summary */}
+                                    <div className="bg-gradient-to-br from-green-600 to-emerald-700 rounded-2xl shadow-lg p-8 text-white mb-12">
+                                        <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                                            <Sparkles className="w-5 h-5 text-green-200" /> Executive Summary
+                                        </h2>
+                                        <p className="text-green-50 text-lg leading-relaxed font-medium opacity-95">{plan.summary}</p>
                                     </div>
 
-                                    {/* Timeline */}
-                                    <div className="relative border-l-4 border-green-200 ml-2 sm:ml-4 space-y-10">
+                                    {/* Timeline Phases */}
+                                    <div className="space-y-12 relative">
+                                        <div className="absolute left-[19px] top-4 bottom-4 w-0.5 bg-gray-200 rounded-full"></div>
+
                                         {plan.phases.map((phase, idx) => (
-                                            <div key={idx} className="relative pl-6 sm:pl-8">
-                                                <div className="absolute -left-3.5 top-0 bg-green-600 w-7 h-7 rounded-full border-4 border-white shadow-md"></div>
+                                            <div key={idx} className="relative pl-12">
+                                                <div className="absolute left-0 top-1 w-10 h-10 bg-white border-4 border-green-500 rounded-full flex items-center justify-center shadow-sm z-10">
+                                                    <span className="text-green-700 font-bold text-sm">{idx + 1}</span>
+                                                </div>
 
-                                                <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">{phase.phaseName}</h3>
+                                                <h3 className="text-2xl font-bold text-gray-900 mb-4">{phase.phaseName}</h3>
 
-                                                <div className="bg-gray-50 rounded-xl border border-gray-100 p-4 sm:p-6 mb-6">
-                                                    <div className="flex items-start mb-4">
-                                                        <Smartphone className="text-green-600 mt-1 mr-3 flex-shrink-0" size={24} />
-                                                        <div className="text-gray-600 prose prose-sm max-w-none">
+                                                <div className="bg-gray-50 rounded-2xl border border-gray-100 p-6 sm:p-8">
+                                                    {/* AI Advice */}
+                                                    <div className="flex items-start gap-4 mb-8">
+                                                        <div className="bg-white p-2.5 rounded-xl shadow-sm border border-gray-100 text-green-600">
+                                                            <Smartphone className="w-6 h-6" />
+                                                        </div>
+                                                        <div className="prose prose-sm prose-gray max-w-none">
                                                             <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                                                 {phase.aiAdvice}
                                                             </ReactMarkdown>
                                                         </div>
                                                     </div>
 
+                                                    {/* Recommended Services */}
                                                     {phase.recommendedServices && phase.recommendedServices.length > 0 && (
-                                                        <div className="mt-4">
-                                                            <h4 className="text-sm font-bold text-gray-500 uppercase tracking-wider mb-3">Recommended Services</h4>
-                                                            <div className="grid grid-cols-1 gap-3">
+                                                        <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                                                            <div className="bg-gray-50/50 px-6 py-4 border-b border-gray-100">
+                                                                <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+                                                                    <Briefcase className="w-4 h-4" /> Recommended Services
+                                                                </h4>
+                                                            </div>
+                                                            <div className="divide-y divide-gray-100">
                                                                 {phase.recommendedServices.map((service, sIdx) => {
                                                                     let Icon = Briefcase;
                                                                     if (service.category === 'TRANSPORT') Icon = Plane;
                                                                     if (service.category === 'HOUSING') Icon = Home;
 
                                                                     return (
-                                                                        <div key={sIdx} className="flex items-center justify-between p-3 bg-white rounded-lg border border-gray-200 shadow-sm">
-                                                                            <div className="flex items-center">
-                                                                                <div className="w-8 h-8 bg-green-50 rounded-full flex items-center justify-center text-green-600">
-                                                                                    <Icon size={16} />
+                                                                        <div key={sIdx} className="p-4 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                                                                            <div className="flex items-center gap-4">
+                                                                                <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-gray-500">
+                                                                                    <Icon className="w-5 h-5" />
                                                                                 </div>
-                                                                                <div className="ml-3">
-                                                                                    <h5 className="font-semibold text-gray-900 text-sm">{service.title}</h5>
-                                                                                    <p className="text-xs text-gray-500">ID: {service.providerId.substring(0, 6)}</p>
+                                                                                <div>
+                                                                                    <h5 className="font-bold text-gray-900 text-sm">{service.title}</h5>
+                                                                                    <p className="text-xs text-gray-500">Provider: {service.providerId.substring(0, 8)}...</p>
                                                                                 </div>
                                                                             </div>
                                                                             <div className="text-right">
-                                                                                <span className="block font-bold text-gray-900 text-sm">${service.price}</span>
+                                                                                <span className="block font-bold text-green-600">${service.price}</span>
                                                                             </div>
                                                                         </div>
                                                                     )
@@ -489,16 +537,16 @@ const JourneyPlanner = () => {
                                 </div>
                             </motion.div>
                         )}
-                    </div>
+                    </AnimatePresence>
                 </div>
 
-                {/* Hidden Print View (Optimized for A4) */}
+                {/* Hidden Print View */}
                 {plan && (
                     <div ref={hiddenPrintRef} style={{ display: 'none', width: '210mm', minHeight: '297mm', padding: '15mm', backgroundColor: 'white' }}>
                         <div style={{ paddingBottom: '20px', borderBottom: '2px solid #22c55e', marginBottom: '30px', display: 'flex', justifyContent: 'space-between' }}>
                             <div>
-                                <h1 style={{ fontSize: '24pt', fontWeight: 'bold', color: '#111827' }}>Migration Journey Plan</h1>
-                                <p style={{ color: '#6b7280', fontSize: '12pt' }}>Prepared by MigrateMate AI</p>
+                                <h1 style={{ fontSize: '24pt', fontWeight: 'bold', color: '#111827' }}>Migration Plan</h1>
+                                <p style={{ color: '#6b7280', fontSize: '12pt' }}>Prepared by MigrateMate</p>
                             </div>
                             <div style={{ textAlign: 'right' }}>
                                 <div style={{ color: '#22c55e', fontSize: '14pt', fontWeight: 'bold' }}>{formData.origin} to {formData.destination}</div>
@@ -507,7 +555,7 @@ const JourneyPlanner = () => {
                         </div>
 
                         <div style={{ backgroundColor: '#f0fdf4', padding: '20px', borderRadius: '8px', marginBottom: '30px' }}>
-                            <h2 style={{ fontSize: '16pt', fontWeight: 'bold', color: '#15803d', marginBottom: '10px' }}>Executive Summary</h2>
+                            <h2 style={{ fontSize: '16pt', fontWeight: 'bold', color: '#15803d', marginBottom: '10px' }}>Summary</h2>
                             <p style={{ fontSize: '11pt', lineHeight: '1.5', color: '#374151' }}>{plan.summary}</p>
                         </div>
 
@@ -538,21 +586,24 @@ const JourneyPlanner = () => {
                 {/* Save Modal */}
                 <AnimatePresence>
                     {showSaveModal && (
-                        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4">
+                        <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
                             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-                                className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md">
-                                <h3 className="text-xl font-bold mb-4">Save Your Plan</h3>
-                                <input
-                                    type="text"
-                                    value={planName}
-                                    onChange={(e) => setPlanName(e.target.value)}
-                                    placeholder="Give your plan a name (e.g., London 2026)"
-                                    className="w-full p-3 border border-gray-300 rounded-lg mb-4 focus:ring-2 focus:ring-green-500 outline-none"
-                                    autoFocus
-                                />
+                                className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
+                                <h3 className="text-2xl font-bold mb-6 text-gray-900">Name Your Plan</h3>
+                                <div className="mb-6">
+                                    <label className="block text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">Plan Name</label>
+                                    <input
+                                        type="text"
+                                        value={planName}
+                                        onChange={(e) => setPlanName(e.target.value)}
+                                        placeholder="e.g. My London Journey"
+                                        className="w-full p-4 border border-gray-200 bg-gray-50 rounded-xl focus:ring-2 focus:ring-green-500 outline-none transition-all"
+                                        autoFocus
+                                    />
+                                </div>
                                 <div className="flex justify-end gap-3">
-                                    <button onClick={() => setShowSaveModal(false)} className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Cancel</button>
-                                    <button onClick={handleSavePlan} disabled={!planName.trim()} className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50">Save</button>
+                                    <button onClick={() => setShowSaveModal(false)} className="px-6 py-3 text-gray-600 hover:bg-gray-100 rounded-xl font-bold transition-colors">Cancel</button>
+                                    <button onClick={handleSavePlan} disabled={!planName.trim()} className="px-6 py-3 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 disabled:opacity-50 transition-colors shadow-lg shadow-green-200">Save Plan</button>
                                 </div>
                             </motion.div>
                         </div>
@@ -564,53 +615,52 @@ const JourneyPlanner = () => {
                     {showMyPlans && (
                         <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4 backdrop-blur-sm">
                             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }}
-                                className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[85vh] overflow-hidden flex flex-col border border-gray-100">
-                                <div className="p-6 border-b flex justify-between items-center bg-gray-50/50">
-                                    <h3 className="text-xl font-bold text-gray-800">My Saved Plans</h3>
-                                    <button onClick={() => setShowMyPlans(false)} className="p-2 hover:bg-gray-200 rounded-full transition-colors"><X size={20} className="text-gray-500" /></button>
+                                className="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[85vh] overflow-hidden flex flex-col border border-gray-100">
+                                <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-white sticky top-0 z-10">
+                                    <h3 className="text-2xl font-bold text-gray-900">My Saved Plans</h3>
+                                    <button onClick={() => setShowMyPlans(false)} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><X className="w-6 h-6 text-gray-400" /></button>
                                 </div>
 
-                                <div className="overflow-y-auto p-6 flex-1 bg-gray-50/30">
+                                <div className="overflow-y-auto p-8 flex-1 bg-gray-50">
                                     {savedPlans.length === 0 ? (
                                         <div className="flex flex-col items-center justify-center h-64 text-gray-400">
-                                            <div className="bg-gray-100 p-4 rounded-full mb-4">
-                                                <FileText size={40} className="opacity-50" />
+                                            <div className="bg-white p-6 rounded-full shadow-sm mb-4">
+                                                <FileText className="w-12 h-12 text-gray-300" />
                                             </div>
-                                            <p className="text-lg font-medium">No saved plans found</p>
-                                            <p className="text-sm">Create a plan and save it to see it here.</p>
+                                            <p className="text-xl font-bold text-gray-500">No saved plans yet</p>
+                                            <p className="text-sm mt-1">Create a new plan to get started.</p>
                                         </div>
                                     ) : (
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             {savedPlans.map((p) => (
-                                                <div key={p.id} onClick={() => loadSavedPlan(p)} className="group bg-white border border-gray-200 rounded-xl p-5 hover:border-green-500 hover:shadow-md cursor-pointer transition-all duration-300 relative overflow-hidden">
-                                                    <div className="absolute top-0 right-0 w-20 h-20 bg-green-50 rounded-bl-full -mr-10 -mt-10 transition-transform group-hover:scale-110"></div>
+                                                <div key={p.id} onClick={() => loadSavedPlan(p)} className="group bg-white border border-gray-100 rounded-2xl p-6 hover:border-green-500 hover:shadow-xl cursor-pointer transition-all duration-300 relative overflow-hidden">
+                                                    <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-green-50 to-transparent rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110"></div>
 
                                                     <div className="relative z-10">
-                                                        <div className="flex justify-between items-start">
-                                                            <h4 className="font-bold text-gray-900 text-lg mb-1 group-hover:text-green-700 transition-colors pr-8">{p.planName}</h4>
+                                                        <div className="flex justify-between items-start mb-4">
+                                                            <h4 className="font-bold text-gray-900 text-lg group-hover:text-green-700 transition-colors line-clamp-1">{p.planName}</h4>
                                                             <button
                                                                 onClick={(e) => handleDeletePlan(e, p.id)}
-                                                                className="text-gray-400 hover:text-red-500 hover:bg-red-50 p-1.5 rounded-full transition-colors z-20"
+                                                                className="text-gray-300 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 transition-colors"
                                                                 title="Delete Plan"
                                                             >
-                                                                <Trash2 size={16} />
+                                                                <Trash2 className="w-4 h-4" />
                                                             </button>
                                                         </div>
 
-                                                        <div className="flex items-center text-sm text-gray-500 mb-4">
-                                                            <span className="font-medium">{p.origin}</span>
-                                                            <ArrowRight size={14} className="mx-2 text-gray-400" />
-                                                            <span className="font-medium">{p.destination}</span>
+                                                        <div className="flex items-center text-sm text-gray-500 mb-6 bg-gray-50 p-3 rounded-xl">
+                                                            <span className="font-semibold text-gray-700">{p.origin}</span>
+                                                            <ArrowRight className="w-4 h-4 mx-2 text-gray-400" />
+                                                            <span className="font-semibold text-gray-700">{p.destination}</span>
                                                         </div>
 
-                                                        <div className="flex justify-between items-end border-t border-gray-100 pt-4 mt-2">
-                                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                                                ${p.budget.toLocaleString()}
+                                                        <div className="flex justify-between items-center text-xs font-medium text-gray-400">
+                                                            <span className="flex items-center gap-1 bg-green-50 text-green-700 px-2 py-1 rounded-md">
+                                                                <DollarSign className="w-3 h-3" /> {p.budget.toLocaleString()}
                                                             </span>
-                                                            <p className="text-xs text-gray-400 flex items-center">
-                                                                <Clock size={12} className="mr-1" />
-                                                                {new Date(p.createdAt).toLocaleDateString()}
-                                                            </p>
+                                                            <span className="flex items-center gap-1">
+                                                                <Clock className="w-3 h-3" /> {new Date(p.createdAt).toLocaleDateString()}
+                                                            </span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -622,8 +672,7 @@ const JourneyPlanner = () => {
                         </div>
                     )}
                 </AnimatePresence>
-
-            </div>
+            </main>
             <Footer />
         </div>
     );

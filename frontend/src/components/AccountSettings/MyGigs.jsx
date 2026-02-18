@@ -1,132 +1,68 @@
 import React, { useState, useEffect } from 'react';
-import { getMyServices } from '../../utils/serviceApi';
+import { Plus, Edit2, Trash2, Eye, EyeOff, MapPin, DollarSign, Calendar, Clock, Search, Filter, Loader2, AlertCircle } from 'lucide-react';
 import CreateGigForm from './CreateGigForm';
-
-// Category display names
-const CATEGORY_NAMES = {
-    'TRANSPORT': 'Transport',
-    'HOUSING': 'Housing',
-    'DOCUMENTATION': 'Documentation',
-    'CULTURAL_SUPPORT': 'Cultural Support'
-};
-
-// Service status display config
-const STATUS_CONFIG = {
-    INREVIEW: { label: 'In Review', bg: 'bg-yellow-100', text: 'text-yellow-700' },
-    APPROVED: { label: 'Approved', bg: 'bg-green-100', text: 'text-green-700' },
-
-    ADVICED: { label: 'Adviced', bg: 'bg-blue-100', text: 'text-blue-700' },
-};
+import { getUserData } from '../../utils/auth';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const MyGigs = () => {
     const [gigs, setGigs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [showCreateForm, setShowCreateForm] = useState(false);
-    const [openMenuId, setOpenMenuId] = useState(null);
-    const [editGig, setEditGig] = useState(null);
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [editingGig, setEditingGig] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filterStatus, setFilterStatus] = useState('ALL'); // ALL, ACTIVE, INACTIVE
 
-    // Mock data for views and bookings To be implemented with booking system
-    const mockStats = {
-        totalViews: 165,
-        totalBookings: 31,
-        viewsPerGig: () => Math.floor(Math.random() * 100) + 20,
-        bookingsPerGig: () => Math.floor(Math.random() * 15) + 1
+    const user = getUserData();
+
+    const fetchGigs = async () => {
+        try {
+            setLoading(true);
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/services/provider/${user.id}`);
+            if (response.ok) {
+                const data = await response.json();
+                // Handle both direct array and wrapped response formats
+                if (Array.isArray(data)) {
+                    setGigs(data);
+                } else if (data && Array.isArray(data.data)) {
+                    setGigs(data.data);
+                } else {
+                    console.warn("Unexpected API response format:", data);
+                    setGigs([]);
+                }
+            } else {
+                setError('Failed to fetch your services');
+            }
+        } catch (err) {
+            console.error('Error fetching gigs:', err);
+            setError('An error occurred while loading your services');
+        } finally {
+            setLoading(false);
+        }
     };
 
     useEffect(() => {
-        const fetchMyGigs = async () => {
-            try {
-                setLoading(true);
-                setError(null);
-                const data = await getMyServices();
-                // Add mock views and bookings to each gig
-                const gigsWithMockData = data.map(gig => ({
-                    ...gig,
-                    available: gig.available ?? gig.isAvailable ?? true,
-                    views: mockStats.viewsPerGig(),
-                    bookings: mockStats.bookingsPerGig()
-                }));
-                setGigs(gigsWithMockData);
-            } catch (err) {
-                console.error('Error fetching gigs:', err);
-                setError(err.message || 'Failed to load your services');
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchMyGigs();
-    }, []);
-
-    const handleGigCreated = (gig, isUpdate = false) => {
-        if (isUpdate) {
-            setGigs(prev => prev.map(g =>
-                g.id === gig.id ? { ...gig, views: g.views, bookings: g.bookings } : g
-            ));
-        } else {
-            setGigs(prev => [{
-                ...gig,
-                views: mockStats.viewsPerGig(),
-                bookings: mockStats.bookingsPerGig()
-            }, ...prev]);
+        if (user?.id) {
+            fetchGigs();
         }
-        setEditGig(null);
-    };
+    }, [user?.id]);
 
-    const stats = [
-        { label: 'Active Gigs', value: gigs.length.toString(), icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4', color: 'bg-green-100 text-green-600' },
-    ];
-
-    const getGigImage = (gig) => {
-        return gig.imageUrls?.[0] || 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80&w=800';
-    };
-
-    const getLocation = (gig) => {
-        return gig.specificLocation || gig.destination || 'Remote';
-    };
-
-    const getPriceDisplay = (gig) => {
-        const price = gig.price || 0;
-        const currency = gig.currency || 'AUD';
-        return `${price} ${currency}`;
-    };
-
-    const getPricingUnit = (gig) => {
-        const units = {
-            'FIXED': 'service',
-            'HOURLY': 'hour',
-            'NEGOTIABLE': 'negotiable'
-        };
-        return units[gig.pricingType] || 'service';
-    };
-
-    const toggleMenu = (gigId) => {
-        setOpenMenuId(openMenuId === gigId ? null : gigId);
-    };
-
-    const closeMenu = () => setOpenMenuId(null);
-
-    const handleUpdate = (gig) => {
-        setEditGig(gig);
-        setShowCreateForm(true);
-        setOpenMenuId(null);
+    const handleCreateSuccess = (newGig, isEdit) => {
+        if (isEdit) {
+            setGigs(prev => prev.map(g => g.id === newGig.id ? newGig : g));
+        } else {
+            setGigs(prev => [newGig, ...prev]);
+        }
+        setIsCreateModalOpen(false);
+        setEditingGig(null);
     };
 
     const handleDelete = async (gigId) => {
         if (!window.confirm('Are you sure you want to delete this service?')) return;
 
         try {
-            let token = null;
-            try {
-                const authData = JSON.parse(sessionStorage.getItem('migratemate_auth') || localStorage.getItem('migratemate_auth'));
-                token = authData?.token;
-            } catch (e) {
-                console.error("Error parsing auth data", e);
-            }
-
-            const API_URL = `${import.meta.env.VITE_API_BASE_URL}/api`;
-            const response = await fetch(`${API_URL}/services/${gigId}`, {
+            const token = JSON.parse(sessionStorage.getItem('migratemate_auth') || localStorage.getItem('migratemate_auth'))?.token;
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/services/${gigId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -139,233 +75,248 @@ const MyGigs = () => {
                 alert('Failed to delete service');
             }
         } catch (err) {
-            console.error('Error deleting service:', err);
-            alert('Failed to delete service');
+            console.error('Error deleting gig:', err);
+            alert('An error occurred');
         }
-        setOpenMenuId(null);
     };
 
-    // Handle Toggle Active
-    const handleToggle = async (gig) => {
+    const toggleAvailability = async (gig) => {
         try {
-            let token = null;
-            try {
-                const authData = JSON.parse(sessionStorage.getItem('migratemate_auth') || localStorage.getItem('migratemate_auth'));
-                token = authData?.token;
-            } catch (e) {
-                console.error("Error parsing auth data", e);
-            }
+            const token = JSON.parse(sessionStorage.getItem('migratemate_auth') || localStorage.getItem('migratemate_auth'))?.token;
+            const updatedGig = { ...gig, isAvailable: !gig.isAvailable };
 
-            const API_URL = `${import.meta.env.VITE_API_BASE_URL}/api`;
-            const response = await fetch(`${API_URL}/services/${gig.id}/toggle`, {
-                method: 'PATCH',
+            // Optimistic update
+            setGigs(prev => prev.map(g => g.id === gig.id ? updatedGig : g));
+
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/services/${gig.id}`, {
+                method: 'PUT',
                 headers: {
+                    'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
-                }
+                },
+                body: JSON.stringify(updatedGig)
             });
 
-            const data = await response.json();
-            if (response.ok && data.success) {
-                // API returns isAvailable, but we use available in the UI
-                const newAvailableStatus = data.data.isAvailable ?? data.data.available;
-                setGigs(prev => prev.map(g =>
-                    g.id === gig.id ? { ...g, available: newAvailableStatus, isAvailable: newAvailableStatus } : g
-                ));
-            } else {
-                alert('Failed to toggle service status');
+            if (!response.ok) {
+                // Revert on failure
+                setGigs(prev => prev.map(g => g.id === gig.id ? gig : g));
+                alert('Failed to update availability');
             }
         } catch (err) {
-            console.error('Error toggling service:', err);
-            alert('Failed to toggle service status');
+            console.error('Error toggling availability:', err);
+            setGigs(prev => prev.map(g => g.id === gig.id ? gig : g));
         }
-        setOpenMenuId(null);
     };
 
+    const filteredGigs = (Array.isArray(gigs) ? gigs : []).filter(gig => {
+        const matchesSearch = gig.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            gig.description.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesStatus = filterStatus === 'ALL' ? true :
+            filterStatus === 'ACTIVE' ? gig.isAvailable : !gig.isAvailable;
+        return matchesSearch && matchesStatus;
+    });
+
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center py-20 bg-white rounded-3xl shadow-sm border border-gray-100 min-h-[400px]">
+                <div className="flex flex-col items-center">
+                    <Loader2 className="w-10 h-10 text-green-600 animate-spin mb-4" />
+                    <p className="text-gray-500 font-medium">Loading your services...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="bg-red-50 border border-red-200 rounded-3xl p-8 text-center text-red-600">
+                <AlertCircle className="w-12 h-12 mx-auto mb-4" />
+                <h3 className="text-lg font-bold mb-2">Error Loading Services</h3>
+                <p>{error}</p>
+                <button
+                    onClick={fetchGigs}
+                    className="mt-4 px-6 py-2 bg-white text-red-600 border border-red-200 rounded-xl hover:bg-red-50 transition-colors font-medium shadow-sm"
+                >
+                    Try Again
+                </button>
+            </div>
+        );
+    }
+
     return (
-        <div className="space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="space-y-6 animate-fade-in-up">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
                 <div>
-                    <h3 className="text-lg font-semibold text-gray-900">My Service Listings</h3>
-                    <p className="text-sm text-gray-500">Manage the services you offer to other migrants</p>
+                    <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight">My Services</h2>
+                    <p className="text-gray-500 mt-1">Manage, edit, and track your offered services</p>
                 </div>
                 <button
-                    onClick={() => setShowCreateForm(true)}
-                    className="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition flex items-center gap-2 shadow-sm"
+                    onClick={() => {
+                        setEditingGig(null);
+                        setIsCreateModalOpen(true);
+                    }}
+                    className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition-all shadow-lg hover:shadow-green-200 hover:-translate-y-0.5"
                 >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
-                    Create New Gig
+                    <Plus className="w-5 h-5" />
+                    Create New Service
                 </button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {stats.map((stat, idx) => (
-                    <div key={idx} className="bg-gray-50 border border-gray-100 rounded-xl p-4 flex items-center gap-4">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${stat.color}`}>
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={stat.icon} /></svg>
-                        </div>
-                        <div>
-                            <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
-                            <div className="text-xs text-gray-500 font-medium">{stat.label}</div>
-                        </div>
-                    </div>
-                ))}
-            </div>
-
-            {/* Loading State */}
-            {loading && (
-                <div className="flex flex-col items-center justify-center py-12">
-                    <div className="w-10 h-10 border-4 border-green-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-                    <p className="text-gray-500 font-medium">Loading your services...</p>
+            {/* Filters */}
+            <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-4">
+                <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                        type="text"
+                        placeholder="Search your services..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
+                    />
                 </div>
-            )}
-
-            {/* Error State */}
-            {error && !loading && (
-                <div className="text-center py-12">
-                    <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-2">Failed to load services</h4>
-                    <p className="text-gray-500 mb-4">{error}</p>
-                    <button
-                        onClick={() => window.location.reload()}
-                        className="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition"
-                    >
-                        Try Again
-                    </button>
-                </div>
-            )}
-
-            {/* Empty State */}
-            {!loading && !error && gigs.length === 0 && (
-                <div className="text-center py-12">
-                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                        </svg>
-                    </div>
-                    <h4 className="text-lg font-semibold text-gray-900 mb-2">No services yet</h4>
-                    <p className="text-gray-500 mb-4">Create your first gig to start offering services</p>
-                </div>
-            )}
-
-            {/* Gigs List */}
-            {!loading && !error && gigs.length > 0 && (
-                <div className="space-y-4">
-                    {gigs.map((gig) => (
-                        <div key={gig.id} className="bg-white border border-gray-100 rounded-xl p-4 hover:shadow-md transition-shadow">
-                            <div className="flex flex-col sm:flex-row gap-4">
-                                <div className="w-full sm:w-48 h-32 rounded-lg bg-gray-200 overflow-hidden flex-shrink-0">
-                                    <img
-                                        src={getGigImage(gig)}
-                                        alt={gig.title}
-                                        className="w-full h-full object-cover"
-                                        onError={(e) => {
-                                            e.target.src = 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80&w=800';
-                                        }}
-                                    />
-                                </div>
-
-                                <div className="flex-1 flex flex-col justify-between">
-                                    <div className="flex justify-between items-start">
-                                        <div>
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <h4 className="font-bold text-gray-900 line-clamp-1">{gig.title}</h4>
-                                                <span className={`px-2 py-0.5 text-[10px] font-bold uppercase rounded-full tracking-wide ${gig.available
-                                                    ? 'bg-green-100 text-green-700'
-                                                    : 'bg-gray-100 text-gray-600'
-                                                    }`}>
-                                                    {gig.available ? 'Active' : 'Inactive'}
-                                                </span>
-                                                {gig.status && STATUS_CONFIG[gig.status] && (
-                                                    <span className={`px-2 py-0.5 text-[10px] font-bold uppercase rounded-full tracking-wide ${STATUS_CONFIG[gig.status].bg} ${STATUS_CONFIG[gig.status].text}`}>
-                                                        {STATUS_CONFIG[gig.status].label}
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <div className="text-xs text-gray-500 mb-2">
-                                                {CATEGORY_NAMES[gig.category] || gig.category} • {getLocation(gig)}
-                                            </div>
-                                            <p className="text-xs text-gray-600 line-clamp-2 mb-2">
-                                                {gig.description}
-                                            </p>
-                                        </div>
-                                        <div className="relative">
-                                            <button
-                                                onClick={() => toggleMenu(gig.id)}
-                                                className="text-gray-400 hover:text-gray-600 p-1 hover:bg-gray-100 rounded-lg transition"
-                                            >
-                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" /></svg>
-                                            </button>
-
-                                            {/* Dropdown Menu */}
-                                            {openMenuId === gig.id && (
-                                                <>
-                                                    <div
-                                                        className="fixed inset-0 z-10"
-                                                        onClick={closeMenu}
-                                                    />
-                                                    <div className="absolute right-0 top-8 w-40 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-20">
-                                                        <button
-                                                            onClick={() => handleUpdate(gig)}
-                                                            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-                                                        >
-                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                                                            Update
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleToggle(gig)}
-                                                            className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-                                                        >
-                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" /></svg>
-                                                            {gig.available ? 'Deactivate' : 'Activate'}
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleDelete(gig.id)}
-                                                            className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
-                                                        >
-                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                                                            Delete
-                                                        </button>
-                                                    </div>
-                                                </>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-50">
-                                        <div className="font-bold text-green-600 text-sm">
-                                            {getPriceDisplay(gig)}<span className="text-gray-400 font-normal text-xs">/{getPricingUnit(gig)}</span>
-                                        </div>
-                                        <div className="flex items-center gap-4 text-xs text-gray-400">
-                                            <span className="flex items-center gap-1">
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-                                                {gig.views}
-                                            </span>
-                                            <span className="flex items-center gap-1">
-                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
-                                                {gig.bookings} bookings
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0">
+                    {['ALL', 'ACTIVE', 'INACTIVE'].map((status) => (
+                        <button
+                            key={status}
+                            onClick={() => setFilterStatus(status)}
+                            className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${filterStatus === status
+                                ? 'bg-green-100 text-green-700 border border-green-200'
+                                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                                }`}
+                        >
+                            {status === 'ALL' ? 'All Services' : status.charAt(0) + status.slice(1).toLowerCase()}
+                        </button>
                     ))}
                 </div>
+            </div>
+
+            {filteredGigs.length === 0 ? (
+                <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-gray-200">
+                    <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Search className="w-10 h-10 text-gray-400" />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">No services found</h3>
+                    <p className="text-gray-500 max-w-sm mx-auto mb-6">
+                        {searchTerm || filterStatus !== 'ALL'
+                            ? "Try adjusting your filters or search terms."
+                            : "You haven't created any services yet. Start earning by offering your skills to the community!"}
+                    </p>
+                    {!searchTerm && filterStatus === 'ALL' && (
+                        <button
+                            onClick={() => setIsCreateModalOpen(true)}
+                            className="px-6 py-2.5 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition shadow-lg"
+                        >
+                            Create Your First Service
+                        </button>
+                    )}
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <AnimatePresence>
+                        {filteredGigs.map((gig) => (
+                            <motion.div
+                                key={gig.id}
+                                layout
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.9 }}
+                                className={`bg-white rounded-3xl overflow-hidden border transition-all hover:shadow-xl group ${gig.isAvailable ? 'border-gray-100' : 'border-gray-200 opacity-75'
+                                    }`}
+                            >
+                                <div className="relative h-48 overflow-hidden">
+                                    <img
+                                        src={gig.imageUrls?.[0] || 'https://images.unsplash.com/photo-1521737604893-d14cc237f11d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'}
+                                        alt={gig.title}
+                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                    />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+
+                                    <div className="absolute top-4 right-4 flex gap-2">
+                                        <div className={`px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md shadow-sm border border-white/20 text-white ${gig.isAvailable ? 'bg-green-500/80' : 'bg-gray-500/80'
+                                            }`}>
+                                            {gig.isAvailable ? 'Active' : 'Inactive'}
+                                        </div>
+                                    </div>
+
+                                    <div className="absolute bottom-4 left-4 right-4">
+                                        <h3 className="text-lg font-bold text-white truncate shadow-black drop-shadow-md">{gig.title}</h3>
+                                        <div className="flex items-center text-white/90 text-sm mt-1">
+                                            <MapPin className="w-3.5 h-3.5 mr-1" />
+                                            <span className="truncate">{gig.destination}</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="p-5">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <span className="text-2xl font-bold text-green-600">
+                                            {gig.currency} {gig.price}
+                                        </span>
+                                        <span className="text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded-lg uppercase tracking-wide">
+                                            {gig.pricingType}
+                                        </span>
+                                    </div>
+
+                                    <div className="space-y-2 mb-6">
+                                        <div className="flex items-center text-sm text-gray-600">
+                                            <Calendar className="w-4 h-4 mr-2 text-gray-400" />
+                                            <span className="truncate">
+                                                {gig.availableDays?.map(d => d.charAt(0) + d.slice(1).toLowerCase().substr(0, 2)).join(', ') || 'Flexible'}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-center text-sm text-gray-600">
+                                            <Clock className="w-4 h-4 mr-2 text-gray-400" />
+                                            <span className="truncate">{gig.availableTimeSlot || 'Flexible hours'}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-between gap-2 pt-4 border-t border-gray-100">
+                                        <button
+                                            onClick={() => toggleAvailability(gig)}
+                                            className={`p-2 rounded-xl transition-colors ${gig.isAvailable
+                                                ? 'bg-yellow-50 text-yellow-600 hover:bg-yellow-100'
+                                                : 'bg-green-50 text-green-600 hover:bg-green-100'
+                                                }`}
+                                            title={gig.isAvailable ? "Mark as Inactive" : "Mark as Active"}
+                                        >
+                                            {gig.isAvailable ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                        </button>
+
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => {
+                                                    setEditingGig(gig);
+                                                    setIsCreateModalOpen(true);
+                                                }}
+                                                className="p-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-colors"
+                                                title="Edit Service"
+                                            >
+                                                <Edit2 className="w-5 h-5" />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(gig.id)}
+                                                className="p-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors"
+                                                title="Delete Service"
+                                            >
+                                                <Trash2 className="w-5 h-5" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </AnimatePresence>
+                </div>
             )}
 
-            {/* Create/Edit Gig Modal */}
             <CreateGigForm
-                isOpen={showCreateForm}
+                isOpen={isCreateModalOpen}
                 onClose={() => {
-                    setShowCreateForm(false);
-                    setEditGig(null);
+                    setIsCreateModalOpen(false);
+                    setEditingGig(null);
                 }}
-                onSuccess={handleGigCreated}
-                editGig={editGig}
+                onSuccess={handleCreateSuccess}
+                editGig={editingGig}
             />
         </div>
     );

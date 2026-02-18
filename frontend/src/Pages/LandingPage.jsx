@@ -3,190 +3,285 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import { ArrowRight, CheckCircle, Shield, Users, Globe, MessageSquare, Heart, Star, Sparkles, MapPin, Search } from 'lucide-react';
 
 const LandingPage = () => {
+    const fadeIn = {
+        initial: { opacity: 0, y: 20 },
+        animate: { opacity: 1, y: 0 },
+        transition: { duration: 0.6 }
+    };
+
+    const staggerContainer = {
+        animate: {
+            transition: {
+                staggerChildren: 0.1
+            }
+        }
+    };
+
     return (
-        <div className="min-h-screen bg-white font-sans text-gray-900">
+        <div className="min-h-screen bg-gray-50 font-sans text-gray-900 overflow-hidden">
             <Navbar />
 
-
-            <header className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden bg-[#F0FDF4]">
-
-                <div className="absolute inset-0 opacity-40" style={{ backgroundImage: 'radial-gradient(#22C55E 0.5px, transparent 0.5px)', backgroundSize: '24px 24px' }}></div>
-
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6 }}
-                    >
-                        <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#22C55E]/10 border border-[#22C55E]/20 rounded-full text-xs font-medium text-[#16A34A] mb-8">
-                            <span className="w-2 h-2 bg-[#16A34A] rounded-full animate-pulse"></span>
-                            Trusted by 10,000+ migrants worldwide
-                        </div>
-
-                        <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight text-gray-900 mb-6">
-                            Bridging Borders <span className="text-[#22C55E]">with Trust</span>
-                        </h1>
-
-                        <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto mb-10 leading-relaxed">
-                            A verified, AI-assisted community for international migrants.
-                            Find trusted help, safe housing, and a welcoming community.
-                        </p>
-
-                        <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                            <Link to="/signup" className="w-full sm:w-auto px-8 py-3.5 bg-[#22C55E] text-white rounded-lg font-bold shadow-lg hover:bg-[#16A34A] hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
-                                Find Help
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
-                            </Link>
-                            <Link to="/signup" className="w-full sm:w-auto px-8 py-3.5 bg-white text-gray-700 border border-gray-200 rounded-lg font-bold hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center justify-center gap-2">
-                                <svg className="w-4 h-4 text-[#22C55E]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-                                Become a Helper
-                            </Link>
-                        </div>
-
-                        <div className="mt-12 flex items-center justify-center gap-8 text-xs text-gray-500 font-medium opacity-80">
-                            <div className="flex items-center gap-2">
-                                <div className="p-1 bg-[#22C55E]/10 rounded-full"><svg className="w-3 h-3 text-[#16A34A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
-                                100% Verified Helpers
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <div className="p-1 bg-[#22C55E]/10 rounded-full"><svg className="w-3 h-3 text-[#16A34A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
-                                50+ Countries
-                            </div>
-                            <div className="flex items-center gap-2">
-                                <div className="p-1 bg-[#22C55E]/10 rounded-full"><svg className="w-3 h-3 text-[#16A34A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg></div>
-                                AI Powered Support
-                            </div>
-                        </div>
-                    </motion.div>
+            {/* Hero Section */}
+            <section className="relative pt-32 pb-20 lg:pt-40 lg:pb-32 overflow-hidden bg-white">
+                <div className="absolute inset-0 z-0">
+                    <div className="absolute inset-0 bg-[radial-gradient(#22C55E_1px,transparent_1px)] [background-size:20px_20px] opacity-[0.05]"></div>
+                    <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-green-100/50 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
+                    <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-blue-100/30 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2"></div>
                 </div>
-            </header>
 
-            <section className="py-24 bg-white">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center mb-16">
-                        <h2 className="text-3xl font-extrabold text-gray-900">
-                            Built for <span className="text-[#22C55E]">Safety & Trust</span>
-                        </h2>
-                        <p className="mt-4 text-gray-500 max-w-2xl mx-auto text-sm">
-                            Every feature designed with your safety in mind. We verify everyone so you can focus on settling in.
-                        </p>
-                    </div>
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                    <div className="flex flex-col lg:flex-row items-center gap-16">
+                        <motion.div
+                            className="flex-1 text-center lg:text-left"
+                            initial="initial"
+                            animate="animate"
+                            variants={staggerContainer}
+                        >
+                            <motion.div variants={fadeIn} className="inline-flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-100 rounded-full text-sm font-semibold text-green-700 mb-8 shadow-sm">
+                                <span className="relative flex h-2.5 w-2.5">
+                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500"></span>
+                                </span>
+                                #1 Trusted Platform for Migrants
+                            </motion.div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            <motion.h1 variants={fadeIn} className="text-5xl lg:text-7xl font-extrabold tracking-tight text-gray-900 mb-6 leading-[1.1]">
+                                Moving Countries? <br />
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-500">
+                                    Don't Do It Alone.
+                                </span>
+                            </motion.h1>
 
-                        <div className="p-8 rounded-2xl border border-gray-100 hover:shadow-xl transition-shadow bg-white group">
-                            <div className="w-12 h-12 bg-[#22C55E]/10 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                                <svg className="w-6 h-6 text-[#16A34A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                            <motion.p variants={fadeIn} className="text-xl text-gray-600 mb-10 leading-relaxed max-w-2xl mx-auto lg:mx-0">
+                                Connect with verified locals for housing, jobs, and advice.
+                                MigrateMate is your AI-powered companion for a seamless transition.
+                            </motion.p>
+
+                            <motion.div variants={fadeIn} className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
+                                <Link to="/signup" className="w-full sm:w-auto px-8 py-4 bg-green-600 text-white rounded-2xl font-bold text-lg shadow-xl shadow-green-200 hover:bg-green-700 hover:shadow-2xl hover:shadow-green-300 hover:-translate-y-1 transition-all flex items-center justify-center gap-2">
+                                    Start Your Journey
+                                    <ArrowRight className="w-5 h-5" />
+                                </Link>
+                                <Link to="/marketplace" className="w-full sm:w-auto px-8 py-4 bg-white text-gray-700 border border-gray-200 rounded-2xl font-bold text-lg hover:bg-gray-50 hover:border-gray-300 transition-all flex items-center justify-center gap-2 shadow-sm hover:shadow-md">
+                                    <Search className="w-5 h-5 text-gray-400" />
+                                    Explore Services
+                                </Link>
+                            </motion.div>
+
+                            <motion.div variants={fadeIn} className="mt-12 flex items-center justify-center lg:justify-start gap-6 text-sm font-medium text-gray-500">
+                                <div className="flex -space-x-3">
+                                    {[1, 2, 3, 4].map((i) => (
+                                        <div key={i} className="w-10 h-10 rounded-full border-2 border-white bg-gray-200 overflow-hidden">
+                                            <img src={`https://i.pravatar.cc/100?img=${i + 10}`} alt={`User ${i}`} className="w-full h-full object-cover" />
+                                        </div>
+                                    ))}
+                                    <div className="w-10 h-10 rounded-full border-2 border-white bg-green-50 flex items-center justify-center text-xs text-green-700 font-bold">
+                                        +2k
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="flex gap-1 text-yellow-500">
+                                        {[...Array(5)].map((_, i) => <Star key={i} size={14} fill="currentColor" />)}
+                                    </div>
+                                    <p>Loved by 10,000+ users</p>
+                                </div>
+                            </motion.div>
+                        </motion.div>
+
+                        <motion.div
+                            className="flex-1 relative hidden lg:block"
+                            initial={{ opacity: 0, x: 50 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.8 }}
+                        >
+                            <div className="relative">
+                                {/* Decorative Blobs */}
+                                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-gradient-to-tr from-green-200 to-blue-200 rounded-full blur-3xl opacity-30 animate-pulse"></div>
+
+                                {/* Main Image Card */}
+                                <div className="relative z-10 bg-white p-4 rounded-3xl shadow-2xl border border-gray-100 rotate-[-2deg] hover:rotate-0 transition-all duration-500">
+                                    <img
+                                        src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                                        alt="Community"
+                                        className="rounded-2xl w-full h-auto object-cover"
+                                    />
+
+                                    {/* Floating Badges */}
+                                    <div className="absolute -left-8 top-12 bg-white p-4 rounded-2xl shadow-xl border border-gray-50 flex items-center gap-3 animate-bounce" style={{ animationDuration: '3s' }}>
+                                        <div className="bg-green-100 p-2 rounded-lg text-green-600">
+                                            <Shield className="w-6 h-6" />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-gray-500 font-semibold">Verification</p>
+                                            <p className="text-sm font-bold text-gray-900">100% ID Verified</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="absolute -right-8 bottom-12 bg-white p-4 rounded-2xl shadow-xl border border-gray-50 flex items-center gap-3 animate-bounce" style={{ animationDuration: '4s' }}>
+                                        <div className="bg-blue-100 p-2 rounded-lg text-blue-600">
+                                            <Globe className="w-6 h-6" />
+                                        </div>
+                                        <div>
+                                            <p className="text-xs text-gray-500 font-semibold">Community</p>
+                                            <p className="text-sm font-bold text-gray-900">50+ Countries</p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            <h3 className="text-lg font-bold text-gray-900 mb-2">Mandatory KYC</h3>
-                            <p className="text-sm text-gray-500 leading-relaxed">
-                                Every helper is verified through government ID and facial recognition for your safety.
-                            </p>
-                        </div>
-
-
-                        <div className="p-8 rounded-2xl border border-gray-100 hover:shadow-xl transition-shadow bg-white group">
-                            <div className="w-12 h-12 bg-[#22C55E]/10 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                                <svg className="w-6 h-6 text-[#16A34A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                            </div>
-                            <h3 className="text-lg font-bold text-gray-900 mb-2">Community Marketplace</h3>
-                            <p className="text-sm text-gray-500 leading-relaxed">
-                                Connect with locals who offer housing, transport, job help, and cultural orientation.
-                            </p>
-                        </div>
-
-
-                        <div className="p-8 rounded-2xl border border-gray-100 hover:shadow-xl transition-shadow bg-white group">
-                            <div className="w-12 h-12 bg-[#22C55E]/10 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-                                <svg className="w-6 h-6 text-[#16A34A]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                            </div>
-                            <h3 className="text-lg font-bold text-gray-900 mb-2">AI Safety Net</h3>
-                            <p className="text-sm text-gray-500 leading-relaxed">
-                                Our AI monitors conversations and transactions to flag suspicious activity instantly.
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="mt-12 flex justify-center gap-8 text-[10px] text-gray-400 font-medium tracking-wide uppercase">
-                        <div className="flex items-center gap-2"><svg className="w-4 h-4 text-[#22C55E]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> Escrow payments for security</div>
-                        <div className="flex items-center gap-2"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg> End-to-end encrypted messaging</div>
-                        <div className="flex items-center gap-2"><svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> 24/7 emergency SOS support</div>
+                        </motion.div>
                     </div>
                 </div>
             </section>
 
-
-            <section className="py-24 bg-gray-50">
+            {/* Features Grid */}
+            <section className="py-24 bg-white relative">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="text-center mb-16">
-                        <h2 className="text-3xl font-extrabold text-gray-900">
-                            Stories from Our <span className="text-[#22C55E]">Community</span>
+                    <div className="text-center max-w-3xl mx-auto mb-20">
+                        <span className="text-green-600 font-bold tracking-wider uppercase text-sm">Why Choose Us</span>
+                        <h2 className="text-4xl font-extrabold text-gray-900 mt-3 mb-6">
+                            Everything You Need to <br /> <span className="text-green-600">Settle In Smoothly</span>
                         </h2>
-                        <p className="mt-4 text-gray-500 max-w-2xl mx-auto text-sm">
-                            Real experiences from migrants who found their footing with MigrateMate.
+                        <p className="text-lg text-gray-500">
+                            We've combined AI technology with human trust to build the safest platform for migrants worldwide.
                         </p>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        {[
+                            {
+                                icon: Shield,
+                                title: "Mandatory KYC Verification",
+                                desc: "Every user is government-ID verified. No bots, no scams, just real people you can trust.",
+                                color: "bg-green-100 text-green-600"
+                            },
+                            {
+                                icon: Sparkles,
+                                title: "AI-Powered Assistance",
+                                desc: "Our AI helps navigate visas, contracts, and local laws instantly, 24/7 in your language.",
+                                color: "bg-purple-100 text-purple-600"
+                            },
+                            {
+                                icon: MessageSquare,
+                                title: "Safe Community Forums",
+                                desc: "Connect with people from your home country who have already made the move.",
+                                color: "bg-blue-100 text-blue-600"
+                            },
+                            {
+                                icon: MapPin,
+                                title: "Verified Housing & Jobs",
+                                desc: "Find accommodation and employment opportunities listed by verified community members.",
+                                color: "bg-orange-100 text-orange-600"
+                            },
+                            {
+                                icon: Heart,
+                                title: "Emergency SOS Support",
+                                desc: "One-tap emergency assistance connects you with nearby verified helpers instantly.",
+                                color: "bg-red-100 text-red-600"
+                            },
+                            {
+                                icon: Globe,
+                                title: "Cross-Cultural Events",
+                                desc: "Join local meetups and cultural exchange events to make new friends faster.",
+                                color: "bg-teal-100 text-teal-600"
+                            }
+                        ].map((feature, i) => (
+                            <motion.div
+                                key={i}
+                                whileHover={{ y: -5 }}
+                                className="p-8 rounded-3xl bg-gray-50 hover:bg-white border border-gray-100 hover:shadow-xl transition-all group"
+                            >
+                                <div className={`w-14 h-14 ${feature.color} rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform`}>
+                                    <feature.icon className="w-7 h-7" />
+                                </div>
+                                <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
+                                <p className="text-gray-500 leading-relaxed">
+                                    {feature.desc}
+                                </p>
+                            </motion.div>
+                        ))}
+                    </div>
+                </div>
+            </section>
 
-                        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-                            <div className="text-[#22C55E] text-4xl mb-4 font-serif">"</div>
-                            <div className="flex gap-1 text-yellow-400 mb-4">
-                                {[...Array(5)].map((_, i) => <svg key={i} className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>)}
-                            </div>
-                            <p className="text-sm text-gray-600 mb-6 leading-relaxed">
-                                MigrateMate connected me with Sarah who helped me find safe housing near my university. The verification process gave me peace of mind as a young woman moving alone.
+            {/* Testimonials */}
+            <section className="py-24 bg-gray-900 text-white relative overflow-hidden">
+                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
+                <div className="absolute top-0 right-0 w-96 h-96 bg-green-500/20 rounded-full blur-[100px]"></div>
+
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+                    <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-6">
+                        <div>
+                            <h2 className="text-4xl font-extrabold mb-4">Voices from our Community</h2>
+                            <p className="text-gray-400 max-w-xl">
+                                Join thousands of people who have found their new home away from home.
                             </p>
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-gray-200 rounded-full overflow-hidden">
-                                    <img src="https://i.pravatar.cc/150?u=a042581f4e29026024d" alt="User" />
-                                </div>
-                                <div>
-                                    <h5 className="text-sm font-bold text-gray-900">Thejandeera Sandeepana</h5>
-                                    <p className="text-xs text-gray-500">Student from Sri Lanka</p>
-                                </div>
-                            </div>
                         </div>
+                        <Link to="/community" className="px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/10 rounded-xl font-medium transition-all backdrop-blur-sm">
+                            Read Success Stories
+                        </Link>
+                    </div>
 
-
-                        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-                            <div className="text-[#22C55E] text-4xl mb-4 font-serif">"</div>
-                            <div className="flex gap-1 text-yellow-400 mb-4">
-                                {[...Array(5)].map((_, i) => <svg key={i} className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>)}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {[
+                            {
+                                name: "Sarah Chen",
+                                role: "Student from China",
+                                img: "https://i.pravatar.cc/150?u=a042581f4e29026024d",
+                                quote: "I was terrified moving to Toronto alone. MigrateMate connected me with a senior student who helped me find an apartment in 2 days!"
+                            },
+                            {
+                                name: "Carlos Rodriguez",
+                                role: "Chef from Mexico",
+                                img: "https://i.pravatar.cc/150?u=a042581f4e29026704d",
+                                quote: "The job market was confusing until I used the AI assistant to fix my resume. I landed a job at a top restaurant within a week."
+                            },
+                            {
+                                name: "Amara Ndiaye",
+                                role: "Nurse from Senegal",
+                                img: "https://i.pravatar.cc/150?u=a04258114e29026702d",
+                                quote: "The SOS feature is a lifesaver. When I got lost late at night, a verified community volunteer guided me home safely."
+                            }
+                        ].map((user, i) => (
+                            <div key={i} className="bg-white/5 backdrop-blur-sm p-8 rounded-3xl border border-white/10">
+                                <div className="flex gap-1 text-green-400 mb-6">
+                                    {[...Array(5)].map((_, j) => <Star key={j} size={16} fill="currentColor" />)}
+                                </div>
+                                <p className="text-lg text-gray-300 italic mb-8">"{user.quote}"</p>
+                                <div className="flex items-center gap-4">
+                                    <img src={user.img} alt={user.name} className="w-12 h-12 rounded-full border-2 border-green-500/50" />
+                                    <div>
+                                        <h4 className="font-bold text-white">{user.name}</h4>
+                                        <p className="text-xs text-gray-400 uppercase tracking-wide">{user.role}</p>
+                                    </div>
+                                </div>
                             </div>
-                            <p className="text-sm text-gray-600 mb-6 leading-relaxed">
-                                The AI assistant helped me understand Australian tax and superannuation. The community forum is amazing - I found a job within my first month!
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* Call to Action */}
+            <section className="py-24 bg-white">
+                <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="bg-gradient-to-br from-green-600 to-emerald-700 rounded-[3rem] p-12 md:p-20 text-center relative overflow-hidden shadow-2xl">
+                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
+                        <div className="relative z-10">
+                            <h2 className="text-4xl md:text-5xl font-extrabold text-white mb-6">
+                                Ready to Start Your New Chapter?
+                            </h2>
+                            <p className="text-green-100 text-xl max-w-2xl mx-auto mb-10">
+                                Join a community that cares. Safe, verified, and always here to help you succeed.
                             </p>
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-gray-200 rounded-full overflow-hidden">
-                                    <img src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="User" />
-                                </div>
-                                <div>
-                                    <h5 className="text-sm font-bold text-gray-900">Sumuditha Vimukthi</h5>
-                                    <p className="text-xs text-gray-500">Engineer from Sri Lanka</p>
-                                </div>
-                            </div>
-                        </div>
-
-
-                        <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
-                            <div className="text-[#22C55E] text-4xl mb-4 font-serif">"</div>
-                            <div className="flex gap-1 text-yellow-400 mb-4">
-                                {[...Array(5)].map((_, i) => <svg key={i} className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>)}
-                            </div>
-                            <p className="text-sm text-gray-600 mb-6 leading-relaxed">
-                                When my flight was delayed at midnight, I used the SOS feature and a verified helper came to pick me up. I felt safe knowing they were background-checked.
-                            </p>
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-gray-200 rounded-full overflow-hidden">
-                                    <img src="https://i.pravatar.cc/150?u=a04258114e29026702d" alt="User" />
-                                </div>
-                                <div>
-                                    <h5 className="text-sm font-bold text-gray-900">Nimal Kalperuma</h5>
-                                    <p className="text-xs text-gray-500">Nurse from Srilanka</p>
-                                </div>
+                            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                                <Link to="/signup" className="px-10 py-4 bg-white text-green-700 rounded-2xl font-bold text-lg shadow-lg hover:bg-gray-50 transition-all hover:scale-105">
+                                    Join Now - It's Free
+                                </Link>
+                                <Link to="/marketplace" className="px-10 py-4 bg-green-700 text-white border border-green-500 rounded-2xl font-bold text-lg hover:bg-green-600 transition-all">
+                                    Browse Services
+                                </Link>
                             </div>
                         </div>
                     </div>

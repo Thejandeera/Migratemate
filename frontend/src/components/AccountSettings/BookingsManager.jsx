@@ -1,198 +1,292 @@
 import React, { useState, useEffect } from 'react';
-import { getProviderBookings, updateBookingStatus } from '../../utils/bookingApi';
+import { getUserData } from '../../utils/auth';
+import { Calendar, Clock, MapPin, Check, X, MessageCircle, Phone, User, Loader2, AlertCircle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const BookingsManager = () => {
-    const [activeTab, setActiveTab] = useState('Pending');
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [activeTab, setActiveTab] = useState('PENDING'); // PENDING, ACTIVE, COMPLETED
+    const user = getUserData();
 
-    useEffect(() => {
-        getProviderBookings()
-            .then(data => setBookings(Array.isArray(data) ? data : []))
-            .catch(err => {
-                console.error(err);
-                setBookings([]);
-            })
-            .finally(() => setLoading(false));
-    }, []);
-
-    const handleStatusUpdate = async (bookingId, newStatus) => {
+    const fetchBookings = async () => {
         try {
-            const updatedBooking = await updateBookingStatus(bookingId, newStatus);
-            setBookings(prev => prev.map(b => b.id === bookingId ? updatedBooking : b));
-        } catch (error) {
-            console.error("Failed to update status", error);
-            alert("Failed to update status");
+            const token = JSON.parse(sessionStorage.getItem('migratemate_auth') || localStorage.getItem('migratemate_auth'))?.token;
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/bookings/provider-requests`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (Array.isArray(data)) {
+                    setBookings(data);
+                } else if (data && Array.isArray(data.data)) {
+                    setBookings(data.data);
+                } else {
+                    setBookings([]);
+                    console.warn("Unexpected API response format in BookingsManager:", data);
+                }
+            } else {
+                setError('Failed to fetch bookings');
+            }
+        } catch (err) {
+            console.error(err);
+            setError('Error loading bookings');
+        } finally {
+            setLoading(false);
         }
     };
 
+    useEffect(() => {
+        if (user?.id) fetchBookings();
+    }, [user?.id]);
 
-    const tabs = ['Pending', 'Active', 'Past'];
+    const handleStatusUpdate = async (bookingId, newStatus) => {
+        try {
+            const token = JSON.parse(sessionStorage.getItem('migratemate_auth') || localStorage.getItem('migratemate_auth'))?.token;
+
+            // Optimistic update
+            setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, status: newStatus } : b));
+
+            const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/bookings/${bookingId}/status?status=${newStatus}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                // Revert if failed
+                fetchBookings();
+                alert('Failed to update booking status');
+            }
+        } catch (err) {
+            console.error(err);
+            fetchBookings();
+        }
+    };
+
+    const filteredBookings = (Array.isArray(bookings) ? bookings : []).filter(b => {
+        if (activeTab === 'PENDING') return b.status === 'PENDING';
+        if (activeTab === 'ACTIVE') return b.status === 'ACCEPTED' || b.status === 'IN_PROGRESS';
+        if (activeTab === 'COMPLETED') return b.status === 'COMPLETED' || b.status === 'CANCELLED' || b.status === 'DECLINED';
+        return true;
+    });
+
+    if (loading) {
+        return (
+            <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-gray-100 shadow-sm min-h-[400px]">
+                <Loader2 className="w-10 h-10 text-green-600 animate-spin mb-4" />
+                <p className="text-gray-500 font-medium">Loading incoming requests...</p>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="bg-red-50 border border-red-200 rounded-3xl p-8 text-center text-red-600">
+                <AlertCircle className="w-12 h-12 mx-auto mb-4" />
+                <h3 className="text-lg font-bold mb-2">Something went wrong</h3>
+                <p>{error}</p>
+                <button
+                    onClick={fetchBookings}
+                    className="mt-4 px-6 py-2 bg-white text-red-600 border border-red-200 rounded-xl hover:bg-red-50 transition-colors font-medium shadow-sm"
+                >
+                    Try Again
+                </button>
+            </div>
+        );
+    }
+
+    const tabs = [
+        { id: 'PENDING', label: 'Requests', count: (Array.isArray(bookings) ? bookings : []).filter(b => b.status === 'PENDING').length },
+        { id: 'ACTIVE', label: 'Active', count: (Array.isArray(bookings) ? bookings : []).filter(b => ['ACCEPTED', 'IN_PROGRESS'].includes(b.status)).length },
+        { id: 'COMPLETED', label: 'History', count: (Array.isArray(bookings) ? bookings : []).filter(b => ['COMPLETED', 'CANCELLED', 'DECLINED'].includes(b.status)).length }
+    ];
 
     return (
-        <div className="space-y-6">
-            <div>
-                <h3 className="text-lg font-semibold text-gray-900">Received Bookings</h3>
-                <p className="text-sm text-gray-500">Manage bookings from customers who want your services</p>
-            </div>
+        <div className="space-y-6 animate-fade-in-up">
+            <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight">Booking Requests</h2>
+                    <p className="text-gray-500 mt-1">Manage incoming jobs and meaningful connections</p>
+                </div>
 
-            <div className="flex items-center gap-2 border-b border-gray-100 pb-1">
-                {tabs.map(tab => (
-                    <button
-                        key={tab}
-                        onClick={() => setActiveTab(tab)}
-                        className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors relative ${activeTab === tab
-                                ? 'text-gray-900 bg-gray-100'
-                                : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
-                            }`}
-                    >
-                        {tab === 'Pending' && (
-                            <span className="inline-flex items-center gap-1">
-                                <svg className="w-3.5 h-3.5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                {tab}
-                                <span className="w-2 h-2 rounded-full bg-yellow-500 ml-1"></span>
-                            </span>
-                        )}
-                        {tab === 'Active' && (
-                            <span className="inline-flex items-center gap-1">
-                                <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
-                                {tab}
-                            </span>
-                        )}
-                        {tab === 'Past' && (
-                            <span className="inline-flex items-center gap-1">
-                                <svg className="w-3.5 h-3.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                {tab}
-                            </span>
-                        )}
-                    </button>
-                ))}
-            </div>
-
-            <div className="space-y-4">
-                {loading ? (
-                    <p className="text-center text-gray-500 py-8">Loading requests...</p>
-                ) : bookings.filter(b => {
-                        if (activeTab === 'Pending') return b?.status === 'PENDING';
-                        if (activeTab === 'Active') return b?.status === 'ACCEPTED' || b?.status === 'IN_PROGRESS';
-                        if (activeTab === 'Past') return b?.status === 'COMPLETED' || b?.status === 'CANCELLED' || b?.status === 'DECLINED';
-                        return false;
-                    }).length === 0 ? (
-                    <div className="text-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                        <p className="text-gray-500 text-sm">No {activeTab.toLowerCase()} bookings found.</p>
-                    </div>
-                ) : (
-                    bookings.filter(b => {
-                        if (activeTab === 'Pending') return b?.status === 'PENDING';
-                        if (activeTab === 'Active') return b?.status === 'ACCEPTED' || b?.status === 'IN_PROGRESS';
-                        if (activeTab === 'Past') return b?.status === 'COMPLETED' || b?.status === 'CANCELLED' || b?.status === 'DECLINED';
-                        return false;
-                    }).map((booking) => (
-
-                        <div key={booking.id} className="bg-white border border-gray-100 rounded-xl p-6 shadow-sm">
-                            <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
-                                <div className="flex items-start gap-4">
-                                    <div className="w-12 h-12 rounded-full bg-gray-200 overflow-hidden">
-                                        <img 
-                                            src={booking.customerAvatar || `https://ui-avatars.com/api/?name=${booking.customerName || 'User'}&background=random`} 
-                                            alt={booking.customerName || 'Customer'} 
-                                            className="w-full h-full object-cover" 
-                                        />
-                                    </div>
-                                    <div>
-                                        <div className="flex items-center gap-2">
-                                            <h4 className="font-bold text-gray-900">{booking.customerName || 'Unknown Customer'}</h4>
-                                        </div>
-                                        
-                                        <div className="text-sm text-gray-600 mt-2 font-medium">
-                                            {booking.serviceTitle || 'Service'}
-                                        </div>
-                                        <div className="text-xs text-gray-400 flex items-center gap-3 mt-1">
-                                            <span className="flex items-center gap-1">
-                                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                                                {booking.requestedDate ? new Date(booking.requestedDate).toLocaleDateString() : 'Date N/A'}
-                                            </span>
-                                            <span className="font-bold text-gray-900">{booking.currency || 'AUD'} {booking.totalAmount || 0}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <span className={`text-xs font-bold px-3 py-1 rounded-full border flex items-center gap-1 ${booking.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700 border-yellow-200' : 'bg-green-100 text-green-700 border-green-200'}`}>
-                                    {booking.status || 'UNKNOWN'}
+                <div className="flex p-1 bg-gray-100 rounded-xl">
+                    {tabs.map(tab => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${activeTab === tab.id
+                                ? 'bg-white text-gray-900 shadow-sm'
+                                : 'text-gray-500 hover:text-gray-700'
+                                }`}
+                        >
+                            {tab.label}
+                            {tab.count > 0 && (
+                                <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${activeTab === tab.id ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'
+                                    }`}>
+                                    {tab.count}
                                 </span>
-                            </div>
-
-                            <div className="bg-gray-50 rounded-lg p-3 mb-4 text-sm text-gray-600 italic border border-gray-100 flex gap-2">
-                                <svg className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" /></svg>
-                                {booking.notes || "No notes provided."}
-                            </div>
-
-
-                            {booking.status === 'PENDING' && (
-                                <div className="flex gap-4">
-                                    <button 
-                                        onClick={() => handleStatusUpdate(booking.id, 'ACCEPTED')}
-                                        className="flex-1 bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg text-sm font-semibold transition shadow-sm flex items-center justify-center gap-2">
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" /></svg>
-                                        Accept
-                                    </button>
-                                    <button 
-                                        onClick={() => handleStatusUpdate(booking.id, 'DECLINED')}
-                                        className="flex-1 bg-white border border-red-200 text-red-600 hover:bg-red-50 py-2 rounded-lg text-sm font-semibold transition flex items-center justify-center gap-2">
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" /></svg>
-                                        Decline
-                                    </button>
-                                </div>
                             )}
-                            {booking.status === 'ACCEPTED' && (
-                                 <div className="mt-4 pt-4 border-t border-gray-100 animate-fadeIn">
-                                     <h5 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                                         <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-                                         Customer Contact Details
-                                     </h5>
-                                     
-                                     <div className="grid grid-cols-2 gap-3 mb-4">
-                                         {booking.customerPhone ? (
-                                             <>
-                                                 <a href={`tel:${booking.customerPhone}`} className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-50 hover:bg-green-50 text-gray-700 hover:text-green-700 border border-gray-200 hover:border-green-200 rounded-lg transition-all text-sm font-medium">
-                                                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
-                                                     Call
-                                                 </a>
-                                                 <a href={`https://wa.me/${booking.customerPhone.replace(/[^0-9]/g, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 px-4 py-2 bg-gray-50 hover:bg-green-50 text-gray-700 hover:text-green-700 border border-gray-200 hover:border-green-200 rounded-lg transition-all text-sm font-medium">
-                                                     <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.008-.57-.008-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
-                                                     WhatsApp
-                                                 </a>
-                                             </>
-                                         ) : (
-                                            <div className="col-span-2 text-center py-2 text-gray-400 text-sm border border-dashed rounded-lg">
-                                                No phone number provided
-                                            </div>
-                                         )}
-
-                                          {booking.customerEmail ? (
-                                             <a href={`mailto:${booking.customerEmail}`} className="col-span-2 flex items-center justify-center gap-2 px-4 py-2 bg-gray-50 hover:bg-gray-100 text-gray-700 hover:text-gray-900 border border-gray-200 rounded-lg transition-all text-sm font-medium">
-                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-                                                 Email Customer
-                                             </a>
-                                         ) : (
-                                            <div className="col-span-2 text-center py-2 text-gray-400 text-sm border border-dashed rounded-lg">
-                                                No email provided
-                                            </div>
-                                         )}
-                                     </div>
-
-                                     <button 
-                                        onClick={() => handleStatusUpdate(booking.id, 'COMPLETED')}
-                                        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg text-sm font-semibold transition shadow-md flex items-center justify-center gap-2">
-                                        Mark Job as Completed
-                                    </button>
-                                </div>
-                            )}
-
-                        </div>
-                    ))
-                )}
+                        </button>
+                    ))}
+                </div>
             </div>
+
+            {filteredBookings.length === 0 ? (
+                <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed border-gray-200">
+                    <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Calendar className="w-10 h-10 text-gray-400" />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">No bookings found</h3>
+                    <p className="text-gray-500 max-w-sm mx-auto">
+                        {activeTab === 'PENDING'
+                            ? "You're all caught up! No new requests pending."
+                            : activeTab === 'ACTIVE'
+                                ? "No jobs currently in progress."
+                                : "No past booking history available."}
+                    </p>
+                </div>
+            ) : (
+                <div className="grid gap-4">
+                    <AnimatePresence>
+                        {filteredBookings.map((booking) => (
+                            <motion.div
+                                key={booking.id}
+                                layout
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+                            >
+                                <div className="p-6 flex flex-col md:flex-row gap-6">
+                                    {/* User Info & Service Date */}
+                                    <div className="flex-shrink-0 flex md:flex-col items-center md:items-start gap-4 md:w-48">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center border-2 border-white shadow-sm overflow-hidden">
+                                                {booking.customerAvatar ? (
+                                                    <img src={booking.customerAvatar} alt="" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <User className="w-6 h-6 text-gray-400" />
+                                                )}
+                                            </div>
+                                            <div>
+                                                <p className="font-bold text-gray-900">{booking.customerName || 'Guest User'}</p>
+                                                <p className="text-xs text-gray-500">Customer</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-2 text-sm text-gray-600 space-y-1">
+                                            <div className="flex items-center gap-2">
+                                                <Calendar className="w-4 h-4 text-green-600" />
+                                                <span className="font-medium">{new Date(booking.bookingDate).toLocaleDateString()}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <Clock className="w-4 h-4 text-green-600" />
+                                                <span>{booking.timeSlot || 'Flexible Time'}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Service Details */}
+                                    <div className="flex-1 border-l border-gray-100 pl-0 md:pl-6 pt-4 md:pt-0 border-t md:border-t-0">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <h3 className="text-lg font-bold text-gray-900">{booking.serviceTitle}</h3>
+                                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${booking.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
+                                                booking.status === 'ACCEPTED' ? 'bg-blue-100 text-blue-700' :
+                                                    booking.status === 'IN_PROGRESS' ? 'bg-purple-100 text-purple-700' :
+                                                        booking.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
+                                                            'bg-red-100 text-red-700'
+                                                }`}>
+                                                {booking.status.replace('_', ' ')}
+                                            </span>
+                                        </div>
+
+                                        <div className="flex items-center text-sm text-gray-500 mb-4">
+                                            <MapPin className="w-4 h-4 mr-1 text-gray-400" />
+                                            {booking.serviceLocation || 'Remote / Online'}
+                                        </div>
+
+                                        {booking.notes && (
+                                            <div className="bg-gray-50 p-3 rounded-lg text-sm text-gray-600 italic mb-4 border border-gray-100">
+                                                "{booking.notes}"
+                                            </div>
+                                        )}
+
+                                        <div className="flex items-center gap-4">
+                                            <div className="text-lg font-bold text-gray-900">
+                                                {booking.currency} {booking.totalAmount}
+                                            </div>
+                                            {['ACCEPTED', 'IN_PROGRESS'].includes(booking.status) && (
+                                                <div className="flex items-center gap-2">
+                                                    <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Message Customer">
+                                                        <MessageCircle className="w-5 h-5" />
+                                                    </button>
+                                                    <button className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition" title="Call Customer">
+                                                        <Phone className="w-5 h-5" />
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Actions */}
+                                    <div className="flex flex-row md:flex-col gap-2 justify-end md:justify-center border-t md:border-t-0 md:border-l border-gray-100 pt-4 md:pt-0 md:pl-6">
+                                        {booking.status === 'PENDING' && (
+                                            <>
+                                                <button
+                                                    onClick={() => handleStatusUpdate(booking.id, 'ACCEPTED')}
+                                                    className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition font-bold shadow-md hover:shadow-lg"
+                                                >
+                                                    <Check className="w-4 h-4" />
+                                                    Accept
+                                                </button>
+                                                <button
+                                                    onClick={() => handleStatusUpdate(booking.id, 'DECLINED')}
+                                                    className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 transition font-medium"
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                    Decline
+                                                </button>
+                                            </>
+                                        )}
+
+                                        {booking.status === 'ACCEPTED' && (
+                                            <button
+                                                onClick={() => handleStatusUpdate(booking.id, 'IN_PROGRESS')}
+                                                className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition font-bold shadow-md"
+                                            >
+                                                Start Job
+                                            </button>
+                                        )}
+
+                                        {booking.status === 'IN_PROGRESS' && (
+                                            <button
+                                                onClick={() => handleStatusUpdate(booking.id, 'COMPLETED')}
+                                                className="flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition font-bold shadow-md"
+                                            >
+                                                <Check className="w-4 h-4" />
+                                                Complete
+                                            </button>
+                                        )}
+
+                                        {['COMPLETED', 'DECLINED', 'CANCELLED'].includes(booking.status) && (
+                                            <span className="text-xs text-center text-gray-400 font-medium px-2">
+                                                {new Date(booking.updatedAt || Date.now()).toLocaleDateString()}
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </AnimatePresence>
+                </div>
+            )}
         </div>
     );
 };

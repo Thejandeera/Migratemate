@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import Navbar from '../components/Navbar';
+import { ArrowRight, ArrowLeft, Camera, Upload, Check, Mail, User, Phone, MapPin, Shield, CheckCircle, Loader2, Image as ImageIcon } from 'lucide-react';
 
 const Signup = () => {
     const navigate = useNavigate();
@@ -13,9 +14,11 @@ const Signup = () => {
     const [cameraActive, setCameraActive] = useState(false);
     const [stream, setStream] = useState(null);
 
+    // OTP State
     const [otp, setOtp] = useState('');
     const [otpSent, setOtpSent] = useState(false);
     const [otpVerified, setOtpVerified] = useState(false);
+    const [otpLoading, setOtpLoading] = useState(false);
 
     const [formData, setFormData] = useState({
         email: '',
@@ -53,7 +56,7 @@ const Signup = () => {
             setError("Please enter your email first.");
             return;
         }
-        setLoading(true);
+        setOtpLoading(true);
         setError('');
         try {
             const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/users/send-otp?email=${formData.email}`, {
@@ -62,14 +65,13 @@ const Signup = () => {
             const data = await response.json();
             if (response.ok && data.success) {
                 setOtpSent(true);
-                alert("OTP sent to your email!");
             } else {
                 setError(data.message || "Failed to send OTP.");
             }
         } catch (err) {
             setError("Network error sending OTP.");
         } finally {
-            setLoading(false);
+            setOtpLoading(false);
         }
     };
 
@@ -78,7 +80,7 @@ const Signup = () => {
             setError("Please enter the OTP.");
             return;
         }
-        setLoading(true);
+        setOtpLoading(true);
         setError('');
         try {
             const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/users/verify-otp?email=${formData.email}&otp=${otp}`, {
@@ -87,14 +89,13 @@ const Signup = () => {
             const data = await response.json();
             if (response.ok && data.success) {
                 setOtpVerified(true);
-                alert("Email verified successfully!");
             } else {
                 setError(data.message || "Invalid OTP.");
             }
         } catch (err) {
             setError("Network error verifying OTP.");
         } finally {
-            setLoading(false);
+            setOtpLoading(false);
         }
     };
 
@@ -104,7 +105,7 @@ const Signup = () => {
         const initCamera = async () => {
             if (cameraActive) {
                 try {
-                    const mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                    const mediaStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
                     currentStream = mediaStream;
                     setStream(mediaStream);
 
@@ -119,7 +120,9 @@ const Signup = () => {
             }
         };
 
-        initCamera();
+        if (cameraActive) {
+            initCamera();
+        }
 
         return () => {
             if (currentStream) {
@@ -140,7 +143,6 @@ const Signup = () => {
             canvasRef.current.height = videoRef.current.videoHeight;
 
             context.drawImage(videoRef.current, 0, 0, videoRef.current.videoWidth, videoRef.current.videoHeight);
-
             const imageSrc = canvasRef.current.toDataURL('image/png');
 
             if (stream) {
@@ -166,16 +168,13 @@ const Signup = () => {
         try {
             const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/users/register`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(dataToSubmit),
             });
 
             const data = await response.json();
 
             if (response.ok && data.success) {
-                alert('Registration Successful! Please Login.');
                 navigate('/');
             } else {
                 setError(data.message || 'Registration failed. Please try again.');
@@ -211,276 +210,269 @@ const Signup = () => {
             }
         }
         setStep(prev => Math.min(prev + 1, 3));
+        window.scrollTo(0, 0);
     };
+
     const prevStep = () => setStep(prev => Math.max(prev - 1, 1));
 
+    const steps = [
+        { id: 1, title: "Personal Details", icon: User },
+        { id: 2, title: "Identity Upload", icon: Upload },
+        { id: 3, title: "Liveness Check", icon: Camera }
+    ];
+
     return (
-        <div className="min-h-screen bg-[#F0FDF4] font-sans">
+        <div className="min-h-screen bg-white font-sans flex flex-col">
             <Navbar />
 
-            <div className="flex items-center justify-center min-h-screen pt-20 px-4 sm:px-6 lg:px-8">
-                <div className="w-full max-w-2xl relative">
+            <div className="flex-1 pt-20 pb-12">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex flex-col lg:flex-row gap-12 lg:gap-24">
 
-                    <Link to="/" className="absolute -top-12 left-0 flex items-center gap-2 text-gray-600 hover:text-[#22C55E] transition-colors font-medium">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-                        Back to Home
-                    </Link>
+                        {/* Left Side: Steps & Info */}
+                        <div className="lg:w-1/3">
+                            <div className="sticky top-28">
+                                <h1 className="text-3xl font-extrabold text-gray-900 mb-2">Create Account</h1>
+                                <p className="text-gray-500 mb-8">Join the community in a few simple steps.</p>
 
+                                <div className="space-y-8 relative">
+                                    <div className="absolute left-6 top-8 bottom-8 w-0.5 bg-gray-100 -z-10"></div>
+                                    {steps.map((s) => (
+                                        <div key={s.id} className="flex items-center gap-4 relative">
+                                            <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center transition-colors shadow-sm bg-white ${step === s.id ? 'border-green-500 text-green-600' :
+                                                    step > s.id ? 'border-green-500 bg-green-500 text-white' : 'border-gray-200 text-gray-300'
+                                                }`}>
+                                                {step > s.id ? <Check size={20} /> : <s.icon size={20} />}
+                                            </div>
+                                            <div>
+                                                <h3 className={`font-bold text-sm ${step === s.id ? 'text-gray-900' : 'text-gray-400'}`}>{s.title}</h3>
+                                                {step === s.id && <p className="text-xs text-green-600 font-medium">In Progress</p>}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
 
-                    <div className="mb-8">
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-xl font-bold text-gray-800">Identity Verification</h2>
-                            <span className="text-sm text-gray-500">Step {step} of 3</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2.5">
-                            <motion.div
-                                className="bg-[#22C55E] h-2.5 rounded-full"
-                                initial={{ width: 0 }}
-                                animate={{ width: `${(step / 3) * 100}%` }}
-                            ></motion.div>
-                        </div>
-                    </div>
-
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="bg-white p-8 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.05)]"
-                    >
-                        {error && (
-                            <div className="mb-6 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm flex items-center">
-                                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                {error}
+                                <div className="mt-12 bg-green-50 p-6 rounded-2xl border border-green-100 hidden lg:block">
+                                    <div className="flex items-start gap-4">
+                                        <div className="bg-green-100 p-2 rounded-lg text-green-600">
+                                            <Shield size={24} />
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-gray-900 text-sm">Why do we need this?</h4>
+                                            <p className="text-xs text-gray-600 mt-2 leading-relaxed">
+                                                We verify every member to ensure the safety and trust of our community. Your data is encrypted and secure.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                        )}
+                        </div>
 
-                        <form onSubmit={handleSubmit}>
-                            <AnimatePresence mode='wait'>
-                                {step === 1 && (
-                                    <motion.div
-                                        key="step1"
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        exit={{ opacity: 0, x: 20 }}
-                                        className="space-y-6"
-                                    >
-                                        <div className="flex items-center gap-3 mb-6">
-                                            <div className="bg-[#E0F2F1] p-2 rounded-lg">
-                                                <svg className="w-6 h-6 text-[#22C55E]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-                                            </div>
-                                            <h3 className="text-xl font-bold text-gray-900">Personal Information</h3>
-                                        </div>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                            <div>
-                                                <label className="block text-sm font-semibold text-gray-700 mb-1">First Name</label>
-                                                <input name="firstName" type="text" required value={formData.firstName} onChange={handleChange} className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#22C55E]/20 focus:border-[#22C55E] focus:bg-white text-sm transition-all" placeholder="Jane" />
-                                            </div>
-                                            <div>
-                                                <label className="block text-sm font-semibold text-gray-700 mb-1">Last Name</label>
-                                                <input name="lastName" type="text" required value={formData.lastName} onChange={handleChange} className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#22C55E]/20 focus:border-[#22C55E] focus:bg-white text-sm transition-all" placeholder="Doe" />
-                                            </div>
-                                        </div>
+                        {/* Right Side: Form */}
+                        <div className="lg:w-2/3">
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="bg-white rounded-3xl lg:shadow-xl lg:border border-gray-100 lg:p-8"
+                            >
+                                {error && (
+                                    <div className="mb-6 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm flex items-center">
+                                        <Shield className="w-5 h-5 mr-3" />
+                                        {error}
+                                    </div>
+                                )}
 
-                                        <div>
-                                            <label className="block text-sm font-semibold text-gray-700 mb-1">Email Address</label>
-                                            <div className="flex gap-2">
-                                                <input
-                                                    name="email"
-                                                    type="email"
-                                                    required
-                                                    value={formData.email}
-                                                    onChange={handleChange}
-                                                    disabled={otpVerified}
-                                                    className={`block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#22C55E]/20 focus:border-[#22C55E] focus:bg-white text-sm transition-all ${otpVerified ? 'bg-green-50 border-green-200 text-green-700' : ''}`}
-                                                    placeholder="jane@example.com"
-                                                />
-                                                {!otpVerified && !otpSent && (
-                                                    <button
-                                                        type="button"
-                                                        onClick={sendOtp}
-                                                        className="px-4 py-2 bg-[#22C55E] text-white rounded-lg whitespace-nowrap text-sm font-semibold hover:bg-[#16A34A] transition-colors"
-                                                    >
-                                                        Verify
-                                                    </button>
-                                                )}
-                                                {otpVerified && (
-                                                    <span className="flex items-center justify-center w-12 text-[#22C55E] bg-green-100 rounded-lg">
-                                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
-                                                    </span>
-                                                )}
+                                <AnimatePresence mode='wait'>
+                                    {step === 1 && (
+                                        <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <div>
+                                                    <label className="block text-sm font-bold text-gray-700 mb-2">First Name</label>
+                                                    <input name="firstName" value={formData.firstName} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all" placeholder="Jane" />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-bold text-gray-700 mb-2">Last Name</label>
+                                                    <input name="lastName" value={formData.lastName} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all" placeholder="Doe" />
+                                                </div>
                                             </div>
-                                            {otpSent && !otpVerified && (
-                                                <div className="mt-3 flex gap-2">
+
+                                            <div>
+                                                <label className="block text-sm font-bold text-gray-700 mb-2">Email Address</label>
+                                                <div className="flex gap-3">
                                                     <input
-                                                        type="text"
-                                                        value={otp}
-                                                        onChange={(e) => setOtp(e.target.value)}
-                                                        className="block w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-sm"
-                                                        placeholder="Enter OTP"
+                                                        name="email"
+                                                        type="email"
+                                                        value={formData.email}
+                                                        onChange={handleChange}
+                                                        disabled={otpVerified}
+                                                        className={`flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all ${otpVerified ? 'bg-green-50 text-green-700 border-green-200' : ''}`}
+                                                        placeholder="name@example.com"
                                                     />
-                                                    <button
-                                                        type="button"
-                                                        onClick={verifyOtp}
-                                                        className="px-4 py-2 bg-gray-800 text-white rounded-lg whitespace-nowrap text-sm font-semibold hover:bg-gray-700 transition-colors"
-                                                    >
-                                                        Submit OTP
-                                                    </button>
+                                                    {!otpVerified && !otpSent && (
+                                                        <button
+                                                            onClick={sendOtp}
+                                                            disabled={otpLoading}
+                                                            className="px-6 py-3 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-gray-800 transition-all disabled:opacity-50"
+                                                        >
+                                                            {otpLoading ? <Loader2 className="animate-spin w-4 h-4" /> : 'Verify'}
+                                                        </button>
+                                                    )}
                                                 </div>
-                                            )}
-                                        </div>
 
-                                        <div>
-                                            <label className="block text-sm font-semibold text-gray-700 mb-1">Password</label>
-                                            <input name="password" type="password" required value={formData.password} onChange={handleChange} className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#22C55E]/20 focus:border-[#22C55E] focus:bg-white text-sm transition-all" placeholder="••••••••" />
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-semibold text-gray-700 mb-1">Phone</label>
-                                            <input name="phone" type="tel" value={formData.phone} onChange={handleChange} className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#22C55E]/20 focus:border-[#22C55E] focus:bg-white text-sm transition-all" placeholder="+94 77 123 4567" />
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-semibold text-gray-700 mb-1">Country of Origin</label>
-                                            <input name="countryOfOrigin" type="text" required value={formData.countryOfOrigin} onChange={handleChange} className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#22C55E]/20 focus:border-[#22C55E] focus:bg-white text-sm transition-all" placeholder="Your Country" />
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-semibold text-gray-700 mb-1">Destination Country</label>
-                                            <input name="destinationCountry" type="text" required value={formData.destinationCountry} onChange={handleChange} className="block w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#22C55E]/20 focus:border-[#22C55E] focus:bg-white text-sm transition-all" placeholder="Australia" />
-                                        </div>
-
-                                        <button
-                                            type="button"
-                                            onClick={nextStep}
-                                            className="w-full mt-6 flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-[#22C55E] hover:bg-[#16A34A] transition-all"
-                                        >
-                                            Continue to Document Upload
-                                        </button>
-                                    </motion.div>
-                                )}
-
-                                {step === 2 && (
-                                    <motion.div
-                                        key="step2"
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        exit={{ opacity: 0, x: 20 }}
-                                        className="space-y-6"
-                                    >
-                                        <div className="flex items-center gap-3 mb-6">
-                                            <div className="bg-[#E0F2F1] p-2 rounded-lg">
-                                                <svg className="w-6 h-6 text-[#22C55E]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                                            </div>
-                                            <h3 className="text-xl font-bold text-gray-900">Upload ID Document</h3>
-                                        </div>
-
-                                        <div className="space-y-4">
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:border-[#22C55E] hover:bg-green-50 transition-all relative">
-                                                    <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'passportImageBase64')} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                                                    <div className="bg-white p-3 rounded-full shadow-sm mb-3">
-                                                        <svg className="w-6 h-6 text-[#22C55E]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 21h7a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v11m0 5l4.879-4.879m0 0a3 3 0 104.243-4.242 3 3 0 00-4.243 4.242z"></path></svg>
+                                                {otpSent && !otpVerified && (
+                                                    <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200 animate-in fade-in slide-in-from-top-4">
+                                                        <label className="block text-xs font-bold text-gray-500 mb-2">Enter verification code sent to your email</label>
+                                                        <div className="flex gap-3">
+                                                            <input
+                                                                value={otp}
+                                                                onChange={(e) => setOtp(e.target.value)}
+                                                                className="flex-1 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-center tracking-widest font-mono"
+                                                                placeholder="000000"
+                                                                maxLength={6}
+                                                            />
+                                                            <button
+                                                                onClick={verifyOtp}
+                                                                disabled={otpLoading}
+                                                                className="px-4 py-2 bg-green-600 text-white rounded-lg font-bold text-sm hover:bg-green-700"
+                                                            >
+                                                                {otpLoading ? <Loader2 className="animate-spin w-4 h-4" /> : 'Confirm'}
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                    <span className="text-sm font-medium text-gray-700">Upload Passport</span>
-                                                    <span className="text-xs text-gray-500 mt-1">PNG, JPG or PDF up to 10MB</span>
-                                                    {formData.passportImageBase64 && <span className="text-xs text-[#22C55E] mt-2 font-semibold">File Selected</span>}
-                                                </div>
+                                                )}
+                                                {otpVerified && <p className="text-green-600 text-xs font-bold mt-2 flex items-center gap-1"><CheckCircle size={14} /> Email Verified Successfully</p>}
+                                            </div>
 
-                                                <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer hover:border-[#22C55E] hover:bg-green-50 transition-all relative">
-                                                    <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, 'avatarBase64')} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
-                                                    <div className="bg-white p-3 rounded-full shadow-sm mb-3">
-                                                        <svg className="w-6 h-6 text-[#22C55E]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                            <div>
+                                                <label className="block text-sm font-bold text-gray-700 mb-2">Password</label>
+                                                <input name="password" type="password" value={formData.password} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all" placeholder="Create a strong password" />
+                                            </div>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <div>
+                                                    <label className="block text-sm font-bold text-gray-700 mb-2">Phone</label>
+                                                    <input name="phone" value={formData.phone} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all" placeholder="+1 (555) 000-0000" />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm font-bold text-gray-700 mb-2">Origin Country</label>
+                                                    <input name="countryOfOrigin" value={formData.countryOfOrigin} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all" placeholder="e.g. Brazil" />
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-bold text-gray-700 mb-2">Destination Country</label>
+                                                <input name="destinationCountry" value={formData.destinationCountry} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all" placeholder="e.g. Canada" />
+                                            </div>
+
+                                            <button onClick={nextStep} className="w-full py-4 bg-green-600 text-white rounded-xl font-bold shadow-lg shadow-green-200 hover:bg-green-700 hover:shadow-green-300 transition-all flex items-center justify-center gap-2 group">
+                                                Continue
+                                                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                            </button>
+                                        </motion.div>
+                                    )}
+
+                                    {step === 2 && (
+                                        <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                {/* Passport Upload */}
+                                                <div className="relative group cursor-pointer">
+                                                    <input type="file" onChange={(e) => handleFileChange(e, 'passportImageBase64')} className="absolute inset-0 w-full h-full opacity-0 z-10 cursor-pointer" accept="image/*" />
+                                                    <div className={`border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center text-center transition-all h-64 ${formData.passportImageBase64 ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-400 hover:bg-gray-50'}`}>
+                                                        {formData.passportImageBase64 ? (
+                                                            <img src={formData.passportImageBase64} alt="Passport" className="w-full h-full object-contain rounded-lg" />
+                                                        ) : (
+                                                            <>
+                                                                <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-sm mb-4">
+                                                                    <Upload className="w-6 h-6 text-green-600" />
+                                                                </div>
+                                                                <h4 className="font-bold text-gray-900">Upload Password</h4>
+                                                                <p className="text-xs text-gray-500 mt-1">Click to browse</p>
+                                                            </>
+                                                        )}
                                                     </div>
-                                                    <span className="text-sm font-medium text-gray-700">Upload Profile Picture</span>
-                                                    <span className="text-xs text-gray-500 mt-1">PNG, JPG up to 5MB</span>
-                                                    {formData.avatarBase64 && <span className="text-xs text-[#22C55E] mt-2 font-semibold">File Selected</span>}
+                                                </div>
+
+                                                {/* Avatar Upload */}
+                                                <div className="relative group cursor-pointer">
+                                                    <input type="file" onChange={(e) => handleFileChange(e, 'avatarBase64')} className="absolute inset-0 w-full h-full opacity-0 z-10 cursor-pointer" accept="image/*" />
+                                                    <div className={`border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center text-center transition-all h-64 ${formData.avatarBase64 ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-400 hover:bg-gray-50'}`}>
+                                                        {formData.avatarBase64 ? (
+                                                            <img src={formData.avatarBase64} alt="Avatar" className="w-32 h-32 object-cover rounded-full shadow-md" />
+                                                        ) : (
+                                                            <>
+                                                                <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-sm mb-4">
+                                                                    <ImageIcon className="w-6 h-6 text-green-600" />
+                                                                </div>
+                                                                <h4 className="font-bold text-gray-900">Profile Picture</h4>
+                                                                <p className="text-xs text-gray-500 mt-1">Click to browse</p>
+                                                            </>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
 
-                                        <div className="flex gap-4 mt-8">
-                                            <button type="button" onClick={prevStep} className="w-1/3 flex justify-center py-3 px-4 border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 transition-all">
-                                                Back
-                                            </button>
-                                            <button type="button" onClick={nextStep} className="w-2/3 flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white bg-[#22C55E] hover:bg-[#16A34A] transition-all">
-                                                Continue to Selfie
-                                            </button>
-                                        </div>
-                                    </motion.div>
-                                )}
-
-                                {step === 3 && (
-                                    <motion.div
-                                        key="step3"
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        exit={{ opacity: 0, x: 20 }}
-                                        className="space-y-6"
-                                    >
-                                        <div className="flex items-center gap-3 mb-6">
-                                            <div className="bg-[#E0F2F1] p-2 rounded-lg">
-                                                <svg className="w-6 h-6 text-[#22C55E]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                            <div className="flex gap-4">
+                                                <button onClick={prevStep} className="w-1/3 py-4 border border-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-all">Back</button>
+                                                <button onClick={nextStep} className="w-2/3 py-4 bg-green-600 text-white rounded-xl font-bold shadow-lg shadow-green-200 hover:bg-green-700 transition-all">Continue</button>
                                             </div>
-                                            <h3 className="text-xl font-bold text-gray-900">Take a Selfie</h3>
-                                        </div>
+                                        </motion.div>
+                                    )}
 
-                                        <div className="bg-gray-100 rounded-2xl overflow-hidden aspect-[4/3] relative flex items-center justify-center border-2 border-dashed border-gray-300">
-                                            {!formData.selfieImageBase64 && !cameraActive && (
-                                                <div className="text-center p-6">
-                                                    <button type="button" onClick={startCamera} className="px-6 py-2 bg-indigo-600 text-white rounded-full text-sm font-medium hover:bg-indigo-700 transition">Turn on Camera</button>
-                                                </div>
-                                            )}
-
-                                            {cameraActive && !formData.selfieImageBase64 && (
-                                                <div className="relative w-full h-full">
-                                                    <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover"></video>
-                                                    <canvas ref={canvasRef} className="hidden"></canvas>
-
-                                                    <div className="absolute bottom-6 left-0 right-0 flex justify-center z-10">
-                                                        <button type="button" onClick={captureSelfie} className="w-16 h-16 bg-white rounded-full border-4 border-[#22C55E] flex items-center justify-center shadow-lg hover:bg-gray-100 transition-transform transform active:scale-95">
-                                                            <div className="w-12 h-12 bg-[#22C55E] rounded-full"></div>
+                                    {step === 3 && (
+                                        <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
+                                            <div className="bg-gray-900 rounded-3xl overflow-hidden aspect-[4/3] relative flex items-center justify-center">
+                                                {!formData.selfieImageBase64 && !cameraActive && (
+                                                    <div className="text-center">
+                                                        <div className="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
+                                                            <Camera className="w-8 h-8 text-gray-400" />
+                                                        </div>
+                                                        <button onClick={startCamera} className="px-8 py-3 bg-white text-gray-900 rounded-full font-bold hover:scale-105 transition-transform">
+                                                            Start Camera
                                                         </button>
                                                     </div>
-                                                </div>
-                                            )}
+                                                )}
 
-                                            {formData.selfieImageBase64 && (
-                                                <div className="relative w-full h-full">
-                                                    <img src={formData.selfieImageBase64} alt="Selfie" className="w-full h-full object-cover" />
-                                                    <div className="absolute bottom-6 left-0 right-0 flex justify-center">
-                                                        <button type="button" onClick={retakeSelfie} className="px-6 py-2 bg-white/90 backdrop-blur-sm text-gray-800 rounded-full text-sm font-medium shadow-md hover:bg-white transition">Retake Selfie</button>
+                                                {cameraActive && !formData.selfieImageBase64 && (
+                                                    <div className="relative w-full h-full">
+                                                        <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover transform scale-x-[-1]"></video>
+                                                        <canvas ref={canvasRef} className="hidden"></canvas>
+                                                        <div className="absolute bottom-8 left-0 right-0 flex justify-center z-10">
+                                                            <button onClick={captureSelfie} className="w-20 h-20 bg-white rounded-full border-4 border-green-500 p-1 cursor-pointer hover:scale-110 transition-transform">
+                                                                <div className="w-full h-full bg-white rounded-full border-2 border-gray-100"></div>
+                                                            </button>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            )}
-                                        </div>
+                                                )}
 
-                                        <div className="flex gap-4 mt-8">
-                                            <button type="button" onClick={prevStep} className="w-1/3 flex justify-center py-3 px-4 border border-gray-300 rounded-lg text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 transition-all">
-                                                Back
-                                            </button>
-                                            <button
-                                                type="submit"
-                                                disabled={loading || !formData.selfieImageBase64}
-                                                className={`w-2/3 flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-semibold text-white transition-all ${loading || !formData.selfieImageBase64
-                                                    ? 'bg-[#22C55E]/70 cursor-not-allowed'
-                                                    : 'bg-[#22C55E] hover:bg-[#16A34A]'
-                                                    }`}
-                                            >
-                                                {loading ? 'Verifying...' : 'Submit for Verification'}
-                                            </button>
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-                        </form>
-                    </motion.div>
+                                                {formData.selfieImageBase64 && (
+                                                    <div className="relative w-full h-full">
+                                                        <img src={formData.selfieImageBase64} alt="Selfie" className="w-full h-full object-cover" />
+                                                        <button onClick={retakeSelfie} className="absolute bottom-8 left-1/2 -translate-x-1/2 px-6 py-2 bg-black/50 backdrop-blur-md text-white rounded-full text-sm font-bold border border-white/20 hover:bg-black/70 transition-all">
+                                                            Retake Photo
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
 
-                    <div className="text-center mt-6">
-                        <p className="text-sm text-gray-600">
-                            Already have an account?{' '}
-                            <Link to="/login" className="font-semibold text-[#22C55E] hover:text-[#16A34A]">
-                                Sign in
-                            </Link>
-                        </p>
+                                            <div className="flex gap-4 pt-4">
+                                                <button onClick={prevStep} className="w-1/3 py-4 border border-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-all">Back</button>
+                                                <button
+                                                    onClick={handleSubmit}
+                                                    disabled={loading || !formData.selfieImageBase64}
+                                                    className="w-2/3 py-4 bg-green-600 text-white rounded-xl font-bold shadow-lg shadow-green-200 hover:bg-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                                                >
+                                                    {loading ? <Loader2 className="animate-spin w-5 h-5" /> : 'Complete Registration'}
+                                                </button>
+                                            </div>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </motion.div>
+
+                            <p className="text-center text-sm text-gray-500 mt-8">
+                                Already have an account? <Link to="/login" className="text-green-600 font-bold hover:text-green-700">Log in</Link>
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>

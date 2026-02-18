@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
+import ReactDOM from 'react-dom';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { clearAuthData, isAuthenticated, getUserData, getAuthData } from '../utils/auth';
 import { API_URL } from '../utils/api';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, Check, CheckCheck, Trash2, Box, MessageSquare, Star, Settings } from 'lucide-react';
+import { Bell, CheckCheck, Trash2, Box, MessageSquare, Star, Settings, Menu, X, LogOut, LayoutDashboard, User } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 const Navbar = () => {
@@ -20,9 +21,6 @@ const Navbar = () => {
     const notificationRef = useRef(null);
     const mobileNotificationRef = useRef(null);
     const [userData, setUserData] = useState(null);
-
-    // API Base URL imported from utils/api
-
 
     useEffect(() => {
         const handleScroll = () => {
@@ -45,7 +43,6 @@ const Navbar = () => {
         checkAuth();
         document.addEventListener('scroll', handleScroll);
 
-        // Close notifications on click outside
         const handleClickOutside = (event) => {
             if (
                 notificationRef.current && !notificationRef.current.contains(event.target) &&
@@ -63,6 +60,16 @@ const Navbar = () => {
         };
     }, [scrolled, location]);
 
+    useEffect(() => {
+        if (mobileMenuOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [mobileMenuOpen]);
 
     useEffect(() => {
         setMobileMenuOpen(false);
@@ -76,7 +83,7 @@ const Navbar = () => {
     };
 
     const fetchNotifications = async () => {
-        if (!isLoggedIn) return; // No userId needed for this endpoint
+        if (!isLoggedIn) return;
         try {
             const authData = getAuthData();
             if (!authData?.token) return;
@@ -90,16 +97,12 @@ const Navbar = () => {
                 const jsonResponse = await response.json();
                 if (jsonResponse.success) {
                     const data = jsonResponse.data;
-                    // Sort by new to old
                     const sortedData = data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-
-                    // Map backend fields to frontend expected format
                     const mappedNotifications = sortedData.map(n => ({
                         ...n,
                         description: n.message,
                         createdTime: n.createdAt,
                         read: n.isRead,
-                        // Map type to color for UI
                         color: n.notificationType === 'SOS_ALERT' ? 'RED' :
                             n.notificationType === 'SOS_RESPONSE' ? 'GREEN' : 'GRAY'
                     }));
@@ -150,7 +153,7 @@ const Navbar = () => {
     };
 
     const deleteNotification = async (e, notificationId) => {
-        e.stopPropagation(); // Prevent toggling read status if clicking delete
+        e.stopPropagation();
         try {
             const authData = getAuthData();
             if (!authData?.token) return;
@@ -171,8 +174,6 @@ const Navbar = () => {
     };
 
     const deleteAllNotifications = async () => {
-        // Feature not supported by current backend
-        // Can be implemented if endpoint is added
         console.warn("Delete all not supported yet");
         setNotifications([]);
         setUnreadCount(0);
@@ -186,14 +187,9 @@ const Navbar = () => {
     }
 
     const getIcon = (type) => {
-        // You can map 'color' or check 'title' to decide icon if 'type' isn't explicitly stored
-        // Using naive logic based on title or random mapping for demo if type is missing
-        // or just use generic icons based on 'color' which we have.
-        // The user prompt mentions "color (red, green...)"
-
         switch (type) {
             case 'GREEN': return <Box className="w-5 h-5 text-green-600" />;
-            case 'RED': return <MessageSquare className="w-5 h-5 text-red-600" />; // Or Alert
+            case 'RED': return <MessageSquare className="w-5 h-5 text-red-600" />;
             case 'YELLOW': return <Star className="w-5 h-5 text-yellow-500" />;
             case 'GRAY': return <Settings className="w-5 h-5 text-gray-500" />;
             default: return <Box className="w-5 h-5 text-blue-600" />;
@@ -209,48 +205,46 @@ const Navbar = () => {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 10, scale: 0.95 }}
                     transition={{ duration: 0.2 }}
-                    className={`absolute mt-3 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-[60] 
-                        ${mobile ? 'right-[-50px] w-[90vw] max-w-sm' : 'right-0 w-80 sm:w-96'}`}
+                    className={`absolute mt-4 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-[60] 
+                        ${mobile ? 'right-[-80px] w-[90vw] max-w-sm' : 'right-0 w-80 sm:w-96'}`}
                 >
-                    <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gray-50/50">
-                        <h3 className="font-semibold text-gray-900">Notifications</h3>
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-gray-50 bg-gray-50/50">
+                        <h3 className="font-bold text-gray-900">Notifications</h3>
                         <div className="flex items-center gap-3">
                             <button
                                 onClick={markAllAsRead}
-                                className="text-xs font-medium text-gray-500 hover:text-[#22C55E] flex items-center gap-1 transition-colors"
-                                title="Mark all as read"
+                                className="text-xs font-bold text-gray-500 hover:text-green-600 flex items-center gap-1.5 transition-colors"
                             >
                                 <CheckCheck className="w-3.5 h-3.5" />
                                 Read All
                             </button>
-                            <div className="h-4 w-px bg-gray-300"></div>
+                            <div className="h-4 w-px bg-gray-200"></div>
                             <button
                                 onClick={deleteAllNotifications}
-                                className="text-xs font-medium text-gray-500 hover:text-red-500 flex items-center gap-1 transition-colors"
-                                title="Delete all notifications"
+                                className="text-xs font-bold text-gray-500 hover:text-red-500 flex items-center gap-1.5 transition-colors"
                             >
                                 <Trash2 className="w-3.5 h-3.5" />
-                                Clear All
+                                Clear
                             </button>
                         </div>
                     </div>
 
-                    <div className="max-h-[400px] overflow-y-auto scrollbar-hide">
+                    <div className="max-h-[400px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
                         {notifications.length === 0 ? (
-                            <div className="py-8 text-center text-gray-500 text-sm">
-                                No notifications yet
+                            <div className="py-12 flex flex-col items-center justify-center text-center text-gray-400">
+                                <Bell className="w-8 h-8 mb-2 opacity-20" />
+                                <p className="text-sm font-medium">No new notifications</p>
                             </div>
                         ) : (
                             <div className="divide-y divide-gray-50">
                                 {notifications.map((notification) => (
                                     <div
                                         key={notification.id}
-                                        className={`relative p-4 hover:bg-gray-50 transition-colors group cursor-pointer ${!notification.read ? 'bg-green-50 border-l-4 border-green-500' : 'bg-white border-l-4 border-transparent'
-                                            }`}
+                                        className={`relative p-4 hover:bg-gray-50 transition-colors group cursor-pointer ${!notification.read ? 'bg-green-50/30' : 'bg-white'}`}
                                         onClick={() => markAsRead(notification.id)}
                                     >
                                         <div className="flex gap-3">
-                                            <div className={`mt-1 p-2 rounded-lg h-fit ${notification.color === 'GREEN' ? 'bg-green-100 text-green-600' :
+                                            <div className={`mt-0.5 p-2 rounded-xl h-fit shadow-sm ${notification.color === 'GREEN' ? 'bg-green-100 text-green-600' :
                                                 notification.color === 'RED' ? 'bg-red-100 text-red-600' :
                                                     notification.color === 'YELLOW' ? 'bg-yellow-100 text-yellow-600' :
                                                         'bg-gray-100 text-gray-600'
@@ -259,26 +253,24 @@ const Navbar = () => {
                                             </div>
                                             <div className="flex-1 min-w-0">
                                                 <div className="flex justify-between items-start mb-1">
-                                                    <h4 className={`text-sm font-semibold truncate pr-6 ${!notification.read ? 'text-gray-900' : 'text-gray-700'}`}>
+                                                    <h4 className={`text-sm font-bold truncate pr-6 ${!notification.read ? 'text-gray-900' : 'text-gray-600'}`}>
                                                         {notification.title}
                                                     </h4>
                                                     {!notification.read && (
-                                                        <span className="w-2 h-2 rounded-full bg-[#22C55E] flex-shrink-0 mt-1.5 shadow-[0_0_5px_rgba(34,197,94,0.6)]"></span>
+                                                        <span className="w-2 h-2 rounded-full bg-green-500 flex-shrink-0 mt-1.5 shadow-sm shadow-green-200"></span>
                                                     )}
                                                 </div>
-                                                <p className="text-xs text-gray-600 leading-relaxed line-clamp-2 mb-1.5">
+                                                <p className="text-xs text-gray-500 leading-relaxed line-clamp-2 mb-2">
                                                     {notification.description}
                                                 </p>
-                                                <span className="text-[10px] text-gray-400 font-medium">
+                                                <span className="text-[10px] text-gray-400 font-bold bg-gray-100 px-2 py-0.5 rounded-full inline-block">
                                                     {formatDistanceToNow(new Date(notification.createdTime), { addSuffix: true })}
                                                 </span>
                                             </div>
 
-                                            {/* Delete Button (Visible on Hover) */}
                                             <button
                                                 onClick={(e) => deleteNotification(e, notification.id)}
-                                                className="absolute top-2 right-2 p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md opacity-0 group-hover:opacity-100 transition-all"
-                                                title="Delete"
+                                                className="absolute top-2 right-2 p-1.5 text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
                                             >
                                                 <Trash2 className="w-3.5 h-3.5" />
                                             </button>
@@ -290,8 +282,9 @@ const Navbar = () => {
                     </div>
 
                     <div className="p-3 border-t border-gray-100 bg-gray-50/50 text-center">
-                        <Link to="/notifications" onClick={() => setShowNotifications(false)} className="text-xs font-semibold text-gray-600 hover:text-[#22C55E] transition-colors">
-                            View all notifications
+                        <Link to="/notifications" onClick={() => setShowNotifications(false)} className="text-xs font-bold text-green-600 hover:text-green-700 transition-colors flex items-center justify-center gap-1">
+                            View All Notifications
+                            <Box className="w-3 h-3" />
                         </Link>
                     </div>
                 </motion.div>
@@ -299,95 +292,103 @@ const Navbar = () => {
         </AnimatePresence>
     );
 
+    const NavLink = ({ to, label, primary = false, active = false, onClick }) => (
+        <Link
+            to={to}
+            onClick={onClick}
+            className={`
+                text-sm font-bold px-4 py-2 rounded-xl transition-all duration-200
+                ${active
+                    ? 'bg-green-50 text-green-700'
+                    : primary
+                        ? 'bg-green-600 text-white shadow-lg shadow-green-200 hover:bg-green-700 hover:shadow-green-300 transform hover:-translate-y-0.5'
+                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                }
+            `}
+        >
+            {label}
+        </Link>
+    );
+
     return (
         <nav
-            className={`fixed w-full z-50 transition-all duration-300 ${scrolled || mobileMenuOpen ? 'bg-white shadow-md py-4' : 'bg-[#F0FDF4] py-6'
+            className={`fixed top-0 left-0 right-0 w-full z-[9999] transition-all duration-300 ${scrolled || mobileMenuOpen
+                ? 'bg-white/80 backdrop-blur-md border-b border-gray-100 shadow-sm py-3'
+                : 'bg-transparent py-5'
                 }`}
         >
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center">
 
-                    <Link to="/" className="flex items-center gap-2 z-50">
-                        <div className="bg-[#22C55E] p-2 rounded-lg">
-                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
-                            </svg>
+                    <Link to="/" className="flex items-center gap-3 z-50 group">
+                        <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-2 rounded-xl shadow-lg shadow-green-200 group-hover:shadow-green-300 transition-all duration-300 group-hover:-translate-y-0.5">
+                            <Box className="w-5 h-5 text-white" strokeWidth={2.5} />
                         </div>
-                        <span className="text-xl font-bold text-gray-800">
+                        <span className="text-xl font-bold text-gray-900 tracking-tight">
                             MigrateMate
                         </span>
                     </Link>
 
-
-                    <div className="hidden md:flex items-center space-x-8">
-                        <Link to="/" className={`text-sm font-medium px-3 py-1.5 rounded-md transition-colors ${location.pathname === '/' ? 'text-gray-900 bg-gray-200/50' : 'text-gray-500 hover:text-gray-900'}`}>Home</Link>
-                        <Link to="/marketplace" onClick={handleAuthNavigation} className={`text-sm font-medium px-3 py-1.5 rounded-md transition-colors ${location.pathname === '/marketplace' ? 'text-gray-900 bg-gray-200/50' : 'text-gray-500 hover:text-gray-900'}`}>Marketplace</Link>
-                        <Link to="/community" onClick={handleAuthNavigation} className={`text-sm font-medium px-3 py-1.5 rounded-md transition-colors ${location.pathname === '/community' ? 'text-gray-900 bg-gray-200/50' : 'text-gray-500 hover:text-gray-900'}`}>Community</Link>
-                        <Link to="/sos" onClick={handleAuthNavigation} className={`text-sm font-medium px-3 py-1.5 rounded-md transition-colors ${location.pathname === '/sos' ? 'text-gray-900 bg-gray-200/50' : 'text-gray-500 hover:text-gray-900'}`}>SOS</Link>
-                        <Link to="/profile" onClick={handleAuthNavigation} className={`text-sm font-medium px-3 py-1.5 rounded-md transition-colors ${location.pathname === '/profile' ? 'text-gray-900 bg-gray-200/50' : 'text-gray-500 hover:text-gray-900'}`}>Profile</Link>
-                        <Link to="/scanner" onClick={handleAuthNavigation} className={`text-sm font-medium px-3 py-1.5 rounded-md transition-colors ${location.pathname === '/scanner' ? 'text-gray-900 bg-gray-200/50' : 'text-gray-500 hover:text-gray-900'}`}>Scanner</Link>
-                        <Link to="/journey-planner" className={`text-sm font-medium px-3 py-1.5 rounded-md transition-colors ${location.pathname === '/journey-planner' ? 'text-green-600 bg-green-50' : 'text-gray-500 hover:text-gray-900'}`}>Journey Planner</Link>
+                    <div className="hidden lg:flex items-center space-x-1 bg-white/50 backdrop-blur-sm p-1.5 rounded-2xl border border-gray-100 shadow-sm">
+                        <NavLink to="/" label="Home" active={location.pathname === '/'} />
+                        <NavLink to="/marketplace" onClick={handleAuthNavigation} label="Marketplace" active={location.pathname === '/marketplace'} />
+                        <NavLink to="/community" onClick={handleAuthNavigation} label="Community" active={location.pathname === '/community'} />
+                        <NavLink to="/journey-planner" label="Journey Planner" active={location.pathname === '/journey-planner'} />
+                        <NavLink to="/sos" onClick={handleAuthNavigation} label="SOS" active={location.pathname === '/sos'} />
+                        <NavLink to="/scanner" label="Scanner" active={location.pathname === '/scanner'} />
                     </div>
 
                     <div className="hidden md:flex items-center gap-4">
-                        {/* Notification Bell */}
                         {isLoggedIn && (
                             <div className="relative" ref={notificationRef}>
                                 <button
                                     onClick={() => setShowNotifications(!showNotifications)}
-                                    className="relative p-2 text-gray-600 hover:text-gray-900 transition-colors"
-                                    aria-label="Notifications"
+                                    className={`relative p-2.5 rounded-xl transition-all ${showNotifications ? 'bg-green-50 text-green-600' : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'}`}
                                 >
-                                    <Bell className="w-6 h-6" />
+                                    <Bell className="w-5 h-5" strokeWidth={2.5} />
                                     {unreadCount > 0 && (
-                                        <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border border-white">
-                                            {unreadCount > 9 ? '9+' : unreadCount}
-                                        </span>
+                                        <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
                                     )}
                                 </button>
-
-                                {/* Notification Dropdown */}
                                 {renderNotificationDropdown()}
                             </div>
                         )}
 
-
                         {isLoggedIn ? (
-                            <div className="flex items-center gap-4">
-                                <Link to="/dashboard" className="hidden sm:flex items-center gap-2 px-4 py-2 bg-[#22C55E] text-white rounded-lg text-sm font-semibold hover:bg-[#16A34A] transition">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                            <div className="flex items-center gap-3 pl-2 border-l border-gray-200">
+                                <Link to="/dashboard" className="hidden lg:flex items-center gap-2 px-4 py-2.5 bg-gray-900 text-white rounded-xl text-sm font-bold hover:bg-gray-800 transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">
+                                    <LayoutDashboard className="w-4 h-4" />
                                     Dashboard
                                 </Link>
-                                <button onClick={handleLogout} className="text-sm font-semibold text-gray-600 hover:text-red-500">
-                                    Sign Out
+                                <Link to="/profile" className="hidden lg:flex p-2.5 text-gray-500 hover:text-gray-900 hover:bg-gray-50 rounded-xl transition-all">
+                                    <User className="w-5 h-5" strokeWidth={2.5} />
+                                </Link>
+                                <button onClick={handleLogout} className="p-2.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all">
+                                    <LogOut className="w-5 h-5" strokeWidth={2.5} />
                                 </button>
                             </div>
                         ) : (
-                            <>
-                                <Link to="/login" className="text-sm font-bold text-gray-700 hover:text-[#22C55E]">
+                            <div className="flex items-center gap-3">
+                                <Link to="/login" className="text-sm font-bold text-gray-600 hover:text-gray-900 px-4 py-2">
                                     Sign In
                                 </Link>
-                                <Link to="/dashboard" className="flex items-center gap-2 px-4 py-2 bg-[#22C55E] text-white rounded-lg text-sm font-semibold hover:bg-[#16A34A] transition shadow-md hover:shadow-lg">
-                                    Dashboard
+                                <Link to="/signup" className="flex items-center gap-2 px-5 py-2.5 bg-green-600 text-white rounded-xl text-sm font-bold hover:bg-green-700 transition-all shadow-lg shadow-green-200 hover:shadow-green-300 hover:-translate-y-0.5">
+                                    Get Started
                                 </Link>
-                            </>
+                            </div>
                         )}
                     </div>
 
-
-                    <div className="md:hidden flex items-center gap-3 z-50">
+                    <div className="lg:hidden flex items-center gap-3 z-50">
                         {isLoggedIn && (
                             <div className="relative" ref={mobileNotificationRef}>
                                 <button
                                     onClick={() => setShowNotifications(!showNotifications)}
-                                    className="relative p-2 text-gray-600 hover:text-gray-900 transition-colors"
-                                    aria-label="Notifications"
+                                    className="relative p-2 text-gray-600 hover:text-gray-900"
                                 >
                                     <Bell className="w-6 h-6" />
                                     {unreadCount > 0 && (
-                                        <span className="absolute top-1 right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border border-white">
-                                            {unreadCount > 9 ? '9+' : unreadCount}
-                                        </span>
+                                        <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
                                     )}
                                 </button>
                                 {renderNotificationDropdown(true)}
@@ -395,61 +396,72 @@ const Navbar = () => {
                         )}
                         <button
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                            className="text-gray-600 hover:text-gray-900 focus:outline-none"
-                            aria-label="Toggle menu"
+                            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-xl transition-colors"
                         >
-                            {mobileMenuOpen ? (
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                            ) : (
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
-                            )}
+                            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                         </button>
                     </div>
                 </div>
             </div>
 
-            <AnimatePresence>
-                {mobileMenuOpen && (
-                    <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="md:hidden bg-white border-t border-gray-100 overflow-hidden"
-                    >
-                        <div className="px-4 pt-2 pb-6 space-y-2 shadow-inner">
-                            <Link to="/" className={`block px-3 py-2 text-base font-medium rounded-md ${location.pathname === '/' ? 'text-[#22C55E] bg-[#22C55E]/10' : 'text-gray-700 hover:bg-gray-50'}`}>Home</Link>
-                            <Link to="/marketplace" onClick={handleAuthNavigation} className={`block px-3 py-2 text-base font-medium rounded-md ${location.pathname === '/marketplace' ? 'text-[#22C55E] bg-[#22C55E]/10' : 'text-gray-700 hover:bg-gray-50'}`}>Marketplace</Link>
-                            <Link to="/community" onClick={handleAuthNavigation} className={`block px-3 py-2 text-base font-medium rounded-md ${location.pathname === '/community' ? 'text-[#22C55E] bg-[#22C55E]/10' : 'text-gray-700 hover:bg-gray-50'}`}>Community</Link>
-                            <Link to="/sos" onClick={handleAuthNavigation} className={`block px-3 py-2 text-base font-medium rounded-md ${location.pathname === '/sos' ? 'text-[#22C55E] bg-[#22C55E]/10' : 'text-gray-700 hover:bg-gray-50'}`}>SOS</Link>
-                            <Link to="/profile" onClick={handleAuthNavigation} className={`block px-3 py-2 text-base font-medium rounded-md ${location.pathname === '/profile' ? 'text-[#22C55E] bg-[#22C55E]/10' : 'text-gray-700 hover:bg-gray-50'}`}>Profile</Link>
-                            <Link to="/scanner" onClick={handleAuthNavigation} className={`block px-3 py-2 text-base font-medium rounded-md ${location.pathname === '/scanner' ? 'text-[#22C55E] bg-[#22C55E]/10' : 'text-gray-700 hover:bg-gray-50'}`}>Scanner</Link>
-                            <Link to="/journey-planner" className={`block px-3 py-2 text-base font-medium rounded-md ${location.pathname === '/journey-planner' ? 'text-[#22C55E] bg-[#22C55E]/10' : 'text-gray-700 hover:bg-gray-50'}`}>Journey Planner</Link>
+            {mobileMenuOpen && (
+                ReactDOM.createPortal(
+                    <AnimatePresence>
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="fixed inset-0 z-[10000] bg-white flex flex-col justify-center items-center"
+                        >
+                            <button
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="absolute top-6 right-6 p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-full transition-all"
+                            >
+                                <X className="w-8 h-8" />
+                            </button>
 
-                            <div className="border-t border-gray-100 pt-4 mt-4">
+                            <div className="flex flex-col items-center space-y-6 w-full max-w-sm px-6">
+                                <div className="flex flex-col items-center gap-4 w-full">
+                                    <NavLink to="/" label="Home" active={location.pathname === '/'} onClick={() => setMobileMenuOpen(false)} />
+                                    <NavLink to="/marketplace" label="Marketplace" active={location.pathname === '/marketplace'} onClick={(e) => { handleAuthNavigation(e); setMobileMenuOpen(false); }} />
+                                    <NavLink to="/community" label="Community" active={location.pathname === '/community'} onClick={(e) => { handleAuthNavigation(e); setMobileMenuOpen(false); }} />
+                                    <NavLink to="/journey-planner" label="Journey Planner" active={location.pathname === '/journey-planner'} onClick={() => setMobileMenuOpen(false)} />
+                                    <NavLink to="/sos" label="Emergency SOS" active={location.pathname === '/sos'} onClick={(e) => { handleAuthNavigation(e); setMobileMenuOpen(false); }} />
+                                    <Link to="/scanner" onClick={() => setMobileMenuOpen(false)} className="text-lg font-bold text-gray-600 hover:text-green-600 transition-colors">Scanner</Link>
+                                </div>
+
+                                {isLoggedIn && (
+                                    <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="text-lg font-bold text-gray-600 hover:text-green-600 transition-colors">My Profile</Link>
+                                )}
+
+                                <div className="w-16 h-1 bg-gray-100 rounded-full"></div>
+
                                 {isLoggedIn ? (
-                                    <>
-                                        <Link to="/dashboard" className="block w-full text-center px-4 py-2 bg-[#22C55E] text-white rounded-lg text-base font-semibold hover:bg-[#16A34A] mb-3">
+                                    <div className="flex flex-col gap-3 w-full">
+                                        <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} className="w-full text-center px-6 py-3 bg-gray-900 text-white rounded-xl text-lg font-bold shadow-lg hover:bg-gray-800 transition-all">
                                             Dashboard
                                         </Link>
-                                        <button onClick={handleLogout} className="block w-full text-center px-4 py-2 border border-red-200 text-red-600 rounded-lg text-base font-semibold hover:bg-red-50">
+                                        <button onClick={() => { handleLogout(); setMobileMenuOpen(false); }} className="w-full text-center px-6 py-3 bg-red-50 text-red-600 rounded-xl text-lg font-bold hover:bg-red-100 transition-colors">
                                             Sign Out
                                         </button>
-                                    </>
+                                    </div>
                                 ) : (
-                                    <>
-                                        <Link to="/login" className="block w-full text-center px-4 py-2 border border-[#22C55E] text-[#22C55E] rounded-lg text-base font-semibold hover:bg-green-50 mb-3">
+                                    <div className="flex flex-col gap-3 w-full">
+                                        <Link to="/login" onClick={() => setMobileMenuOpen(false)} className="w-full text-center px-6 py-3 border-2 border-gray-100 text-gray-700 rounded-xl text-lg font-bold hover:bg-gray-50 transition-colors">
                                             Sign In
                                         </Link>
-                                        <Link to="/dashboard" className="block w-full text-center px-4 py-2 bg-[#22C55E] text-white rounded-lg text-base font-semibold hover:bg-[#16A34A]">
+                                        <Link to="/signup" onClick={() => setMobileMenuOpen(false)} className="w-full text-center px-6 py-3 bg-green-600 text-white rounded-xl text-lg font-bold shadow-lg shadow-green-200 hover:bg-green-700 transition-all">
                                             Get Started
                                         </Link>
-                                    </>
+                                    </div>
                                 )}
                             </div>
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+                        </motion.div>
+                    </AnimatePresence>,
+                    document.body
+                )
+            )}
         </nav>
     );
 };

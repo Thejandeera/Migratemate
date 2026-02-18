@@ -8,9 +8,13 @@ import {
     Filter,
     RefreshCw,
     Eye,
+    Edit2,
     Trash2,
     CheckCircle,
+    XCircle,
     AlertTriangle,
+    HelpCircle,
+    MoreVertical,
     Truck,
     Home,
     FileText,
@@ -20,10 +24,8 @@ import {
     BookOpen,
     Scale,
     Briefcase,
-    HelpCircle,
-    MoreVertical,
-    MapPin,
-    Calendar
+    LayoutGrid,
+    List
 } from 'lucide-react';
 
 const STATUS_CONFIG = {
@@ -45,50 +47,37 @@ const CATEGORY_ICONS = {
     'OTHER': HelpCircle,
 };
 
-const CATEGORY_NAMES = {
-    'TRANSPORT': 'Transport',
-    'HOUSING': 'Housing',
-    'DOCUMENTATION': 'Documentation',
-    'CULTURAL_SUPPORT': 'Cultural Support',
-    'FINANCIAL': 'Financial',
-    'HEALTHCARE': 'Healthcare',
-    'EDUCATION': 'Education',
-    'LEGAL': 'Legal',
-    'EMPLOYMENT': 'Employment',
-    'OTHER': 'Other',
-};
-
 const ManageGigs = () => {
-    const navigate = useNavigate();
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [notification, setNotification] = useState({ show: false, message: '', type: '' });
+
     const [searchTerm, setSearchTerm] = useState('');
-    const [filterStatus, setFilterStatus] = useState('all');
-    const [filterCategory, setFilterCategory] = useState('all');
-    const [updatingId, setUpdatingId] = useState(null);
+    const [statusFilter, setStatusFilter] = useState('ALL');
+    const [categoryFilter, setCategoryFilter] = useState('ALL');
+    const [notification, setNotification] = useState({ show: false, message: '', type: '' });
+
     const [deleteModal, setDeleteModal] = useState({ show: false, serviceId: null, serviceTitle: '', reason: '', customReason: '', loading: false });
     const [adviceModal, setAdviceModal] = useState({ show: false, serviceId: null, serviceTitle: '', reason: '', customReason: '', loading: false });
 
+    // Predefined reasons for deletion/advice
     const DELETE_REASONS = [
-        'Violation of terms of service',
-        'Inappropriate or offensive content',
+        'Violation of rules',
+        'Inappropriate content',
         'Duplicate listing',
-        'Fraudulent or misleading information',
-        'Inactive or unresponsive provider',
+        'Fraudulent info',
         'Other'
     ];
 
     const ADVICE_REASONS = [
-        'Incomplete or unclear service description',
-        'Pricing information needs to be updated',
-        'Service images are missing or low quality',
-        'Contact information is incomplete',
-        'Service category is incorrect',
-        'Service details do not match our guidelines',
+        'Unclear description',
+        'Pricing update needed',
+        'Low quality images',
+        'Incorrect category',
         'Other'
     ];
+
+    const navigate = useNavigate();
 
     const getHeaders = () => {
         const auth = getAuthData();
@@ -98,18 +87,18 @@ const ManageGigs = () => {
         };
     };
 
-    const fetchServices = async () => {
+    const fetchGigs = async () => {
         setLoading(true);
         setError(null);
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/services/admin/all`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/services/all`, {
                 headers: getHeaders()
             });
             const data = await response.json();
             if (data.success) {
                 setServices(data.data);
             } else {
-                setError(data.message || 'Failed to fetch services');
+                setError(data.message || "Failed to fetch services");
             }
         } catch (err) {
             setError('Failed to fetch services. Ensure the server is running.');
@@ -120,62 +109,83 @@ const ManageGigs = () => {
     };
 
     useEffect(() => {
-        fetchServices();
+        fetchGigs();
     }, []);
 
-    const handleStatusUpdate = async (serviceId, newStatus) => {
-        setUpdatingId(serviceId);
+    const handleStatusUpdate = async (id, newStatus) => {
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/services/admin/${serviceId}/status`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/services/admin/${id}/status`, {
                 method: 'PATCH',
                 headers: getHeaders(),
                 body: JSON.stringify({ status: newStatus })
             });
             const data = await response.json();
             if (data.success) {
-                setServices(services.map(s => s.id === serviceId ? { ...s, status: newStatus } : s));
-                showNotification(`Service status updated to ${STATUS_CONFIG[newStatus]?.label || newStatus}`, 'success');
+                setServices(services.map(s => s.id === id ? { ...s, status: newStatus } : s));
+                showNotification(`Service ${newStatus.toLowerCase()} successfully`, 'success');
             } else {
-                showNotification(data.message || 'Failed to update status', 'error');
+                showNotification(data.message || 'Update failed', 'error');
             }
         } catch (err) {
             console.error(err);
-            showNotification('Failed to update service status', 'error');
-        } finally {
-            setUpdatingId(null);
+            showNotification('Failed to update status', 'error');
         }
     };
 
-    const showNotification = (message, type) => {
-        setNotification({ show: true, message, type });
-        setTimeout(() => setNotification({ show: false, message: '', type: '' }), 3000);
-    };
+    const handleDeleteService = async () => {
+        const { serviceId, reason, customReason } = deleteModal;
+        const finalReason = reason === 'Other' ? customReason : reason;
 
-    const openDeleteModal = (service) => {
-        setDeleteModal({ show: true, serviceId: service.id, serviceTitle: service.title, reason: '', customReason: '', loading: false });
-    };
+        if (!finalReason) {
+            showNotification('Please provide a reason', 'error');
+            return;
+        }
 
-    const openAdviceModal = (service) => {
-        setAdviceModal({ show: true, serviceId: service.id, serviceTitle: service.title, reason: '', customReason: '', loading: false });
+        setDeleteModal(prev => ({ ...prev, loading: true }));
+        try {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/services/admin/${serviceId}`, {
+                method: 'DELETE',
+                headers: getHeaders(),
+                body: JSON.stringify({ reason: finalReason })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+                setServices(services.filter(s => s.id !== serviceId));
+                showNotification('Service deleted successfully', 'success');
+                setDeleteModal({ show: false, serviceId: null, serviceTitle: '', reason: '', customReason: '', loading: false });
+            } else {
+                showNotification(data.message || 'Delete failed', 'error');
+                setDeleteModal(prev => ({ ...prev, loading: false }));
+            }
+        } catch (err) {
+            console.error(err);
+            showNotification('Failed to delete service', 'error');
+            setDeleteModal(prev => ({ ...prev, loading: false }));
+        }
     };
 
     const handleAdviceService = async () => {
-        const reason = adviceModal.reason === 'Other' ? adviceModal.customReason : adviceModal.reason;
-        if (!reason.trim()) {
-            showNotification('Please select or enter a reason', 'error');
+        const { serviceId, reason, customReason } = adviceModal;
+        const finalReason = reason === 'Other' ? customReason : reason;
+
+        if (!finalReason) {
+            showNotification('Please provide a reason', 'error');
             return;
         }
+
         setAdviceModal(prev => ({ ...prev, loading: true }));
         try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/services/admin/${adviceModal.serviceId}/status`, {
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/services/admin/${serviceId}/status`, {
                 method: 'PATCH',
                 headers: getHeaders(),
-                body: JSON.stringify({ status: 'ADVICED', reason })
+                body: JSON.stringify({ status: 'ADVICED', reason: finalReason })
             });
+
             const data = await response.json();
             if (data.success) {
-                setServices(services.map(s => s.id === adviceModal.serviceId ? { ...s, status: 'ADVICED' } : s));
-                showNotification('Advice sent and provider notified via email', 'success');
+                setServices(services.map(s => s.id === serviceId ? { ...s, status: 'ADVICED' } : s));
+                showNotification('Advice sent successfully', 'success');
                 setAdviceModal({ show: false, serviceId: null, serviceTitle: '', reason: '', customReason: '', loading: false });
             } else {
                 showNotification(data.message || 'Failed to send advice', 'error');
@@ -188,68 +198,25 @@ const ManageGigs = () => {
         }
     };
 
-    const handleDeleteService = async () => {
-        const reason = deleteModal.reason === 'Other' ? deleteModal.customReason : deleteModal.reason;
-        if (!reason.trim()) {
-            showNotification('Please select or enter a reason', 'error');
-            return;
-        }
-        setDeleteModal(prev => ({ ...prev, loading: true }));
-        try {
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/services/admin/${deleteModal.serviceId}`, {
-                method: 'DELETE',
-                headers: getHeaders(),
-                body: JSON.stringify({ reason })
-            });
-            const data = await response.json();
-            if (data.success) {
-                setServices(services.filter(s => s.id !== deleteModal.serviceId));
-                showNotification('Service deleted and provider notified via email', 'success');
-                setDeleteModal({ show: false, serviceId: null, serviceTitle: '', reason: '', customReason: '', loading: false });
-            } else {
-                showNotification(data.message || 'Failed to delete service', 'error');
-                setDeleteModal(prev => ({ ...prev, loading: false }));
-            }
-        } catch (err) {
-            console.error(err);
-            showNotification('Failed to delete service', 'error');
-            setDeleteModal(prev => ({ ...prev, loading: false }));
-        }
+    const showNotification = (message, type) => {
+        setNotification({ show: true, message, type });
+        setTimeout(() => setNotification({ show: false, message: '', type: '' }), 3000);
     };
 
     const filteredServices = services.filter(service => {
         const matchesSearch = searchTerm === '' ||
-            service.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            service.providerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            service.id?.toLowerCase().includes(searchTerm.toLowerCase());
-
-        const serviceStatus = service.status || 'INREVIEW';
-        const matchesStatus = filterStatus === 'all' || serviceStatus === filterStatus;
-        const matchesCategory = filterCategory === 'all' || service.category === filterCategory;
+            service.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            service.providerName?.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesStatus = statusFilter === 'ALL' || service.status === statusFilter;
+        const matchesCategory = categoryFilter === 'ALL' || service.category === categoryFilter;
 
         return matchesSearch && matchesStatus && matchesCategory;
     });
 
-    const getStatusBadge = (status) => {
-        const config = STATUS_CONFIG[status || 'INREVIEW'] || STATUS_CONFIG.INREVIEW;
-        const StatusIcon = config.icon;
-        return (
-            <span className={`px-3 py-1 inline-flex items-center gap-1.5 text-xs font-bold rounded-full border ${config.bg} ${config.text} border-current border-opacity-20`}>
-                <StatusIcon size={12} strokeWidth={3} />
-                {config.label}
-            </span>
-        );
-    };
-
-    // Count services by status for quick stats
-    const statusCounts = services.reduce((acc, s) => {
-        const status = s.status || 'INREVIEW';
-        acc[status] = (acc[status] || 0) + 1;
-        return acc;
-    }, {});
+    const categories = ['ALL', ...new Set(services.map(s => s.category))].filter(Boolean);
 
     return (
-        <div className="min-h-screen font-sans text-gray-900">
+        <div className="min-h-screen font-sans text-gray-900 bg-gray-50/30">
             <Navbar />
 
             {/* Notification */}
@@ -272,15 +239,15 @@ const ManageGigs = () => {
                 )}
             </AnimatePresence>
 
-            <div className="w-full px-4 sm:px-6 lg:px-8 py-8 pt-24">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-900 mb-2">Manage Gigs</h1>
-                        <p className="text-gray-500">Review, approve, and manage all service listings</p>
+                        <h1 className="text-3xl font-bold text-gray-900 mb-2">Gig Management</h1>
+                        <p className="text-gray-500">Review, approve, and manage service listings.</p>
                     </div>
                     <button
-                        onClick={fetchServices}
+                        onClick={fetchGigs}
                         className="flex items-center gap-2 px-5 py-2.5 bg-white text-gray-700 hover:text-blue-600 border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all font-medium"
                     >
                         <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
@@ -288,94 +255,70 @@ const ManageGigs = () => {
                     </button>
                 </div>
 
-                {/* Status Summary Cards */}
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-                    <div
-                        onClick={() => setFilterStatus('all')}
-                        className={`bg-white rounded-2xl p-5 shadow-sm border cursor-pointer transition-all hover:shadow-md hover:-translate-y-1 ${filterStatus === 'all' ? 'border-blue-500 ring-1 ring-blue-500' : 'border-gray-100'}`}
-                    >
-                        <div className="flex items-start justify-between mb-2">
-                            <div className="p-2 bg-blue-50 text-blue-600 rounded-xl">
-                                <Briefcase size={20} />
-                            </div>
-                            <span className="text-2xl font-bold text-gray-900">{services.length}</span>
-                        </div>
-                        <div className="text-xs text-gray-500 font-medium">Total Gigs</div>
-                    </div>
-                    {Object.entries(STATUS_CONFIG).map(([key, config]) => {
-                        const Icon = config.icon;
-                        return (
-                            <div
-                                key={key}
-                                onClick={() => setFilterStatus(filterStatus === key ? 'all' : key)}
-                                className={`bg-white rounded-2xl p-5 shadow-sm border cursor-pointer transition-all hover:shadow-md hover:-translate-y-1 ${filterStatus === key ? 'border-blue-500 ring-1 ring-blue-500' : 'border-gray-100'}`}
-                            >
-                                <div className="flex items-start justify-between mb-2">
-                                    <div className={`p-2 rounded-xl ${config.bg} ${config.text}`}>
-                                        <Icon size={20} />
-                                    </div>
-                                    <span className="text-2xl font-bold text-gray-900">{statusCounts[key] || 0}</span>
-                                </div>
-                                <div className="text-xs text-gray-500 font-medium">{config.label}</div>
-                            </div>
-                        );
-                    })}
-                </div>
-
                 {/* Filters */}
                 <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-2 mb-8 sticky top-24 z-30">
-                    <div className="flex flex-col md:flex-row gap-2">
-                        <div className="relative flex-1">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                            <input
-                                type="text"
-                                placeholder="Search by title, provider, or ID..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-0 focus:bg-gray-100 transition-all text-gray-900 placeholder-gray-400"
-                            />
-                        </div>
-                        <div className="flex gap-2">
-                            <div className="relative">
-                                <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                                <select
-                                    value={filterStatus}
-                                    onChange={(e) => setFilterStatus(e.target.value)}
-                                    className="pl-12 pr-8 py-3 bg-gray-50 border-none rounded-2xl focus:ring-0 focus:bg-gray-100 transition-all text-gray-900 appearance-none cursor-pointer min-w-[160px]"
-                                >
-                                    <option value="all">All Status</option>
-                                    <option value="INREVIEW">In Review</option>
-                                    <option value="APPROVED">Approved</option>
-                                    <option value="ADVICED">Adviced</option>
-                                </select>
+                    <div className="flex flex-col gap-2">
+                        <div className="flex flex-col md:flex-row gap-2">
+                            <div className="relative flex-1">
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                                <input
+                                    type="text"
+                                    placeholder="Search gigs or providers..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="w-full pl-12 pr-4 py-3 bg-gray-50 border-none rounded-2xl focus:ring-0 focus:bg-gray-100 transition-all text-gray-900 placeholder-gray-400"
+                                />
                             </div>
-                            <div className="relative">
-                                <Briefcase className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                                <select
-                                    value={filterCategory}
-                                    onChange={(e) => setFilterCategory(e.target.value)}
-                                    className="pl-12 pr-8 py-3 bg-gray-50 border-none rounded-2xl focus:ring-0 focus:bg-gray-100 transition-all text-gray-900 appearance-none cursor-pointer min-w-[170px]"
-                                >
-                                    <option value="all">All Categories</option>
-                                    {Object.entries(CATEGORY_NAMES).map(([key, label]) => (
-                                        <option key={key} value={key}>{label}</option>
-                                    ))}
-                                </select>
+                            <div className="flex bg-gray-100 rounded-2xl p-1">
+                                {['ALL', 'INREVIEW', 'APPROVED', 'ADVICED'].map((status) => (
+                                    <button
+                                        key={status}
+                                        onClick={() => setStatusFilter(status)}
+                                        className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${statusFilter === status
+                                            ? 'bg-white text-gray-900 shadow-sm'
+                                            : 'text-gray-500 hover:text-gray-700'
+                                            }`}
+                                    >
+                                        {status === 'ALL' ? 'All' : STATUS_CONFIG[status]?.label || status}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Category Pills */}
+                        <div className="overflow-x-auto pb-1 hide-scrollbar">
+                            <div className="flex gap-2">
+                                {categories.map((cat) => {
+                                    const Icon = CATEGORY_ICONS[cat] || HelpCircle;
+                                    return (
+                                        <button
+                                            key={cat}
+                                            onClick={() => setCategoryFilter(cat)}
+                                            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all border ${categoryFilter === cat
+                                                    ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                                    : 'bg-white text-gray-500 border-gray-100 hover:border-gray-200'
+                                                }`}
+                                        >
+                                            {cat !== 'ALL' && <Icon size={12} />}
+                                            {cat}
+                                        </button>
+                                    );
+                                })}
                             </div>
                         </div>
                     </div>
                 </div>
 
-                {/* Services Table */}
+                {/* Content */}
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-20">
                         <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent mb-4"></div>
-                        <p className="text-gray-500 font-medium">Loading services...</p>
+                        <p className="text-gray-500 font-medium">Loading gigs...</p>
                     </div>
                 ) : error ? (
                     <div className="bg-red-50 text-red-600 p-6 rounded-3xl text-center border border-red-100">
                         <p className="font-medium">{error}</p>
-                        <button onClick={fetchServices} className="mt-4 text-sm underline hover:text-red-700">Try Again</button>
+                        <button onClick={fetchGigs} className="mt-4 text-sm underline hover:text-red-700">Try Again</button>
                     </div>
                 ) : (
                     <div className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
@@ -384,14 +327,15 @@ const ManageGigs = () => {
                                 <thead>
                                     <tr className="bg-gray-50 border-b border-gray-100 text-left">
                                         <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Service</th>
-                                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Provider / Category</th>
-                                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Status & Price</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Category & Price</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Provider</th>
+                                        <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
                                         <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-100">
                                     {filteredServices.map((service) => {
-                                        const CategoryIcon = CATEGORY_ICONS[service.category] || HelpCircle;
+                                        const StatusIcon = STATUS_CONFIG[service.status]?.icon || AlertTriangle;
                                         return (
                                             <motion.tr
                                                 key={service.id}
@@ -401,102 +345,109 @@ const ManageGigs = () => {
                                             >
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-4">
-                                                        <div className="flex-shrink-0 h-16 w-16 relative">
-                                                            {service.imageUrls && service.imageUrls.length > 0 ? (
-                                                                <img
-                                                                    src={service.imageUrls[0]}
-                                                                    alt={service.title}
-                                                                    className="h-16 w-16 rounded-2xl object-cover shadow-sm ring-1 ring-gray-100"
-                                                                />
+                                                        <div className="w-12 h-12 rounded-xl bg-gray-100 flex-shrink-0 overflow-hidden">
+                                                            {service.imageUrls?.[0] ? (
+                                                                <img src={service.imageUrls[0]} alt={service.title} className="w-full h-full object-cover" />
                                                             ) : (
-                                                                <div className="h-16 w-16 rounded-2xl bg-gray-50 flex items-center justify-center text-gray-400 ring-1 ring-gray-100">
-                                                                    <Briefcase size={24} />
+                                                                <div className="w-full h-full flex items-center justify-center text-gray-300">
+                                                                    <Briefcase size={20} />
                                                                 </div>
                                                             )}
                                                         </div>
                                                         <div>
-                                                            <div
-                                                                className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors cursor-pointer text-lg leading-tight mb-1"
-                                                                onClick={() => navigate(`/gig/${service.id}`)}
-                                                            >
+                                                            <div className="font-bold text-gray-900 group-hover:text-blue-600 transition-colors text-sm line-clamp-1 w-48" title={service.title}>
                                                                 {service.title}
                                                             </div>
-                                                            <div className="text-xs text-gray-400 flex items-center gap-1">
-                                                                <Calendar size={12} />
-                                                                {new Date(service.createdAt).toLocaleDateString()}
-                                                            </div>
+                                                            <div className="text-xs text-gray-400 mt-0.5">ID: {service.id}</div>
                                                         </div>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <div className="flex flex-col gap-1.5">
-                                                        <div className="font-medium text-gray-900 flex items-center gap-2">
-                                                            <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-xs font-bold text-gray-500">
-                                                                {service.providerName?.charAt(0)}
-                                                            </div>
-                                                            {service.providerName}
-                                                        </div>
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-gray-100 text-gray-600 flex items-center gap-1.5 border border-gray-200">
-                                                                <CategoryIcon size={12} />
-                                                                {CATEGORY_NAMES[service.category] || service.category}
-                                                            </span>
-                                                        </div>
-                                                        {(service.origin || service.destination) && (
-                                                            <div className="text-xs text-gray-500 flex items-center gap-1">
-                                                                <MapPin size={12} />
-                                                                {service.origin} {service.destination && `→ ${service.destination}`}
-                                                            </div>
-                                                        )}
+                                                    <div className="flex flex-col gap-1">
+                                                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wide flex items-center gap-1">
+                                                            {React.createElement(CATEGORY_ICONS[service.category] || HelpCircle, { size: 10 })}
+                                                            {service.category}
+                                                        </span>
+                                                        <span className="text-sm font-medium text-gray-900">
+                                                            {service.currency} {service.price} <span className="text-gray-400 text-xs">/ {service.pricingType?.toLowerCase()}</span>
+                                                        </span>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <div className="flex flex-col gap-2 items-start">
-                                                        {getStatusBadge(service.status)}
-                                                        <div className="text-sm font-bold text-gray-900 pl-1">
-                                                            {service.currency} {service.price} <span className="text-xs font-normal text-gray-500 lowercase">/ {service.pricingType}</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <div className="w-6 h-6 rounded-full bg-gray-100 overflow-hidden flex-shrink-0">
+                                                            <img
+                                                                src={service.providerProfilePicture || `https://ui-avatars.com/api/?name=${service.providerName}`}
+                                                                alt={service.providerName}
+                                                                className="w-full h-full object-cover"
+                                                            />
                                                         </div>
+                                                        <span className="text-sm text-gray-700">{service.providerName}</span>
                                                     </div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <span className={`px-2.5 py-1 rounded-full text-xs font-bold flex items-center gap-1.5 w-fit ${STATUS_CONFIG[service.status]?.bg || 'bg-gray-100'} ${STATUS_CONFIG[service.status]?.text || 'text-gray-800'}`}>
+                                                        <StatusIcon size={12} />
+                                                        {STATUS_CONFIG[service.status]?.label || service.status}
+                                                    </span>
                                                 </td>
                                                 <td className="px-6 py-4 text-right">
                                                     <div className="flex justify-end gap-2">
                                                         <button
-                                                            onClick={() => navigate(`/gig/${service.id}`)}
-                                                            className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all"
+                                                            onClick={() => navigate(`/gigs/${service.id}`)}
+                                                            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
                                                             title="View Details"
                                                         >
                                                             <Eye size={18} />
                                                         </button>
-                                                        {service.status !== 'APPROVED' && (
+
+                                                        {service.status === 'INREVIEW' && (
                                                             <button
                                                                 onClick={() => handleStatusUpdate(service.id, 'APPROVED')}
-                                                                disabled={updatingId === service.id}
-                                                                className={`p-2 hover:bg-emerald-50 rounded-xl transition-all ${updatingId === service.id ? 'opacity-50 cursor-not-allowed text-emerald-400' : 'text-emerald-500 hover:text-emerald-700'}`}
+                                                                className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all"
                                                                 title="Approve"
                                                             >
-                                                                {updatingId === service.id ? (
-                                                                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                                                                ) : (
-                                                                    <CheckCircle size={18} />
-                                                                )}
+                                                                <CheckCircle size={18} />
                                                             </button>
                                                         )}
-                                                        {service.status !== 'ADVICED' && (
-                                                            <button
-                                                                onClick={() => openAdviceModal(service)}
-                                                                className="p-2 text-blue-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"
-                                                                title="Send Advice"
-                                                            >
-                                                                <HelpCircle size={18} />
+
+                                                        <div className="relative group/more">
+                                                            <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-xl transition-all">
+                                                                <MoreVertical size={18} />
                                                             </button>
-                                                        )}
-                                                        <button
-                                                            onClick={() => openDeleteModal(service)}
-                                                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
-                                                            title="Delete Listing"
-                                                        >
-                                                            <Trash2 size={18} />
-                                                        </button>
+                                                            <div className="absolute right-0 top-full mt-1 w-48 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden z-20 hidden group-hover/more:block">
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setAdviceModal({
+                                                                            show: true,
+                                                                            serviceId: service.id,
+                                                                            serviceTitle: service.title,
+                                                                            reason: '',
+                                                                            customReason: '',
+                                                                            loading: false
+                                                                        });
+                                                                    }}
+                                                                    className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                                                                >
+                                                                    <HelpCircle size={14} /> Send Advice
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => {
+                                                                        setDeleteModal({
+                                                                            show: true,
+                                                                            serviceId: service.id,
+                                                                            serviceTitle: service.title,
+                                                                            reason: '',
+                                                                            customReason: '',
+                                                                            loading: false
+                                                                        });
+                                                                    }}
+                                                                    className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                                                                >
+                                                                    <Trash2 size={14} /> Delete
+                                                                </button>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </td>
                                             </motion.tr>
@@ -504,12 +455,13 @@ const ManageGigs = () => {
                                     })}
                                     {filteredServices.length === 0 && (
                                         <tr>
-                                            <td colspan="4" className="px-6 py-12 text-center text-gray-400">
+                                            <td colSpan="5" className="px-6 py-12 text-center text-gray-400">
                                                 <div className="flex flex-col items-center gap-3">
                                                     <div className="p-4 bg-gray-50 rounded-full">
-                                                        <Briefcase size={24} />
+                                                        <Search size={24} />
                                                     </div>
-                                                    <p>No services found matching your filters.</p>
+                                                    <p>No gigs found matching your criteria.</p>
+                                                    <button onClick={() => { setSearchTerm(''); setStatusFilter('ALL'); setCategoryFilter('ALL'); }} className="text-blue-600 hover:underline text-sm font-medium">Clear all filters</button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -521,7 +473,7 @@ const ManageGigs = () => {
                 )}
             </div>
 
-            {/* Delete Reason Modal */}
+            {/* Modals for Delete and Advice (Reused from GigDetails logic but adapted for list) */}
             <AnimatePresence>
                 {deleteModal.show && (
                     <motion.div
@@ -547,10 +499,6 @@ const ManageGigs = () => {
                                     <p className="text-sm text-gray-500 line-clamp-1">{deleteModal.serviceTitle}</p>
                                 </div>
                             </div>
-
-                            <p className="text-gray-600 mb-6 bg-gray-50 p-4 rounded-xl text-sm">
-                                This action is permanent. The provider will be notified.
-                            </p>
 
                             <div className="space-y-3 mb-6">
                                 <label className="text-xs font-bold text-gray-400 uppercase tracking-wider ml-1">Reason for deletion</label>
@@ -580,9 +528,9 @@ const ManageGigs = () => {
                                     <textarea
                                         value={deleteModal.customReason}
                                         onChange={(e) => setDeleteModal(prev => ({ ...prev, customReason: e.target.value }))}
-                                        placeholder="Enter the specific reason..."
+                                        placeholder="Enter specific reason..."
                                         rows={3}
-                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-transparent outline-none text-sm text-gray-900 placeholder-gray-400 resize-none bg-gray-50"
+                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500 outline-none text-sm bg-gray-50"
                                     />
                                 </div>
                             )}
@@ -591,24 +539,16 @@ const ManageGigs = () => {
                                 <button
                                     onClick={() => setDeleteModal({ show: false, serviceId: null, serviceTitle: '', reason: '', customReason: '', loading: false })}
                                     disabled={deleteModal.loading}
-                                    className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-bold text-sm"
+                                    className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 font-bold text-sm"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={handleDeleteService}
-                                    disabled={deleteModal.loading || !deleteModal.reason || (deleteModal.reason === 'Other' && !deleteModal.customReason.trim())}
-                                    className={`flex-1 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 transition-all font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-red-200 ${deleteModal.loading || !deleteModal.reason || (deleteModal.reason === 'Other' && !deleteModal.customReason.trim())
-                                        ? 'opacity-50 cursor-not-allowed shadow-none'
-                                        : 'hover:-translate-y-0.5'
-                                        }`}
+                                    disabled={deleteModal.loading || !deleteModal.reason}
+                                    className="flex-1 py-3 bg-red-600 text-white rounded-xl hover:bg-red-700 font-bold text-sm shadow-xl shadow-red-200"
                                 >
-                                    {deleteModal.loading ? (
-                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                    ) : (
-                                        <Trash2 size={18} />
-                                    )}
-                                    Confirm Delete
+                                    {deleteModal.loading ? 'Deleting...' : 'Confirm Delete'}
                                 </button>
                             </div>
                         </motion.div>
@@ -616,7 +556,6 @@ const ManageGigs = () => {
                 )}
             </AnimatePresence>
 
-            {/* Advice Reason Modal */}
             <AnimatePresence>
                 {adviceModal.show && (
                     <motion.div
@@ -641,16 +580,6 @@ const ManageGigs = () => {
                                     <h3 className="text-xl font-bold text-gray-900">Send Advice</h3>
                                     <p className="text-sm text-gray-500 line-clamp-1">{adviceModal.serviceTitle}</p>
                                 </div>
-                            </div>
-
-                            <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 mb-6">
-                                <div className="flex items-center gap-2 mb-2">
-                                    <AlertTriangle size={16} className="text-amber-600" />
-                                    <p className="text-xs font-bold text-amber-800 uppercase">Provider Notification</p>
-                                </div>
-                                <p className="text-xs text-amber-700 leading-relaxed">
-                                    The provider will be notified to update their listing. Continued non-compliance may lead to removal.
-                                </p>
                             </div>
 
                             <div className="space-y-3 mb-6">
@@ -683,7 +612,7 @@ const ManageGigs = () => {
                                         onChange={(e) => setAdviceModal(prev => ({ ...prev, customReason: e.target.value }))}
                                         placeholder="Describe the issue..."
                                         rows={3}
-                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none text-sm text-gray-900 placeholder-gray-400 resize-none bg-gray-50"
+                                        className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none text-sm bg-gray-50"
                                     />
                                 </div>
                             )}
@@ -692,24 +621,16 @@ const ManageGigs = () => {
                                 <button
                                     onClick={() => setAdviceModal({ show: false, serviceId: null, serviceTitle: '', reason: '', customReason: '', loading: false })}
                                     disabled={adviceModal.loading}
-                                    className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors font-bold text-sm"
+                                    className="flex-1 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 font-bold text-sm"
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     onClick={handleAdviceService}
-                                    disabled={adviceModal.loading || !adviceModal.reason || (adviceModal.reason === 'Other' && !adviceModal.customReason.trim())}
-                                    className={`flex-1 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-all font-bold text-sm flex items-center justify-center gap-2 shadow-lg shadow-blue-200 ${adviceModal.loading || !adviceModal.reason || (adviceModal.reason === 'Other' && !adviceModal.customReason.trim())
-                                        ? 'opacity-50 cursor-not-allowed shadow-none'
-                                        : 'hover:-translate-y-0.5'
-                                        }`}
+                                    disabled={adviceModal.loading || !adviceModal.reason}
+                                    className="flex-1 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 font-bold text-sm shadow-xl shadow-blue-200"
                                 >
-                                    {adviceModal.loading ? (
-                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                    ) : (
-                                        <Briefcase size={18} />
-                                    )}
-                                    Send Advice
+                                    {adviceModal.loading ? 'Sending...' : 'Send Advice'}
                                 </button>
                             </div>
                         </motion.div>
