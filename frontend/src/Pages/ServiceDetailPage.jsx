@@ -550,12 +550,7 @@ const ServiceDetailPage = () => {
             </main>
 
             {/* Floating Chat Bot */}
-            <button className="fixed bottom-8 right-8 w-14 h-14 bg-[#22C55E] rounded-full shadow-xl flex items-center justify-center text-white hover:bg-[#16A34A] transition-all z-40 hover:scale-110 duration-200 group">
-                <Bot className="w-7 h-7 group-hover:rotate-12 transition-transform" />
-                <span className="absolute -top-12 right-0 px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                    Need help? Chat with AI
-                </span>
-            </button>
+
 
             <Footer />
         </div>

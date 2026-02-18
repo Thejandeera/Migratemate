@@ -444,9 +444,7 @@ const MarketPlace = () => {
             </main>
 
             {/* Floating Chat Bot */}
-            <button className="fixed bottom-8 right-8 w-14 h-14 bg-[#22C55E] rounded-full shadow-lg flex items-center justify-center text-white hover:bg-[#16A34A] transition-colors z-40 hover:scale-110 duration-200">
-                <Bot className="w-7 h-7" />
-            </button>
+
 
             <Footer />
         </div>

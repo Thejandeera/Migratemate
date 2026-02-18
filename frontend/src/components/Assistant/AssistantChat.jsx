@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Send, X, MessageSquare, Loader2, Bot } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -111,12 +112,18 @@ const AssistantChat = () => {
         }
     };
 
+    const location = useLocation();
+
     // Calculate time until reset
     const getResetTime = () => {
         if (!usageStats?.nextReset) return '';
         const reset = new Date(usageStats.nextReset);
         return reset.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
+
+    if (location.pathname !== '/dashboard') {
+        return null;
+    }
 
     return (
         <>
