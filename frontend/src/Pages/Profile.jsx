@@ -10,7 +10,7 @@ import KYCVerification from '../components/AccountSettings/KYCVerification';
 import MyGigs from '../components/AccountSettings/MyGigs';
 import BookingsManager from '../components/AccountSettings/BookingsManager';
 import BookingHistory from '../components/AccountSettings/BookingHistory';
-import NotificationSettings from '../components/AccountSettings/NotificationSettings';
+
 
 const Profile = () => {
     const navigate = useNavigate();
@@ -31,7 +31,7 @@ const Profile = () => {
         { id: 'MyGigs', label: 'My Gigs', icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4' },
         { id: 'Bookings', label: 'Client Orders', icon: 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z' },
         { id: 'History', label: 'My Bookings', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' },
-        { id: 'Notifications', label: 'Notifications', icon: 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9' },
+
     ];
 
     const renderContent = () => {
@@ -67,7 +67,7 @@ const Profile = () => {
             case 'MyGigs': return <MyGigs />;
             case 'Bookings': return <BookingsManager />;
             case 'History': return <BookingHistory />;
-            case 'Notifications': return <NotificationSettings />;
+
             default: return <ProfileInfo />;
         }
     };
