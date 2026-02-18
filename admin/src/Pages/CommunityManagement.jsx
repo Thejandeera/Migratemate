@@ -140,7 +140,7 @@ const CommunityManagement = () => {
     );
 
     return (
-        <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
+        <div className="min-h-screen font-sans text-gray-900">
             <Navbar />
 
             <div className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 pt-24">

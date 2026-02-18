@@ -215,7 +215,7 @@ const GigDetails = () => {
     };
 
     if (loading) return (
-        <div className="min-h-screen bg-gray-50 flex flex-col">
+        <div className="min-h-screen flex flex-col">
             <Navbar />
             <div className="flex-1 flex items-center justify-center">
                 <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-500 border-t-transparent"></div>
@@ -224,7 +224,7 @@ const GigDetails = () => {
     );
 
     if (error || !service) return (
-        <div className="min-h-screen bg-gray-50 flex flex-col">
+        <div className="min-h-screen flex flex-col">
             <Navbar />
             <div className="flex-1 flex flex-col items-center justify-center p-4">
                 <div className="bg-white p-8 rounded-2xl shadow-xl text-center max-w-md w-full">
@@ -245,7 +245,7 @@ const GigDetails = () => {
     );
 
     return (
-        <div className="min-h-screen bg-gray-50 pb-12">
+        <div className="min-h-screen pb-12">
             <Navbar />
 
             {/* Notification */}

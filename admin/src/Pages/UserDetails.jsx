@@ -151,7 +151,7 @@ const UserDetails = () => {
     if (!user) return <div className="min-h-screen flex items-center justify-center">User not found</div>;
 
     return (
-        <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
+        <div className="min-h-screen font-sans text-gray-900">
             <Navbar />
 
             {/* Notification */}
@@ -187,20 +187,21 @@ const UserDetails = () => {
 
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
-                {/* Back Button */}
-                <button
-                    onClick={() => navigate(-1)}
-                    className="group flex items-center text-gray-500 hover:text-blue-600 mb-8 transition-colors duration-200"
-                >
-                    <div className="p-2 rounded-full bg-white shadow-sm group-hover:shadow-md mr-3 transition-all">
-                        <ArrowLeft size={20} />
-                    </div>
-                    <span className="font-medium">Back to Users</span>
-                </button>
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                    {/* Left Column: Sticky Wrapper */}
+                    <div className="lg:col-span-4 xl:col-span-3 space-y-6 sticky top-24">
+                        {/* Back Button */}
+                        <button
+                            onClick={() => navigate(-1)}
+                            className="group flex items-center text-gray-500 hover:text-blue-600 transition-colors duration-200 w-full"
+                        >
+                            <div className="p-2 rounded-full bg-white shadow-sm group-hover:shadow-md mr-3 transition-all">
+                                <ArrowLeft size={20} />
+                            </div>
+                            <span className="font-medium">Back to Users</span>
+                        </button>
 
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                    {/* Left Column: Profile Card */}
-                    <div className="lg:col-span-4 xl:col-span-3 space-y-6">
+                        {/* Profile Card */}
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}

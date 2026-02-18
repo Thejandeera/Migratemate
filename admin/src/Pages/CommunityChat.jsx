@@ -112,7 +112,7 @@ const CommunityChat = () => {
 
     if (loading) {
         return (
-            <div className="flex justify-center items-center min-h-screen bg-gray-50">
+            <div className="flex justify-center items-center min-h-screen">
                 <Loader className="w-8 h-8 text-green-600 animate-spin" />
             </div>
         );
@@ -120,7 +120,7 @@ const CommunityChat = () => {
 
     if (!community) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
+            <div className="flex flex-col items-center justify-center min-h-screen">
                 <p className="text-gray-500 mb-4">Community not found.</p>
                 <button
                     onClick={() => navigate('/communities')}
@@ -133,7 +133,7 @@ const CommunityChat = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
+        <div className="min-h-screen font-sans text-gray-900">
             <Navbar />
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24 pb-10">

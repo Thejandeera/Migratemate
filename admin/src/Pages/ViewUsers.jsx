@@ -182,7 +182,7 @@ const ViewUsers = () => {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen">
             <Navbar />
 
             {/* Notification */}

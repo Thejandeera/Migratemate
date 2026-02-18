@@ -51,7 +51,7 @@ const BookingDetails = () => {
     if (!booking) return <div className="min-h-screen flex items-center justify-center">Booking not found</div>;
 
     return (
-        <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
+        <div className="min-h-screen font-sans text-gray-900">
             <Navbar />
             <div className="max-w-5xl mx-auto py-12 px-4 sm:px-6 lg:px-8 pt-24">
                 <button onClick={() => navigate(-1)} className="flex items-center text-gray-600 hover:text-gray-900 mb-6 transition-colors">

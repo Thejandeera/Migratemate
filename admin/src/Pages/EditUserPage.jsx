@@ -117,7 +117,7 @@ const EditUserPage = () => {
     if (error) return <div className="min-h-screen flex items-center justify-center text-red-600">{error}</div>;
 
     return (
-        <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
+        <div className="min-h-screen font-sans text-gray-900">
             <Navbar />
 
             {/* Notification */}
