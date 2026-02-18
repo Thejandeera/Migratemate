@@ -36,4 +36,10 @@ public class JourneyController {
     public ResponseEntity<java.util.List<com.example.migratemate.JourneyManagement.Model.JourneyPlanEntity>> getAllPlans() {
         return ResponseEntity.ok(journeyService.getAllPlans());
     }
+
+    @DeleteMapping("/{planId}")
+    public ResponseEntity<Void> deletePlan(@PathVariable String planId) {
+        journeyService.deletePlan(planId);
+        return ResponseEntity.noContent().build();
+    }
 }

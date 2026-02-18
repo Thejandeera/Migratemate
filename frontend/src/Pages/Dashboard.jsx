@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -8,24 +8,37 @@ import AiSuggestions from '../components/Dashboard/AiSuggestions';
 import { API_URL } from '../utils/api';
 import SockJS from 'sockjs-client';
 import { Stomp } from '@stomp/stompjs';
-import { AlertCircle, Navigation } from 'lucide-react';
+import {
+    AlertCircle,
+    Navigation,
+    Search,
+    Car,
+    Home,
+    Bot,
+    Calendar,
+    ChevronRight,
+    Shield,
+    BookOpen,
+    CreditCard,
+    MapPin,
+    Clock,
+    User
+} from 'lucide-react';
 import AssistantChat from '../components/Assistant/AssistantChat';
+import { motion } from 'framer-motion';
 
 const Dashboard = () => {
-
     const navigate = useNavigate();
     const user = getUserData();
-    const [bookings, setBookings] = React.useState([]);
-    const [loadingBookings, setLoadingBookings] = React.useState(true);
-    const [sosAlerts, setSosAlerts] = React.useState([]);
+    const [bookings, setBookings] = useState([]);
+    const [loadingBookings, setLoadingBookings] = useState(true);
+    const [sosAlerts, setSosAlerts] = useState([]);
 
     // Initialize WebSocket for SOS Alerts
     useEffect(() => {
         const fetchActiveSosAlerts = async () => {
             try {
-                // Use a public endpoint or ensure authenticated
-                // For Dashboard checking existence, we might fetch public info or just use WS
-                const response = await fetch(`${API_URL}/sos/active`); // Assuming this is open or we use token if needed
+                const response = await fetch(`${API_URL}/sos/active`);
                 if (response.ok) {
                     const result = await response.json();
                     setSosAlerts(result.data || []);
@@ -40,7 +53,6 @@ const Dashboard = () => {
         const baseUrl = API_URL.replace('/api', '');
         const socket = new SockJS(`${baseUrl}/ws`);
         const client = Stomp.over(() => socket);
-        // client.debug = () => {}; 
 
         client.connect({}, () => {
             client.subscribe('/topic/sos-alerts', (message) => {
@@ -65,63 +77,45 @@ const Dashboard = () => {
         };
     }, []);
 
-
-    // Mock Data for UI
     const quickActions = [
         {
             title: "Book Airport Pickup",
-            desc: "Get picked up safely by a verified helper",
-            icon: (
-                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                </svg>
-            ),
-            bg: "bg-green-50"
+            desc: "Safe & verified drivers",
+            icon: Car,
+            bg: "bg-blue-50 text-blue-600",
+            link: "/services/transport"
         },
         {
             title: "Find Housing",
-            desc: "Browse verified housing options",
-            icon: (
-                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
-            ),
-            bg: "bg-green-50"
+            desc: "Verified rentals & stays",
+            icon: Home,
+            bg: "bg-green-50 text-green-600",
+            link: "/marketplace"
         },
         {
             title: "Ask AI Assistant",
-            desc: "Get instant answers to your questions",
-            icon: (
-                <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-            ),
-            bg: "bg-green-50"
+            desc: "Instant answers 24/7",
+            icon: Bot,
+            bg: "bg-purple-50 text-purple-600",
+            link: "#assistant"
         }
     ];
 
-
-
-    // Get recent 2 bookings
-    const activeRequests = bookings.slice(0, 2).map(b => ({
+    const activeRequests = bookings.slice(0, 3).map(b => ({
+        id: b.id,
         title: b.serviceTitle,
         date: new Date(b.requestedDate).toLocaleDateString(),
         status: b.status.charAt(0) + b.status.substring(1).toLowerCase(),
-        statusColor: b.status === "ACCEPTED" ? "bg-green-500 text-white" : "bg-yellow-100 text-yellow-800",
+        statusColor: b.status === "ACCEPTED" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700",
         helper: b.providerName,
-        icon: (
-            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-            </svg>
-        )
+        icon: Calendar
     }));
 
-
     const resources = [
-        "Getting a Tax File Number (TFN)",
-        "Opening a Bank Account",
-        "Understanding Medicare",
-        "Public Transport Guide"
+        { title: "Getting a Tax File Number (TFN)", icon: BookOpen },
+        { title: "Opening a Bank Account", icon: CreditCard },
+        { title: "Understanding Medicare", icon: Shield },
+        { title: "Public Transport Guide", icon: MapPin }
     ];
 
     useEffect(() => {
@@ -135,101 +129,118 @@ const Dashboard = () => {
         }
     }, [navigate]);
 
-
-    if (!isAuthenticated()) return null;
+    if (!user) return null;
 
     return (
-        <div className="min-h-screen bg-white">
+        <div className="min-h-screen bg-gray-50/50 font-sans">
             <Navbar />
 
-            <div className="w-full px-4 sm:px-6 lg:px-8 py-25">
-                {/* Red Alert Banner */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 space-y-8">
+
+                {/* SOS Alert Banner */}
                 {sosAlerts.length > 0 && (
-                    <div className="mb-6 bg-red-50 border-l-4 border-red-600 p-4 rounded-r-lg shadow-md animate-fade-in-down">
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                            <div className="flex items-start gap-3">
-                                <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0 animate-bounce" />
-                                <div>
-                                    <h3 className="text-red-800 font-bold text-lg">SOS ALERT ACTIVE</h3>
-                                    <p className="text-red-700 text-sm">
-                                        {sosAlerts.length} person{sosAlerts.length > 1 ? 's' : ''} need help right now!
-                                    </p>
-                                    <p className="text-red-600 text-xs mt-1">
-                                        Location: {sosAlerts[0].address}
-                                    </p>
-                                </div>
-                            </div>
-                            <button
-                                onClick={() => navigate('/sos')}
-                                className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-bold text-sm shadow-lg transform hover:scale-105 transition-all flex items-center justify-center gap-2"
-                            >
-                                <Navigation className="w-4 h-4" />
-                                View Details & Respond
-                            </button>
-                        </div>
-                    </div>
-                )}
-                {/* Hero Section */}
-                <div className="bg-[#22C55E] rounded-2xl p-6 sm:p-10 mb-8 relative overflow-hidden">
-                    <div className="relative z-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <motion.div
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-red-50 border border-red-200 rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-6"
+                    >
                         <div className="flex items-center gap-4">
-                            <div className="w-16 h-16 rounded-full border-2 border-white overflow-hidden bg-gray-200">
-                                <img src={user.avatarUrl || `https://ui-avatars.com/api/?name=${user.firstName || 'User'}&background=random`} alt="Profile" className="w-full h-full object-cover" />
+                            <div className="bg-red-100 p-3 rounded-full animate-pulse">
+                                <AlertCircle className="w-8 h-8 text-red-600" />
                             </div>
                             <div>
-                                <h1 className="text-2xl sm:text-3xl font-bold text-white mb-1">
-                                    Welcome to {user.destinationCountry || 'Australia'}, {user.firstName || 'User'}!
-                                </h1>
-                                <div className="flex items-center gap-2 text-green-100 text-sm">
-                                    <span className="flex items-center gap-1 bg-green-600/30 px-2 py-0.5 rounded text-xs border border-green-400/30">
-                                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                        Verified
-                                    </span>
-                                    <span>From {user.countryOfOrigin || 'your country'}</span>
+                                <h3 className="text-xl font-bold text-gray-900">Active Emergency Alert</h3>
+                                <p className="text-gray-600">
+                                    {sosAlerts.length} person{sosAlerts.length > 1 ? 's' : ''} reported an emergency nearby.
+                                </p>
+                                <div className="mt-2 flex items-center gap-2 text-sm text-red-700 bg-red-100/50 px-3 py-1 rounded-full w-fit">
+                                    <MapPin className="w-4 h-4" />
+                                    {sosAlerts[0].address}
                                 </div>
                             </div>
                         </div>
                         <button
                             onClick={() => navigate('/sos')}
-                            className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-semibold flex items-center gap-2 transition-colors shadow-sm animate-pulse hover:animate-none"
+                            className="w-full sm:w-auto px-8 py-3 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold shadow-lg shadow-red-200 transition-all flex items-center justify-center gap-2 hover:-translate-y-1"
                         >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
-                            SOS Emergency
+                            View & Respond
+                            <Navigation className="w-5 h-5" />
+                        </button>
+                    </motion.div>
+                )}
+
+                {/* Hero Section */}
+                <div className="relative overflow-hidden rounded-3xl bg-white shadow-sm border border-gray-100">
+                    <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-blue-500/10 opacity-30"></div>
+                    <div className="absolute right-0 top-0 w-96 h-96 bg-green-200 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 opacity-20"></div>
+
+                    <div className="relative z-10 p-8 sm:p-12 flex flex-col md:flex-row items-center justify-between gap-8">
+                        <div className="flex items-center gap-6">
+                            <div className="relative">
+                                <div className="w-24 h-24 rounded-full border-4 border-white shadow-md overflow-hidden bg-gray-100">
+                                    <img
+                                        src={user.avatarUrl || `https://ui-avatars.com/api/?name=${user.firstName || 'User'}&background=random`}
+                                        alt="Profile"
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                                {user.isVerified && (
+                                    <div className="absolute bottom-0 right-0 bg-green-500 text-white p-1.5 rounded-full border-4 border-white" title="Verified User">
+                                        <Shield className="w-4 h-4 fill-current" />
+                                    </div>
+                                )}
+                            </div>
+                            <div>
+                                <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900">
+                                    Hello, {user.firstName || 'User'}! 👋
+                                </h1>
+                                <p className="text-lg text-gray-500 mt-2">
+                                    Welcome to {user.destinationCountry || 'your new home'}. What would you like to do today?
+                                </p>
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={() => navigate('/sos')}
+                            className="w-full md:w-auto px-6 py-3 bg-white border-2 border-red-100 text-red-600 rounded-xl font-bold hover:bg-red-50 hover:border-red-200 transition-all flex items-center justify-center gap-2 shadow-sm"
+                        >
+                            <AlertCircle className="w-5 h-5" />
+                            Emergency SOS
                         </button>
                     </div>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Main Content Column */}
+                    {/* Main Content */}
                     <div className="lg:col-span-2 space-y-8">
 
-                        {/* Search */}
-                        <div>
-                            <h2 className="text-lg font-semibold text-gray-900 mb-3">Find Members</h2>
-                            <div className="relative">
-                                <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
-                                </span>
-                                <input
-                                    type="text"
-                                    placeholder="Search members by name, bio, or origin..."
-                                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500 text-sm"
-                                />
-                            </div>
+                        {/* Search Bar */}
+                        <div className="relative">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+                            <input
+                                type="text"
+                                placeholder="Search for services, people, or help..."
+                                className="w-full pl-12 pr-4 py-4 bg-white border border-gray-200 rounded-2xl shadow-sm focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all text-gray-700 font-medium"
+                            />
                         </div>
 
                         {/* Quick Actions */}
                         <div>
-                            <h2 className="text-lg font-semibold text-gray-900 mb-3">Quick Actions</h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <h2 className="text-xl font-bold text-gray-900 mb-6">Quick Actions</h2>
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                                 {quickActions.map((action, idx) => (
-                                    <div key={idx} className="bg-white border border-gray-100 rounded-xl p-4 hover:shadow-md transition-shadow cursor-pointer">
-                                        <div className={`w-10 h-10 ${action.bg} rounded-lg flex items-center justify-center mb-3`}>
-                                            {action.icon}
+                                    <motion.div
+                                        key={idx}
+                                        whileHover={{ y: -5 }}
+                                        onClick={() => action.link && navigate(action.link)}
+                                        className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg transition-all cursor-pointer group"
+                                    >
+                                        <div className={`w-14 h-14 ${action.bg} rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
+                                            <action.icon className="w-7 h-7" />
                                         </div>
-                                        <h3 className="font-semibold text-gray-900 text-sm mb-1">{action.title}</h3>
-                                        <p className="text-xs text-gray-500">{action.desc}</p>
-                                    </div>
+                                        <h3 className="font-bold text-gray-900 mb-1">{action.title}</h3>
+                                        <p className="text-sm text-gray-500">{action.desc}</p>
+                                    </motion.div>
                                 ))}
                             </div>
                         </div>
@@ -237,88 +248,117 @@ const Dashboard = () => {
                         {/* AI Suggestions */}
                         <AiSuggestions user={user} />
 
-                        {/* Active Requests */}
-                        <div>
-                            <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-lg font-semibold text-gray-900">Active Requests</h2>
-                                <button className="text-sm text-[#22C55E] hover:underline flex items-center gap-1">
-                                    View all
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                        {/* Recent Activity */}
+                        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
+                            <div className="flex items-center justify-between mb-8">
+                                <h2 className="text-xl font-bold text-gray-900">Recent Activity</h2>
+                                <button className="text-sm font-semibold text-green-600 hover:text-green-700 flex items-center gap-1 hover:underline">
+                                    View All <ChevronRight className="w-4 h-4" />
                                 </button>
                             </div>
-                            <div className="space-y-3">
+
+                            <div className="space-y-6">
                                 {loadingBookings ? (
-                                    <p className="text-sm text-gray-500">Loading bookings...</p>
+                                    <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mb-4"></div>
+                                        <p>Loading activity...</p>
+                                    </div>
                                 ) : activeRequests.length === 0 ? (
-                                    <p className="text-sm text-gray-500">No active bookings found.</p>
+                                    <div className="text-center py-12 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                                        <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                                        <h3 className="text-lg font-medium text-gray-900">No recent activity</h3>
+                                        <p className="text-gray-500">Your planned journeys and bookings will appear here.</p>
+                                    </div>
                                 ) : (
-                                    activeRequests.map((req, idx) => (
-                                        <div key={idx} className="bg-white border border-gray-100 rounded-xl p-4 flex items-center justify-between">
-                                            <div className="flex items-center gap-4">
-                                                <div className="bg-gray-50 p-2.5 rounded-lg text-gray-600">
-                                                    {req.icon}
+                                    activeRequests.map((req) => (
+                                        <div key={req.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-2xl border border-gray-100 hover:bg-gray-50 transition-colors">
+                                            <div className="flex items-start gap-4">
+                                                <div className="bg-green-100 p-3 rounded-xl text-green-600">
+                                                    <req.icon className="w-6 h-6" />
                                                 </div>
                                                 <div>
-                                                    <h3 className="text-sm font-semibold text-gray-900">{req.title}</h3>
-                                                    <p className="text-xs text-gray-500">{req.date}</p>
+                                                    <h3 className="font-bold text-gray-900">{req.title}</h3>
+                                                    <div className="flex items-center gap-3 mt-1 text-sm text-gray-500">
+                                                        <span className="flex items-center gap-1">
+                                                            <Clock className="w-3 h-3" /> {req.date}
+                                                        </span>
+                                                        {req.helper && (
+                                                            <span className="flex items-center gap-1">
+                                                                <User className="w-3 h-3" /> {req.helper}
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div className="text-right">
-                                                <span className={`inline-block px-2.5 py-1 rounded-full ${req.statusColor} text-[10px] font-medium mb-1`}>
-                                                    {req.status}
-                                                </span>
-
-                                                {req.helper && <p className="text-[10px] text-gray-400">by {req.helper}</p>}
-                                            </div>
+                                            <span className={`px-4 py-1.5 rounded-full text-xs font-bold text-center w-fit ${req.statusColor}`}>
+                                                {req.status}
+                                            </span>
                                         </div>
                                     ))
                                 )}
                             </div>
-
                         </div>
-
                     </div>
 
-                    {/* Sidebar Column */}
+                    {/* Sidebar */}
                     <div className="space-y-8">
-                        {/* Profile Card */}
-                        <div className="bg-white border border-gray-100 rounded-xl p-6">
-                            <h3 className="font-semibold text-gray-900 mb-4">Your Profile</h3>
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
+                        {/* Profile Summary */}
+                        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
+                            <h3 className="font-bold text-gray-900 mb-6">My Profile</h3>
+                            <div className="flex items-center gap-4 mb-6">
+                                <div className="w-16 h-16 rounded-full bg-gray-100 overflow-hidden">
                                     <img src={user.avatarUrl || `https://ui-avatars.com/api/?name=${user.firstName || 'User'}&background=random`} alt={user.firstName} className="w-full h-full object-cover" />
                                 </div>
                                 <div>
-                                    <div className="text-sm font-semibold text-gray-900">{user.firstName || 'User'}</div>
-                                    <div className="text-xs text-gray-500 break-all">{user.email || 'email@example.com'}</div>
+                                    <div className="font-bold text-gray-900 text-lg">{user.firstName || 'User'}</div>
+                                    <div className="text-sm text-gray-500">{user.email || 'email@example.com'}</div>
                                 </div>
                             </div>
-                            <div className="bg-green-50 rounded-lg p-3 border border-green-100">
-                                <div className="flex items-center gap-2 mb-1 text-green-700">
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-                                    <span className="text-xs font-semibold">Identity Verified</span>
+
+                            <div className={`p-4 rounded-2xl border ${user.isVerified ? 'bg-green-50 border-green-100' : 'bg-yellow-50 border-yellow-100'}`}>
+                                <div className="flex items-center gap-2 mb-2">
+                                    <Shield className={`w-5 h-5 ${user.isVerified ? 'text-green-600' : 'text-yellow-600'}`} />
+                                    <span className={`font-bold text-sm ${user.isVerified ? 'text-green-700' : 'text-yellow-700'}`}>
+                                        {user.isVerified ? 'Identity Verified' : 'Verification Pending'}
+                                    </span>
                                 </div>
-                                <p className="text-[10px] text-green-600/80 leading-relaxed">
-                                    Your identity has been verified. You can now book services and join the community.
+                                <p className={`text-xs ${user.isVerified ? 'text-green-600' : 'text-yellow-600'}`}>
+                                    {user.isVerified
+                                        ? " Your trusted community status is active."
+                                        : "Verify your ID to access all features."}
                                 </p>
+                                {!user.isVerified && (
+                                    <button
+                                        onClick={() => navigate('/profile')}
+                                        className="mt-3 w-full py-2 bg-yellow-600 text-white rounded-lg text-xs font-bold hover:bg-yellow-700 transition"
+                                    >
+                                        Complete Verification
+                                    </button>
+                                )}
                             </div>
                         </div>
 
-                        {/* Helpful Resources */}
-                        <div className="bg-white border border-gray-100 rounded-xl p-6">
-                            <h3 className="font-semibold text-gray-900 mb-1">Helpful Resources</h3>
-                            <p className="text-xs text-gray-500 mb-4">Essential info for new arrivals</p>
+                        {/* Resources */}
+                        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8">
+                            <h3 className="font-bold text-gray-900 mb-2">Essential Guides</h3>
+                            <p className="text-sm text-gray-500 mb-6">Curated for new arrivals in {user.destinationCountry || 'Australia'}.</p>
 
-                            <ul className="space-y-0">
+                            <div className="space-y-3">
                                 {resources.map((res, idx) => (
-                                    <li key={idx}>
-                                        <a href="#" className="flex items-center justify-between py-3 border-b border-gray-50 text-xs text-gray-700 hover:text-green-600 group transition-colors">
-                                            {res}
-                                            <svg className="w-3 h-3 text-gray-400 group-hover:text-green-500 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
-                                        </a>
-                                    </li>
+                                    <a key={idx} href="#" className="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors group">
+                                        <div className="bg-gray-100 p-2 rounded-lg text-gray-500 group-hover:text-green-600 group-hover:bg-green-50 transition-colors">
+                                            <res.icon className="w-5 h-5" />
+                                        </div>
+                                        <span className="text-sm font-medium text-gray-700 group-hover:text-green-700 transition-colors">
+                                            {res.title}
+                                        </span>
+                                        <ChevronRight className="w-4 h-4 ml-auto text-gray-300 group-hover:text-green-500" />
+                                    </a>
                                 ))}
-                            </ul>
+                            </div>
+                            <button className="w-full mt-6 py-3 border border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-50 transition">
+                                View Helper Hub
+                            </button>
                         </div>
                     </div>
                 </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import { AlertCircle, Phone, MapPin, User, Clock, CheckCircle, X, Navigation } from 'lucide-react';
+import { AlertCircle, Phone, MapPin, User, Clock, CheckCircle, X, Navigation, Shield, Radio, Locate, Loader2 } from 'lucide-react';
 import { getUserData, getAuthData } from '../utils/auth';
 import { API_URL } from '../utils/api';
 import { toast } from 'react-hot-toast';
@@ -20,7 +20,6 @@ L.Icon.Default.mergeOptions({
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Custom SOS marker icon
 const sosIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
@@ -30,7 +29,6 @@ const sosIcon = new L.Icon({
     shadowSize: [41, 41]
 });
 
-// User location marker icon
 const userIcon = new L.Icon({
     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
@@ -52,36 +50,23 @@ const SosPage = () => {
     const [selectedAlert, setSelectedAlert] = useState(null);
     const userData = getUserData();
 
-    // Initialize WebSocket connection
     useEffect(() => {
-        // Use the bare URL for SockJS, not the API URL
-        // If API_URL is http://localhost:8080/api, we need http://localhost:8080/ws
         const baseUrl = API_URL.replace('/api', '');
         const socket = new SockJS(`${baseUrl}/ws`);
-        const client = Stomp.over(() => socket); // Pass factory function
-
-        // Disable debug logs appropriately
-        // client.debug = () => {}; 
+        const client = Stomp.over(() => socket);
 
         client.connect({}, () => {
             console.log('✅ WebSocket Connected');
 
-            // Subscribe to SOS alerts broadcast
             client.subscribe('/topic/sos-alerts', (message) => {
                 const alert = JSON.parse(message.body);
-                console.log('🚨 Received SOS Alert Update:', alert);
-
                 handleAlertUpdate(alert);
             });
 
-            // Subscribe to user-specific notifications
             if (userData?.id) {
                 client.subscribe('/user/queue/sos-notifications', (message) => {
                     const notification = JSON.parse(message.body);
-                    toast(notification.message, {
-                        icon: '🔔',
-                        duration: 5000,
-                    });
+                    toast(notification.message, { icon: '🔔', duration: 5000 });
                 });
             }
 
@@ -99,7 +84,6 @@ const SosPage = () => {
 
     const handleAlertUpdate = (alert) => {
         if (alert.status === 'ACTIVE') {
-            // Add or update active alert
             setSosAlerts(prev => {
                 const index = prev.findIndex(a => a.id === alert.id);
                 if (index !== -1) {
@@ -110,22 +94,16 @@ const SosPage = () => {
                 return [alert, ...prev];
             });
 
-            // Check if this is current user's alert
             if (alert.userId === userData?.id) {
                 setHasActiveAlert(true);
                 setActiveAlertId(alert.id);
             }
 
-            // Show toast if new active alert from someone else
             if (alert.userId !== userData?.id && !sosAlerts.find(a => a.id === alert.id)) {
-                toast.error(`🚨 ${alert.userName} needs help!`, {
-                    duration: 5000,
-                    position: 'top-right',
-                });
+                toast.error(`🚨 ${alert.userName} needs help!`, { duration: 5000, position: 'top-right' });
             }
 
         } else if (alert.status === 'RESOLVED' || alert.status === 'CANCELLED') {
-            // Remove from active list
             setSosAlerts(prev => prev.filter(a => a.id !== alert.id));
 
             if (alert.userId === userData?.id) {
@@ -136,8 +114,6 @@ const SosPage = () => {
         }
     };
 
-
-    // Get user's current location
     useEffect(() => {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
@@ -148,7 +124,6 @@ const SosPage = () => {
                     };
                     setUserLocation(location);
 
-                    // Reverse geocode to get address
                     try {
                         const response = await fetch(
                             `https://nominatim.openstreetmap.org/reverse?format=json&lat=${location.latitude}&lon=${location.longitude}`
@@ -168,7 +143,6 @@ const SosPage = () => {
         }
     }, []);
 
-    // Fetch active SOS alerts
     useEffect(() => {
         const authData = getAuthData();
         if (authData?.token) {
@@ -182,9 +156,7 @@ const SosPage = () => {
             const authData = getAuthData();
             if (!authData?.token) return;
             const response = await fetch(`${API_URL}/sos/active`, {
-                headers: {
-                    'Authorization': `Bearer ${authData.token}`
-                }
+                headers: { 'Authorization': `Bearer ${authData.token}` }
             });
 
             if (response.ok) {
@@ -201,9 +173,7 @@ const SosPage = () => {
             const authData = getAuthData();
             if (!authData?.token) return;
             const response = await fetch(`${API_URL}/sos/my-alerts`, {
-                headers: {
-                    'Authorization': `Bearer ${authData.token}`
-                }
+                headers: { 'Authorization': `Bearer ${authData.token}` }
             });
 
             if (response.ok) {
@@ -261,10 +231,8 @@ const SosPage = () => {
                 setMessage('');
                 fetchActiveSosAlerts();
             } else {
-                // If 400 Bad Request, check specifically for "already active" message
                 if (response.status === 400 && result.message?.toLowerCase().includes('already have an active')) {
                     toast.error('You already have an active SOS alert!');
-                    // Refresh state to match backend
                     checkUserActiveAlert();
                 } else {
                     toast.error(result.message || 'Failed to send SOS');
@@ -286,9 +254,7 @@ const SosPage = () => {
             if (!authData?.token) return;
             const response = await fetch(`${API_URL}/sos/${activeAlertId}/resolve`, {
                 method: 'PUT',
-                headers: {
-                    'Authorization': `Bearer ${authData.token}`
-                }
+                headers: { 'Authorization': `Bearer ${authData.token}` }
             });
 
             const result = await response.json();
@@ -315,9 +281,7 @@ const SosPage = () => {
             if (!authData?.token) return;
             const response = await fetch(`${API_URL}/sos/${activeAlertId}`, {
                 method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${authData.token}`
-                }
+                headers: { 'Authorization': `Bearer ${authData.token}` }
             });
 
             const result = await response.json();
@@ -345,9 +309,7 @@ const SosPage = () => {
             }
             const response = await fetch(`${API_URL}/sos/${sosId}/respond`, {
                 method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${authData.token}`
-                }
+                headers: { 'Authorization': `Bearer ${authData.token}` }
             });
 
             const result = await response.json();
@@ -365,11 +327,8 @@ const SosPage = () => {
     };
 
     const handleGetDirections = (alert) => {
-        // Open Google Maps in a new tab
         const url = `https://www.google.com/maps/dir/?api=1&destination=${alert.latitude},${alert.longitude}`;
         window.open(url, '_blank');
-
-        // Also mark as responding
         handleRespondToSOS(alert.id);
     };
 
@@ -390,188 +349,192 @@ const SosPage = () => {
         const diffMins = Math.floor(diffMs / 60000);
 
         if (diffMins < 1) return 'Just now';
-        if (diffMins < 60) return `${diffMins} min ago`;
+        if (diffMins < 60) return `${diffMins}m ago`;
         const diffHours = Math.floor(diffMins / 60);
-        if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+        if (diffHours < 24) return `${diffHours}h ago`;
         const diffDays = Math.floor(diffHours / 24);
-        return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+        return `${diffDays}d ago`;
     };
 
     return (
-        <div className="flex flex-col min-h-screen">
+        <div className="flex flex-col min-h-screen bg-gray-50">
             <Navbar />
-            <div className="flex-grow bg-gradient-to-br from-red-50 via-white to-orange-50 pt-24 pb-12 px-4">
+            <div className="flex-grow pt-24 pb-12 px-4 sm:px-6 relative overflow-hidden">
+                {/* Background red pulse for emergency feel */}
+                <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-red-50 to-transparent -z-10" />
+
                 <div className="max-w-7xl mx-auto">
                     {/* Header */}
                     <motion.div
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="text-center mb-8"
+                        className="text-center mb-10"
                     >
-                        <div className="flex items-center justify-center gap-3 mb-4">
-                            <AlertCircle className="w-12 h-12 text-red-600" />
-                            <h1 className="text-4xl md:text-5xl font-bold text-gray-900">
-                                SOS Emergency
-                            </h1>
+                        <div className="inline-flex items-center justify-center p-3 bg-red-100 rounded-full mb-4 animate-pulse">
+                            <Shield className="w-8 h-8 text-red-600" />
                         </div>
-                        <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-                            Send emergency alerts to all nearby users or respond to help others in need
+                        <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight mb-2">
+                            Emergency <span className="text-red-600">Response</span>
+                        </h1>
+                        <p className="text-gray-500 text-lg max-w-2xl mx-auto">
+                            Quickly alert nearby users and emergency contacts when you need urgent help.
                         </p>
                     </motion.div>
 
                     <div className="grid lg:grid-cols-3 gap-8">
-                        {/* SOS Alert Panel */}
+                        {/* Control Panel */}
                         <motion.div
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
                             className="lg:col-span-1 space-y-6"
                         >
-                            {/* Send SOS Card */}
-                            <div className="bg-white rounded-2xl shadow-xl p-6 border-2 border-red-100">
-                                <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                    <AlertCircle className="w-6 h-6 text-red-600" />
-                                    Send SOS Alert
-                                </h2>
+                            {/* SOS Action Card */}
+                            <div className={`rounded-3xl shadow-xl overflow-hidden border-2 transition-colors ${hasActiveAlert ? 'bg-red-600 border-red-700' : 'bg-white border-red-100'}`}>
+                                <div className="p-8 text-center">
+                                    {hasActiveAlert ? (
+                                        <div className="text-white">
+                                            <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6 animate-ping-slow">
+                                                <Radio className="w-12 h-12 text-white" />
+                                            </div>
+                                            <h2 className="text-2xl font-bold mb-2">SOS Active!</h2>
+                                            <p className="text-white/80 mb-8">Alert sent to nearby community. Help is on the way.</p>
 
-                                {!hasActiveAlert ? (
-                                    <div className="space-y-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Your Location
-                                            </label>
-                                            <div className="flex items-start gap-2 p-3 bg-gray-50 rounded-lg">
-                                                <MapPin className="w-5 h-5 text-gray-500 flex-shrink-0 mt-0.5" />
-                                                <p className="text-sm text-gray-600">
-                                                    {address || 'Detecting location...'}
-                                                </p>
+                                            <div className="grid gap-3">
+                                                <button
+                                                    onClick={handleResolveSOS}
+                                                    className="w-full bg-white text-green-600 font-bold py-4 px-6 rounded-xl shadow-lg hover:bg-green-50 transition-all flex items-center justify-center gap-2"
+                                                >
+                                                    <CheckCircle className="w-5 h-5" />
+                                                    I'm Safe Now
+                                                </button>
+                                                <button
+                                                    onClick={handleCancelSOS}
+                                                    className="w-full bg-red-800/50 text-white font-semibold py-3 px-6 rounded-xl hover:bg-red-800 transition-all flex items-center justify-center gap-2"
+                                                >
+                                                    <X className="w-5 h-5" />
+                                                    Cancel Alert
+                                                </button>
                                             </div>
                                         </div>
-
+                                    ) : (
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                                Message (Optional)
-                                            </label>
-                                            <textarea
-                                                value={message}
-                                                onChange={(e) => setMessage(e.target.value)}
-                                                placeholder="Describe your emergency..."
-                                                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
-                                                rows="3"
-                                            />
-                                        </div>
+                                            <h2 className="text-2xl font-bold text-gray-900 mb-6">Need Help?</h2>
 
-                                        <button
-                                            onClick={handleSendSOS}
-                                            disabled={loading || !userLocation}
-                                            className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-bold py-4 px-6 rounded-xl transition-all transform hover:scale-105 active:scale-95 shadow-lg disabled:transform-none flex items-center justify-center gap-2"
-                                        >
-                                            <AlertCircle className="w-6 h-6" />
-                                            {loading ? 'Sending...' : 'SEND SOS ALERT'}
-                                        </button>
-
-                                        <p className="text-xs text-gray-500 text-center">
-                                            This will notify all users in your area
-                                        </p>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-4">
-                                        <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4">
-                                            <div className="flex items-center gap-2 text-red-700 font-semibold mb-2">
-                                                <AlertCircle className="w-5 h-5 animate-pulse" />
-                                                Active SOS Alert
+                                            <div className="mb-6 text-left">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <div className={`w-2 h-2 rounded-full ${userLocation ? 'bg-green-500' : 'bg-orange-500 animate-pulse'}`} />
+                                                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Your Location</span>
+                                                </div>
+                                                <div className="bg-gray-50 p-3 rounded-xl border border-gray-100 flex items-start gap-3">
+                                                    <Locate className="w-5 h-5 text-gray-400 mt-0.5" />
+                                                    <p className="text-sm text-gray-700 font-medium break-words">
+                                                        {address || 'Detecting location...'}
+                                                    </p>
+                                                </div>
                                             </div>
-                                            <p className="text-sm text-red-600">
-                                                Your emergency alert is active. Help is on the way!
+
+                                            <div className="mb-6 text-left">
+                                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Emergency Message</label>
+                                                <textarea
+                                                    value={message}
+                                                    onChange={(e) => setMessage(e.target.value)}
+                                                    placeholder="Describe the emergency..."
+                                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition-all resize-none text-sm"
+                                                    rows="2"
+                                                />
+                                            </div>
+
+                                            <button
+                                                onClick={handleSendSOS}
+                                                disabled={loading || !userLocation}
+                                                className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-4 px-6 rounded-2xl transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-red-200 flex items-center justify-center gap-3 group"
+                                            >
+                                                <div className="bg-white/20 p-2 rounded-full group-hover:bg-white/30 transition-colors">
+                                                    <AlertCircle className="w-6 h-6" />
+                                                </div>
+                                                <span className="text-lg">SEND SOS ALERT</span>
+                                            </button>
+                                            <p className="mt-4 text-xs text-gray-400">
+                                                Pressing this will instantly alert all nearby MigrateMate users.
                                             </p>
                                         </div>
-
-                                        <button
-                                            onClick={handleResolveSOS}
-                                            className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-xl transition-all flex items-center justify-center gap-2"
-                                        >
-                                            <CheckCircle className="w-5 h-5" />
-                                            Mark as Resolved
-                                        </button>
-
-                                        <button
-                                            onClick={handleCancelSOS}
-                                            className="w-full bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-xl transition-all flex items-center justify-center gap-2"
-                                        >
-                                            <X className="w-5 h-5" />
-                                            Cancel Alert
-                                        </button>
-                                    </div>
-                                )}
+                                    )}
+                                </div>
                             </div>
 
                             {/* Active Alerts List */}
-                            <div className="bg-white rounded-2xl shadow-xl p-6">
-                                <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center justify-between">
-                                    <span>Active SOS Alerts</span>
-                                    <span className="text-sm font-normal text-red-600 bg-red-100 px-3 py-1 rounded-full">
-                                        {sosAlerts.length}
+                            <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6">
+                                <div className="flex items-center justify-between mb-6">
+                                    <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                                        Active Alerts
+                                    </h3>
+                                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${sosAlerts.length > 0 ? 'bg-red-100 text-red-600' : 'bg-gray-100 text-gray-500'}`}>
+                                        {sosAlerts.length} Active
                                     </span>
-                                </h2>
+                                </div>
 
-                                <div className="space-y-3 max-h-96 overflow-y-auto">
+                                <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
                                     {sosAlerts.length === 0 ? (
-                                        <p className="text-center text-gray-500 py-8">No active alerts</p>
+                                        <div className="text-center py-8 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
+                                            <Shield className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                                            <p className="text-sm text-gray-500 font-medium">No active emergencies nearby</p>
+                                        </div>
                                     ) : (
                                         sosAlerts.map((alert) => (
                                             <motion.div
                                                 key={alert.id}
-                                                initial={{ opacity: 0, scale: 0.9 }}
-                                                animate={{ opacity: 1, scale: 1 }}
-                                                className={`border-2 rounded-lg p-4 cursor-pointer transition-all hover:shadow-md ${selectedAlert?.id === alert.id
-                                                    ? 'border-red-500 bg-red-50'
-                                                    : 'border-gray-200 hover:border-red-300'
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                className={`p-4 rounded-2xl border transition-all cursor-pointer ${selectedAlert?.id === alert.id
+                                                    ? 'bg-red-50 border-red-200 ring-1 ring-red-200'
+                                                    : 'bg-white border-gray-100 hover:border-red-100 hover:shadow-md'
                                                     }`}
                                                 onClick={() => setSelectedAlert(alert)}
                                             >
-                                                <div className="flex items-start gap-3">
-                                                    <img
-                                                        src={alert.userAvatar || `https://ui-avatars.com/api/?name=${alert.userName}`}
-                                                        alt={alert.userName}
-                                                        className="w-12 h-12 rounded-full object-cover border-2 border-red-500"
-                                                    />
+                                                <div className="flex gap-3">
+                                                    <div className="relative">
+                                                        <img
+                                                            src={alert.userAvatar || `https://ui-avatars.com/api/?name=${alert.userName}`}
+                                                            alt={alert.userName}
+                                                            className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm"
+                                                        />
+                                                        <span className="absolute -bottom-1 -right-1 flex h-3 w-3">
+                                                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                                            <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500 border-2 border-white"></span>
+                                                        </span>
+                                                    </div>
                                                     <div className="flex-1 min-w-0">
-                                                        <h3 className="font-semibold text-gray-900 truncate">
-                                                            {alert.userName}
-                                                        </h3>
-                                                        <p className="text-sm text-gray-600 truncate">
-                                                            {alert.address}
-                                                        </p>
-                                                        <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
-                                                            <span className="flex items-center gap-1">
-                                                                <Clock className="w-3 h-3" />
+                                                        <div className="flex justify-between items-start">
+                                                            <h4 className="font-bold text-gray-900 text-sm truncate">{alert.userName}</h4>
+                                                            <span className="text-[10px] text-gray-400 font-medium bg-gray-50 px-1.5 py-0.5 rounded">
                                                                 {getTimeSince(alert.createdAt)}
                                                             </span>
-                                                            {alert.userPhone && alert.userId !== userData?.id && (
-                                                                <a
-                                                                    href={`tel:${alert.userPhone}`}
-                                                                    className="flex items-center gap-1 text-green-600 hover:text-green-700"
-                                                                    onClick={(e) => e.stopPropagation()}
-                                                                >
-                                                                    <Phone className="w-3 h-3" />
-                                                                    Call
-                                                                </a>
-                                                            )}
                                                         </div>
-                                                        {alert.userId !== userData?.id && !alert.helperId && (
-                                                            <button
-                                                                onClick={(e) => {
-                                                                    e.stopPropagation();
-                                                                    handleGetDirections(alert);
-                                                                }}
-                                                                className="mt-2 w-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-2 px-4 rounded-lg transition-all flex items-center justify-center gap-2"
-                                                            >
-                                                                <Navigation className="w-3 h-3" />
-                                                                Get Directions
-                                                            </button>
+                                                        <p className="text-xs text-gray-500 truncate mb-2">{alert.address}</p>
+
+                                                        {alert.userId !== userData?.id && (
+                                                            <div className="flex gap-2">
+                                                                <button
+                                                                    onClick={(e) => { e.stopPropagation(); handleGetDirections(alert); }}
+                                                                    className="flex-1 bg-gray-900 text-white text-[10px] font-bold py-1.5 rounded-lg hover:bg-black transition-colors flex items-center justify-center gap-1"
+                                                                >
+                                                                    <Navigation className="w-3 h-3" /> Directions
+                                                                </button>
+                                                                {alert.userPhone && (
+                                                                    <a
+                                                                        href={`tel:${alert.userPhone}`}
+                                                                        onClick={(e) => e.stopPropagation()}
+                                                                        className="flex-1 bg-green-50 text-green-700 text-[10px] font-bold py-1.5 rounded-lg hover:bg-green-100 transition-colors flex items-center justify-center gap-1"
+                                                                    >
+                                                                        <Phone className="w-3 h-3" /> Call
+                                                                    </a>
+                                                                )}
+                                                            </div>
                                                         )}
+
                                                         {alert.helperName && (
-                                                            <div className="mt-2 text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
-                                                                🆘 {alert.helperName} is responding
+                                                            <div className="mt-2 text-[10px] bg-green-50 text-green-700 px-2 py-1 rounded border border-green-100 flex items-center gap-1">
+                                                                <CheckCircle className="w-3 h-3" /> {alert.helperName} is responding
                                                             </div>
                                                         )}
                                                     </div>
@@ -583,19 +546,20 @@ const SosPage = () => {
                             </div>
                         </motion.div>
 
-                        {/* Map */}
+                        {/* Map View */}
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className="lg:col-span-2 bg-white rounded-2xl shadow-xl overflow-hidden relative z-0"
+                            className="lg:col-span-2 bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden relative"
                         >
-                            <div className="h-[50vh] lg:h-[calc(100vh-200px)]">
+                            <div className="h-[500px] lg:h-[calc(100vh-250px)] w-full">
                                 {userLocation ? (
                                     <MapContainer
                                         center={[userLocation.latitude, userLocation.longitude]}
-                                        zoom={13}
+                                        zoom={14}
                                         style={{ height: '100%', width: '100%' }}
                                         scrollWheelZoom={true}
+                                        zoomControl={false}
                                     >
                                         <TileLayer
                                             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -604,72 +568,46 @@ const SosPage = () => {
 
                                         <MapUpdater center={selectedAlert ? [selectedAlert.latitude, selectedAlert.longitude] : null} />
 
-                                        {/* User's location */}
-                                        <Marker
-                                            position={[userLocation.latitude, userLocation.longitude]}
-                                            icon={userIcon}
-                                        >
-                                            <Popup>
-                                                <div className="text-center">
-                                                    <User className="w-6 h-6 mx-auto mb-2 text-blue-600" />
-                                                    <p className="font-semibold">Your Location</p>
-                                                    <p className="text-sm text-gray-600">{address}</p>
+                                        {/* User Location */}
+                                        <Marker position={[userLocation.latitude, userLocation.longitude]} icon={userIcon}>
+                                            <Popup className="custom-popup">
+                                                <div className="text-center p-2">
+                                                    <div className="font-bold text-blue-600 mb-1">You are here</div>
+                                                    <p className="text-xs text-gray-500">{address}</p>
                                                 </div>
                                             </Popup>
                                         </Marker>
 
-                                        {/* SOS Alerts */}
+                                        {/* SOS Markers */}
                                         {sosAlerts.map((alert) => (
-                                            <Marker
-                                                key={alert.id}
-                                                position={[alert.latitude, alert.longitude]}
-                                                icon={sosIcon}
-                                            >
-                                                <Popup>
-                                                    <div className="min-w-[200px]">
-                                                        <div className="flex items-center gap-2 mb-2">
+                                            <Marker key={alert.id} position={[alert.latitude, alert.longitude]} icon={sosIcon}>
+                                                <Popup className="custom-popup">
+                                                    <div className="min-w-[200px] p-1">
+                                                        <div className="flex items-center gap-2 mb-3 pb-2 border-b border-gray-100">
                                                             <img
                                                                 src={alert.userAvatar || `https://ui-avatars.com/api/?name=${alert.userName}`}
                                                                 alt={alert.userName}
-                                                                className="w-10 h-10 rounded-full object-cover"
+                                                                className="w-8 h-8 rounded-full bg-gray-100"
                                                             />
                                                             <div>
-                                                                <p className="font-bold text-red-600">{alert.userName}</p>
-                                                                <p className="text-xs text-gray-500">{getTimeSince(alert.createdAt)}</p>
+                                                                <div className="font-bold text-gray-900 leading-tight">{alert.userName}</div>
+                                                                <div className="text-xs text-red-500 font-medium">SOS Active</div>
                                                             </div>
                                                         </div>
 
-                                                        <p className="text-sm text-gray-700 mb-2">{alert.message}</p>
-
-                                                        <div className="text-xs text-gray-600 mb-3">
-                                                            <MapPin className="w-3 h-3 inline mr-1" />
+                                                        <p className="text-sm text-gray-700 bg-gray-50 p-2 rounded-lg mb-2 italic">"{alert.message}"</p>
+                                                        <div className="text-xs text-gray-500 mb-3 flex items-start gap-1">
+                                                            <MapPin className="w-3 h-3 mt-0.5" />
                                                             {alert.address}
                                                         </div>
 
-                                                        {alert.userPhone && alert.userId !== userData?.id && (
-                                                            <a
-                                                                href={`tel:${alert.userPhone}`}
-                                                                className="block text-center bg-green-600 hover:bg-green-700 text-white text-sm font-semibold py-2 px-4 rounded-lg transition-all mb-2"
-                                                            >
-                                                                <Phone className="w-4 h-4 inline mr-1" />
-                                                                Call {alert.userName}
-                                                            </a>
-                                                        )}
-
-                                                        {alert.userId !== userData?.id && !alert.helperId && (
+                                                        {alert.userId !== userData?.id && (
                                                             <button
                                                                 onClick={() => handleGetDirections(alert)}
-                                                                className="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold py-2 px-4 rounded-lg transition-all flex items-center justify-center gap-2"
+                                                                className="w-full bg-gray-900 text-white text-xs font-bold py-2 rounded-lg hover:bg-black transition-colors flex items-center justify-center gap-1"
                                                             >
-                                                                <Navigation className="w-4 h-4" />
-                                                                Get Directions
+                                                                <Navigation className="w-3 h-3" /> Get Directions
                                                             </button>
-                                                        )}
-
-                                                        {alert.helperName && (
-                                                            <div className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded text-center">
-                                                                🆘 {alert.helperName} is responding
-                                                            </div>
                                                         )}
                                                     </div>
                                                 </Popup>
@@ -677,11 +615,9 @@ const SosPage = () => {
                                         ))}
                                     </MapContainer>
                                 ) : (
-                                    <div className="h-full flex items-center justify-center bg-gray-100">
-                                        <div className="text-center">
-                                            <MapPin className="w-16 h-16 text-gray-400 mx-auto mb-4 animate-bounce" />
-                                            <p className="text-gray-600 font-medium">Detecting your location...</p>
-                                        </div>
+                                    <div className="h-full flex flex-col items-center justify-center bg-gray-50 text-gray-400">
+                                        <Loader2 className="w-10 h-10 animate-spin mb-3 text-red-600" />
+                                        <p className="font-medium">Acquiring detailed location...</p>
                                     </div>
                                 )}
                             </div>
@@ -693,5 +629,9 @@ const SosPage = () => {
         </div>
     );
 };
+
+// Add this to your global CSS or styles to handle Leaflet z-index issues if they arise
+// .leaflet-pane { z-index: 0 !important; }
+// .leaflet-bottom { z-index: 0 !important; }
 
 export default SosPage;

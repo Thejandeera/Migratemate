@@ -6,20 +6,19 @@ import Footer from '../components/Footer';
 import { getServiceById } from '../utils/serviceApi';
 import { createBooking } from '../utils/bookingApi';
 import { isAuthenticated } from '../utils/auth';
-
 import {
     ArrowLeft,
     MapPin,
     Star,
-    Bot,
-    Clock,
-    Users,
-    Calendar,
     CheckCircle,
     Loader2,
     AlertCircle,
-    RefreshCw,
-    DollarSign,
+    Calendar,
+    ChevronLeft,
+    ChevronRight,
+    Shield,
+    Clock,
+    User,
     MessageCircle
 } from 'lucide-react';
 
@@ -30,72 +29,20 @@ const CATEGORY_NAMES = {
     'CULTURAL_SUPPORT': 'Cultural Support',
 };
 
-const PRICING_TYPE_NAMES = {
-    'FIXED': 'Fixed Price',
-    'HOURLY': 'Per Hour',
-    'NEGOTIABLE': 'Negotiable',
-};
-
-const DURATION_TYPE_NAMES = {
-    'MINUTES': 'min',
-    'HOURS': 'hrs',
-    'DAYS': 'days',
-};
-
-const Badge = ({ children, className = '' }) => (
-    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${className}`}>
-        {children}
-    </span>
-);
-
-const ReviewCard = ({ name, initial, date, rating, text, verified = true }) => (
-    <div className="bg-gray-50 rounded-xl p-6 mb-4">
-        <div className="flex items-start justify-between mb-3">
-            <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-[#22C55E]/10 flex items-center justify-center text-[#22C55E] font-bold">
-                    {initial}
-                </div>
-                <div>
-                    <div className="flex items-center gap-2">
-                        <h4 className="font-bold text-gray-900 text-sm">{name}</h4>
-                        {verified && <CheckCircle className="w-3 h-3 text-[#22C55E]" />}
-                    </div>
-                    <p className="text-xs text-gray-500">{date}</p>
-                </div>
-            </div>
-            <div className="flex text-yellow-400">
-                {[...Array(5)].map((_, i) => (
-                    <Star
-                        key={i}
-                        className={`w-4 h-4 ${i < rating ? 'fill-current' : 'text-gray-300'}`}
-                    />
-                ))}
-            </div>
-        </div>
-        <p className="text-gray-600 text-sm leading-relaxed">{text}</p>
-    </div>
-);
-
-// Booking Card Component
 const BookingCard = ({ service }) => {
     const priceDisplay = service.currency ? `${service.price?.toFixed(0) || 0} ${service.currency}` : `${service.price?.toFixed(0) || 0}`;
-    const pricingType = PRICING_TYPE_NAMES[service.pricingType] || service.pricingType;
     const navigate = useNavigate();
-
     const [bookingDate, setBookingDate] = useState('');
     const [notes, setNotes] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [status, setStatus] = useState(null); // 'success', 'error'
+    const [status, setStatus] = useState(null);
     const [errorMessage, setErrorMessage] = useState('');
 
     const handleBooking = async () => {
         if (!isAuthenticated()) {
-            // Redirect to login or show modal
-            alert("Please login to book a service");
             navigate('/login');
             return;
         }
-
         if (!bookingDate) {
             alert("Please select a date");
             return;
@@ -112,7 +59,6 @@ const BookingCard = ({ service }) => {
                 notes: notes
             });
             setStatus('success');
-            // Clear form
             setBookingDate('');
             setNotes('');
         } catch (error) {
@@ -124,439 +70,256 @@ const BookingCard = ({ service }) => {
         }
     };
 
-
     return (
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm sticky top-24">
-            <h3 className="text-lg font-bold text-gray-900 mb-2">
-                Book this Service
-            </h3>
+        <div className="bg-white rounded-3xl border border-gray-100 p-8 shadow-sm lg:sticky lg:top-28">
+            <h3 className="text-xl font-bold text-gray-900 mb-6">Book Service</h3>
 
-            <div className="flex items-baseline gap-2 mb-6">
-                <span className="text-3xl font-bold text-[#22C55E]">{priceDisplay}</span>
-                <span className="text-sm text-gray-500">{pricingType}</span>
+            <div className="flex items-baseline gap-2 mb-8 pb-8 border-b border-gray-100">
+                <span className="text-4xl font-extrabold text-[#22C55E] tracking-tight">{priceDisplay}</span>
+                <span className="text-sm font-medium text-gray-500">starting price</span>
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-5">
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Select Date
-                    </label>
+                    <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wider">Select Date</label>
                     <div className="relative">
                         <input
                             type="date"
                             value={bookingDate}
                             onChange={(e) => setBookingDate(e.target.value)}
                             min={new Date().toISOString().split('T')[0]}
-                            className="w-full pl-4 pr-10 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#22C55E] focus:border-[#22C55E] outline-none transition-all text-gray-700"
+                            className="w-full pl-4 pr-10 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all text-sm font-medium"
                         />
-
-                        <Calendar className="absolute right-3 top-3 w-5 h-5 text-gray-400 pointer-events-none" />
+                        <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
                     </div>
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Message to Helper
-                    </label>
+                    <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wider">Message</label>
                     <textarea
                         rows={3}
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
-                        placeholder="Describe your needs..."
-                        className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#22C55E] focus:border-[#22C55E] outline-none transition-all resize-none text-gray-700 placeholder-gray-400"
+                        placeholder="Briefly describe what you need..."
+                        className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all resize-none text-sm"
                     />
-
                 </div>
 
                 <button
                     onClick={handleBooking}
                     disabled={isSubmitting}
-                    className={`w-full py-3 text-white font-semibold rounded-xl transition-colors shadow-lg mt-2 flex items-center justify-center gap-2 ${isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#22C55E] hover:bg-[#16A34A] shadow-[#22C55E]/20'}`}
+                    className={`w-full py-4 text-white font-bold rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 hover:-translate-y-1 ${isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 shadow-green-200'
+                        }`}
                 >
-                    {isSubmitting ? (
-                        <>
-                            <Loader2 className="w-5 h-5 animate-spin" />
-                            Processing...
-                        </>
-                    ) : 'Request Booking'}
+                    {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Request Booking'}
                 </button>
 
                 {status === 'success' && (
-                    <div className="bg-green-50 text-green-700 p-3 rounded-xl text-sm flex items-center gap-2 mt-2 border border-green-100">
-                        <CheckCircle className="w-4 h-4 text-green-600" />
-                        Booking requested successfully! Check your dashboard.
+                    <div className="bg-green-50 text-green-700 p-4 rounded-xl text-sm font-medium flex items-start gap-3 border border-green-100 animate-in fade-in slide-in-from-top-2">
+                        <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                        <div>
+                            <p className="font-bold">Booking Sent!</p>
+                            <p className="text-xs mt-1">Check your dashboard for updates.</p>
+                        </div>
                     </div>
                 )}
 
                 {status === 'error' && (
-                    <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm flex items-center gap-2 mt-2 border border-red-100">
-                        <AlertCircle className="w-4 h-4 text-red-500" />
+                    <div className="bg-red-50 text-red-600 p-4 rounded-xl text-sm font-medium flex items-center gap-3 border border-red-100 animate-in fade-in slide-in-from-top-2">
+                        <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
                         {errorMessage}
                     </div>
                 )}
+            </div>
 
-                <p className="text-xs text-center text-gray-500 mt-3">
-                    You won't be charged yet
-                </p>
-
+            <div className="mt-6 pt-6 border-t border-gray-100 flex items-center justify-center gap-2 text-xs text-gray-400 font-medium">
+                <Shield className="w-3.5 h-3.5" />
+                <span>Secure Booking Protected</span>
             </div>
         </div>
     );
 };
 
-// Provider Profile Card Component
-const ProviderProfileCard = ({ service }) => {
-    const providerInitial = service.providerName?.charAt(0)?.toUpperCase() || 'P';
-
-    return (
-        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm">
-            {/* Provider Info */}
-            <div className="flex items-start gap-4 mb-6">
-                {service.providerProfilePicture ? (
-                    <img
-                        src={service.providerProfilePicture}
-                        alt={service.providerName}
-                        className="w-12 h-12 rounded-full object-cover shadow-md"
-                        onError={(e) => {
-                            e.target.style.display = 'none';
-                            e.target.nextSibling.style.display = 'flex';
-                        }}
-                    />
-                ) : null}
-                <div
-                    className={`w-12 h-12 bg-gradient-to-br from-[#22C55E] to-[#16A34A] rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md ${service.providerProfilePicture ? 'hidden' : ''}`}
-                >
-                    {providerInitial}
-                </div>
-                <div>
-                    <h3 className="font-bold text-gray-900">{service.providerName || 'Provider'}</h3>
-                    <span className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">
-                        <CheckCircle className="w-3 h-3" />
-                        Verified Helper
-                    </span>
-                </div>
-            </div>
-
-            {/* Provider Stats */}
-            <div className="space-y-3 mb-6">
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <CheckCircle className="w-4 h-4 text-[#22C55E]" />
-                    <span>Identity Verified</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                    <span>{service.averageRating?.toFixed(1) || '0.0'} Average Rating</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <MessageCircle className="w-4 h-4 text-blue-500" />
-                    <span>Response time: &lt; 1 hour</span>
-                </div>
-            </div>
-
-            {/* View Profile Button */}
-            <button className="w-full py-2.5 bg-white border border-gray-200 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all">
-                View Full Profile
-            </button>
-        </div>
-    );
-};
-
-// Main ServiceDetailPage Component
 const ServiceDetailPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-
     const [service, setService] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-    const [isPaused, setIsPaused] = useState(false);
 
-    // Fetch service data
     useEffect(() => {
         const fetchService = async () => {
-            if (!id) {
-                setError('Service ID not provided');
-                setLoading(false);
-                return;
-            }
-
+            if (!id) return;
             setLoading(true);
-            setError(null);
-
             try {
                 const data = await getServiceById(id);
                 setService(data);
             } catch (err) {
-                console.error('Failed to fetch service:', err);
-                setError(err.message || 'Failed to load service details');
+                setError(err.message || 'Failed to load service');
             } finally {
                 setLoading(false);
             }
         };
-
         fetchService();
     }, [id]);
 
-    // Auto-slideshow effect
-    useEffect(() => {
-        if (!service?.imageUrls || service.imageUrls.length <= 1 || isPaused) {
-            return;
+    const handleImageNav = (direction) => {
+        if (!service?.imageUrls || service.imageUrls.length <= 1) return;
+        if (direction === 'next') {
+            setSelectedImageIndex(prev => (prev === service.imageUrls.length - 1 ? 0 : prev + 1));
+        } else {
+            setSelectedImageIndex(prev => (prev === 0 ? service.imageUrls.length - 1 : prev - 1));
         }
-
-        const interval = setInterval(() => {
-            setSelectedImageIndex((prev) =>
-                prev >= service.imageUrls.length - 1 ? 0 : prev + 1
-            );
-        }, 4000);
-
-        return () => clearInterval(interval);
-    }, [service?.imageUrls, isPaused]);
-
-    const handleImageClick = (index) => {
-        setSelectedImageIndex(index);
-        setIsPaused(true);
-        // Resume slideshow after 10 seconds of inactivity
-        setTimeout(() => setIsPaused(false), 10000);
     };
 
-    const categoryDisplay = service?.category ? (CATEGORY_NAMES[service.category] || service.category) : '';
+    if (loading) return (
+        <div className="min-h-screen bg-white flex items-center justify-center">
+            <Loader2 className="w-10 h-10 text-green-500 animate-spin" />
+        </div>
+    );
 
-    const heroImage = service?.imageUrls?.[selectedImageIndex] || service?.imageUrls?.[0] || 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80&w=1200';
+    if (error || !service) return (
+        <div className="min-h-screen bg-white flex flex-col items-center justify-center p-4">
+            <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">Service Not Found</h2>
+            <p className="text-gray-500 mb-6">The service you are looking for may have been removed.</p>
+            <button onClick={() => navigate('/marketplace')} className="px-6 py-2 bg-green-600 text-white rounded-lg font-bold">Go Back</button>
+        </div>
+    );
 
-    const locationDisplay = service?.specificLocation || service?.destination || 'Location TBD';
+    const heroImage = service.imageUrls?.[selectedImageIndex] || service.imageUrls?.[0] || 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80&w=1200';
+    const categoryName = CATEGORY_NAMES[service.category] || service.category;
 
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col font-sans relative">
+        <div className="min-h-screen bg-white font-sans">
             <Navbar />
 
-            {/* Top gradient shadow */}
-            <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black/10 to-transparent pointer-events-none z-10"></div>
-
-            <main className="flex-grow pt-20 pb-16">
-                {/* Back Navigation */}
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-                    <Link
-                        to="/marketplace"
-                        className="inline-flex items-center text-sm text-gray-500 hover:text-[#22C55E] font-medium transition-colors"
-                    >
-                        <ArrowLeft className="w-4 h-4 mr-2" />
-                        Back to Marketplace
-                    </Link>
-                </div>
-
-                {/* Loading State */}
-                {loading && (
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="flex flex-col items-center justify-center py-24">
-                            <Loader2 className="w-12 h-12 text-[#22C55E] animate-spin mb-4" />
-                            <p className="text-gray-500 font-medium">Loading service details...</p>
-                        </div>
+            <main className="pt-24 pb-16">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    {/* Breadcrumb */}
+                    <div className="mb-6 flex items-center gap-2 text-sm text-gray-500 font-medium">
+                        <Link to="/marketplace" className="hover:text-green-600 transition-colors">Marketplace</Link>
+                        <span>/</span>
+                        <span className="text-gray-900 truncate max-w-xs">{service.title}</span>
                     </div>
-                )}
 
-                {/* Error State */}
-                {error && !loading && (
-                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                        <div className="text-center py-24">
-                            <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                                <AlertCircle className="w-8 h-8 text-red-500" />
-                            </div>
-                            <h3 className="text-xl font-bold text-gray-900 mb-2">Failed to load service</h3>
-                            <p className="text-gray-500 mb-6">{error}</p>
-                            <div className="flex items-center justify-center gap-4">
-                                <button
-                                    onClick={() => navigate('/marketplace')}
-                                    className="px-6 py-2.5 bg-white border border-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors"
-                                >
-                                    Back to Marketplace
-                                </button>
-                                <button
-                                    onClick={() => window.location.reload()}
-                                    className="px-6 py-2.5 bg-[#22C55E] text-white font-semibold rounded-lg hover:bg-[#16A34A] transition-colors inline-flex items-center gap-2"
-                                >
-                                    <RefreshCw className="w-4 h-4" />
-                                    Try Again
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                )}
+                    <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
+                        {/* Left Column: Content */}
+                        <div className="flex-1 min-w-0">
 
-                {/* Service Content */}
-                {!loading && !error && service && (
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.4 }}
-                        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
-                    >
-                        <div className="flex flex-col lg:flex-row gap-8">
-                            {/* Main Content */}
-                            <div className="flex-1">
-                                {/* Hero Image with Slideshow */}
-                                <div className="relative h-[400px] rounded-2xl overflow-hidden mb-8 shadow-sm">
-                                    <AnimatePresence mode="wait">
-                                        <motion.img
-                                            key={selectedImageIndex}
-                                            src={heroImage}
-                                            alt={service.title}
-                                            className="w-full h-full object-cover absolute inset-0"
-                                            initial={{ opacity: 0, scale: 1.05 }}
-                                            animate={{ opacity: 1, scale: 1 }}
-                                            exit={{ opacity: 0, scale: 0.95 }}
-                                            transition={{ duration: 0.5, ease: 'easeInOut' }}
-                                            onError={(e) => {
-                                                e.target.src = 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80&w=1200';
-                                            }}
-                                        />
-                                    </AnimatePresence>
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent pointer-events-none"></div>
-                                    <div className="absolute top-6 left-6 z-10">
-                                        <Badge className="bg-white/90 backdrop-blur text-gray-900 shadow-sm">
-                                            {categoryDisplay}
-                                        </Badge>
-                                    </div>
-                                    {/* Slideshow indicators */}
-                                    {service.imageUrls && service.imageUrls.length > 1 && (
-                                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-                                            {service.imageUrls.map((_, index) => (
-                                                <button
-                                                    key={index}
-                                                    onClick={() => handleImageClick(index)}
-                                                    className={`w-2 h-2 rounded-full transition-all duration-300 ${selectedImageIndex === index
-                                                        ? 'bg-white w-6'
-                                                        : 'bg-white/50 hover:bg-white/75'
-                                                        }`}
-                                                />
-                                            ))}
-                                        </div>
-                                    )}
+                            {/* Hero Gallery */}
+                            <div className="relative aspect-video rounded-3xl overflow-hidden bg-gray-100 mb-8 group">
+                                <motion.img
+                                    key={selectedImageIndex}
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ duration: 0.3 }}
+                                    src={heroImage}
+                                    className="w-full h-full object-cover"
+                                    alt={service.title}
+                                />
+                                <div className="absolute top-4 left-4">
+                                    <span className="bg-white/90 backdrop-blur px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider shadow-sm text-gray-900">
+                                        {categoryName}
+                                    </span>
                                 </div>
 
-                                {/* Image Gallery (if multiple images) */}
                                 {service.imageUrls && service.imageUrls.length > 1 && (
-                                    <div className="flex gap-3 mb-8 overflow-x-auto pb-2">
-                                        {service.imageUrls.map((url, index) => (
-                                            <div
-                                                key={index}
-                                                onClick={() => handleImageClick(index)}
-                                                className={`flex-shrink-0 cursor-pointer rounded-lg overflow-hidden transition-all border-2 ${selectedImageIndex === index
-                                                    ? 'border-[#22C55E]'
-                                                    : 'border-transparent hover:border-[#22C55E]/50'
-                                                    }`}
-                                            >
-                                                <img
-                                                    src={url}
-                                                    alt={`${service.title} - ${index + 1}`}
-                                                    className="w-24 h-24 object-cover"
+                                    <>
+                                        <button
+                                            onClick={() => handleImageNav('prev')}
+                                            className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 backdrop-blur rounded-full flex items-center justify-center hover:bg-white transition-all opacity-0 group-hover:opacity-100 shadow-md"
+                                        >
+                                            <ChevronLeft className="w-5 h-5 text-gray-900" />
+                                        </button>
+                                        <button
+                                            onClick={() => handleImageNav('next')}
+                                            className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 backdrop-blur rounded-full flex items-center justify-center hover:bg-white transition-all opacity-0 group-hover:opacity-100 shadow-md"
+                                        >
+                                            <ChevronRight className="w-5 h-5 text-gray-900" />
+                                        </button>
+                                        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                                            {service.imageUrls.map((_, idx) => (
+                                                <div
+                                                    key={idx}
+                                                    className={`h-1.5 rounded-full transition-all ${idx === selectedImageIndex ? 'w-6 bg-white' : 'w-1.5 bg-white/50'}`}
                                                 />
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-
-                                {/* Title Header */}
-                                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-8">
-                                    <div>
-                                        <h1 className="text-3xl font-bold text-gray-900 mb-3">
-                                            {service.title}
-                                        </h1>
-                                        <div className="flex items-center gap-4 text-sm flex-wrap">
-                                            <div className="flex items-center text-gray-600">
-                                                <MapPin className="w-4 h-4 mr-1.5" />
-                                                {locationDisplay}
-                                            </div>
-                                            <div className="flex items-center text-yellow-500 font-medium">
-                                                <Star className="w-4 h-4 fill-current mr-1.5" />
-                                                {service.averageRating?.toFixed(1) || '0.0'}
-                                                <span className="text-gray-400 font-normal ml-1">
-                                                    ({service.totalReviews || 0} reviews)
-                                                </span>
-                                            </div>
-                                            {service.origin && (
-                                                <div className="text-gray-500">
-                                                    From: <span className="font-medium">{service.origin}</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                    </div>
-                                    <div className="text-2xl font-bold text-[#22C55E]">
-                                        {service.price?.toFixed(0) || 0}{service.currency ? ` ${service.currency}` : ''}
-                                    </div>
-                                </div>
-
-                                {/* About Section */}
-                                <section className="mb-12">
-                                    <h2 className="text-xl font-bold text-gray-900 mb-4">
-                                        About this service
-                                    </h2>
-                                    <div className="prose prose-gray max-w-none text-gray-600">
-                                        <p className="whitespace-pre-line">{service.description}</p>
-                                    </div>
-                                </section>
-
-                                {/* Features Section */}
-                                {service.features && service.features.length > 0 && (
-                                    <section className="mb-12">
-                                        <h2 className="text-xl font-bold text-gray-900 mb-4">
-                                            What's included
-                                        </h2>
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                            {service.features.map((feature, index) => (
-                                                <div key={index} className="flex items-center gap-3 text-gray-600">
-                                                    <CheckCircle className="w-5 h-5 text-[#22C55E] flex-shrink-0" />
-                                                    <span>{feature}</span>
-                                                </div>
                                             ))}
                                         </div>
-                                    </section>
+                                    </>
                                 )}
+                            </div>
 
-                                {/* Reviews Section */}
-                                <section>
-                                    <h2 className="text-xl font-bold text-gray-900 mb-6">
-                                        Client Reviews
-                                    </h2>
-                                    {service.totalReviews && service.totalReviews > 0 ? (
-                                        <div className="space-y-4">
-                                            {/* Placeholder reviews - will be replaced when reviews API is available */}
-                                            <ReviewCard
-                                                name="Happy Customer"
-                                                initial="H"
-                                                date="Recently"
-                                                rating={5}
-                                                text="Great service! Highly recommended."
-                                            />
-                                        </div>
+                            {/* Title & Metadata */}
+                            <div className="mb-8">
+                                <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4 leading-tight">{service.title}</h1>
+
+                                <div className="flex flex-wrap items-center gap-6 text-sm text-gray-500 font-medium">
+                                    <div className="flex items-center gap-2">
+                                        <MapPin className="w-4 h-4 text-gray-400" />
+                                        {service.specificLocation || service.destination || 'Online'}
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                                        <span className="text-gray-900 font-bold">{service.averageRating?.toFixed(1) || 'New'}</span>
+                                        <span>({service.totalReviews || 0} reviews)</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Description */}
+                            <div className="prose prose-lg prose-green max-w-none text-gray-600 mb-10">
+                                <h3 className="text-gray-900 font-bold mb-3">About this Service</h3>
+                                <p>{service.description}</p>
+                            </div>
+
+                            {/* Features */}
+                            {service.features && service.features.length > 0 && (
+                                <div className="mb-10 bg-gray-50 rounded-3xl p-8 border border-gray-100">
+                                    <h3 className="font-bold text-gray-900 mb-4">What's Included</h3>
+                                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        {service.features.map((feature, i) => (
+                                            <li key={i} className="flex items-center gap-3 text-gray-600">
+                                                <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                                                <span>{feature}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            )}
+
+                            {/* Provider Info */}
+                            <div className="border border-gray-100 rounded-3xl p-8 flex items-center gap-6">
+                                <div className="w-16 h-16 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
+                                    {service.providerProfilePicture ? (
+                                        <img src={service.providerProfilePicture} alt={service.providerName} className="w-full h-full object-cover" />
                                     ) : (
-                                        <div className="bg-gray-50 rounded-xl p-8 text-center">
-                                            <Star className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                                            <h4 className="font-semibold text-gray-900 mb-2">No reviews yet</h4>
-                                            <p className="text-gray-500 text-sm">Be the first to review this service!</p>
+                                        <div className="w-full h-full bg-green-100 flex items-center justify-center text-green-700 font-bold text-xl">
+                                            {service.providerName?.charAt(0) || 'P'}
                                         </div>
                                     )}
-                                </section>
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-gray-900 text-lg mb-1">{service.providerName}</h4>
+                                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                                        <span className="flex items-center gap-1 text-green-600 font-medium bg-green-50 px-2 py-0.5 rounded-full">
+                                            <Shield className="w-3 h-3" /> Identity Verified
+                                        </span>
+                                        <span>Member since 2024</span>
+                                    </div>
+                                </div>
                             </div>
 
-                            {/* Sidebar */}
-                            <div className="w-full lg:w-[380px] flex-shrink-0 space-y-6">
-                                <BookingCard service={service} />
-                                <ProviderProfileCard service={service} />
-                            </div>
                         </div>
-                    </motion.div>
-                )}
+
+                        {/* Right Column: Booking Widget */}
+                        <div className="lg:w-[380px] flex-shrink-0">
+                            <BookingCard service={service} />
+                        </div>
+                    </div>
+                </div>
             </main>
-
-            {/* Floating Chat Bot */}
-            <button className="fixed bottom-8 right-8 w-14 h-14 bg-[#22C55E] rounded-full shadow-xl flex items-center justify-center text-white hover:bg-[#16A34A] transition-all z-40 hover:scale-110 duration-200 group">
-                <Bot className="w-7 h-7 group-hover:rotate-12 transition-transform" />
-                <span className="absolute -top-12 right-0 px-3 py-1.5 bg-gray-900 text-white text-xs font-medium rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                    Need help? Chat with AI
-                </span>
-            </button>
-
             <Footer />
         </div>
     );

@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Send, ArrowLeft, Users, MoreVertical, LogOut, Loader, Image as ImageIcon, MapPin, CheckCircle, Clock } from 'lucide-react';
+import { Send, ArrowLeft, Users, MoreVertical, Loader2, Image as ImageIcon, MapPin, CheckCircle, Clock } from 'lucide-react';
 import { API_URL } from '../utils/api';
 import { getAuthData, isAuthenticated } from '../utils/auth';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { formatDistanceToNow, isAfter, subMinutes } from 'date-fns';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const CommunityDetails = () => {
     const { id: communityId } = useParams();
@@ -31,32 +32,12 @@ const CommunityDetails = () => {
         fetchMessages();
         fetchMembers();
 
-        // Polling for new messages every 3 seconds
         pollingInterval.current = setInterval(fetchMessages, 3000);
 
         return () => {
             if (pollingInterval.current) clearInterval(pollingInterval.current);
         };
     }, [communityId]);
-
-    useEffect(() => {
-        // Only auto-scroll if the user is already near the bottom or if it's the initial load
-        // For now, let's restrict it to when activeTab is chat. 
-        // A better UX might be to only scroll if specific conditions are met, but the user just wants the "auto scrolling" fixed.
-        // It's likely annoyingly scrolling even when they are reading history.
-
-        // We will remove the auto-scroll on *every* message update.
-        // Instead, we should only scroll to bottom on initial load of chat tab 
-        // OR when the user themselves sends a message (handled in handleSendMessage).
-
-        // If we want to keep some auto-scroll but less aggressive:
-        /*
-        if (activeTab === 'chat') {
-             // ... logic ...
-        }
-        */
-        // DISABLING auto-scroll on general message updates as per common user complaints about this.
-    }, [activeTab]); // Removed 'messages' dependency to stop auto-scrolling on polling updates
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -117,7 +98,7 @@ const CommunityDetails = () => {
         if (!newMessage.trim()) return;
 
         const tempMsg = newMessage;
-        setNewMessage(''); // Optimistic clear
+        setNewMessage('');
 
         try {
             const authData = getAuthData();
@@ -138,9 +119,10 @@ const CommunityDetails = () => {
             });
 
             if (response.ok) {
-                fetchMessages(); // Refresh immediately
+                fetchMessages();
+                setTimeout(scrollToBottom, 100);
             } else {
-                setNewMessage(tempMsg); // Restore on failure
+                setNewMessage(tempMsg);
             }
         } catch (error) {
             console.error("Error sending message:", error);
@@ -160,7 +142,7 @@ const CommunityDetails = () => {
     if (loading) {
         return (
             <div className="flex justify-center items-center min-h-screen bg-gray-50">
-                <Loader className="w-8 h-8 text-green-600 animate-spin" />
+                <Loader2 className="w-10 h-10 text-green-600 animate-spin" />
             </div>
         );
     }
@@ -180,58 +162,53 @@ const CommunityDetails = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50 font-sans text-gray-900 pb-10">
+        <div className="min-h-screen bg-gray-50/50 font-sans flex flex-col">
             <Navbar />
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-24">
-                {/* Back Button */}
+            {/* Background Decoration */}
+            <div className="fixed inset-0 pointer-events-none z-0">
+                <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-green-100/30 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2"></div>
+            </div>
+
+            <main className="flex-grow pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full relative z-10">
+                {/* Back Link */}
                 <button
                     onClick={() => navigate('/community')}
-                    className="mb-6 flex items-center gap-2 text-gray-500 hover:text-green-600 transition-colors w-fit px-3 py-2 rounded-lg hover:bg-white/50"
+                    className="mb-6 flex items-center gap-2 text-gray-500 hover:text-green-600 transition-colors w-fit px-3 py-2 rounded-xl group"
                 >
-                    <ArrowLeft className="w-5 h-5" />
+                    <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
                     Back to Communities
                 </button>
 
                 {/* Hero Header */}
-                <div className="relative h-64 md:h-80 rounded-3xl overflow-hidden shadow-lg mb-8 group">
+                <div className="relative h-72 md:h-80 rounded-3xl overflow-hidden shadow-2xl mb-8 group">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/10 z-10" />
                     <img
                         src={community.coverImageUrl || "https://via.placeholder.com/1200x400"}
                         alt={community.name}
-                        className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700"
+                        className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-1000"
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex flex-col justify-end p-8">
-                        <div className="flex items-center gap-3 mb-2">
-                            <span className="bg-white/20 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border border-white/10">
-                                {community.originCountry} → {community.destinationCountry}
+                    <div className="absolute inset-0 flex flex-col justify-end p-8 z-20">
+                        <div className="flex items-center gap-3 mb-4">
+                            <span className="bg-white/10 backdrop-blur-md text-white border border-white/20 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-2">
+                                <MapPin className="w-3 h-3" /> {community.originCountry} → {community.destinationCountry}
                             </span>
                         </div>
-                        <h1 className="text-3xl md:text-5xl font-bold text-white mb-2 shadow-sm">{community.name}</h1>
-                        <p className="text-gray-200 max-w-2xl text-lg line-clamp-2 mb-4">{community.description}</p>
-                        <div className="flex items-center gap-6 text-sm font-medium text-gray-300">
-                            <div className="flex items-center gap-2 bg-black/30 px-3 py-1.5 rounded-full backdrop-blur-sm">
-                                <Users className="w-4 h-4" />
-                                {community.memberCount} Members
-                            </div>
-                            <div className="flex items-center gap-2 bg-black/30 px-3 py-1.5 rounded-full backdrop-blur-sm">
-                                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                                {onlineMembers.length} Online
-                            </div>
-                        </div>
+                        <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-3 tracking-tight shadow-sm">{community.name}</h1>
+                        <p className="text-gray-300 max-w-2xl text-lg line-clamp-2 md:line-clamp-none leading-relaxed opacity-90">{community.description}</p>
                     </div>
                 </div>
 
-                {/* Main Content Layout */}
                 <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-
-                    {/* Left Column: Navigation/Tabs (Desktop) or Top Bar (Mobile) */}
-                    <div className="lg:col-span-1">
-                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-2 sticky top-24">
+                    {/* Sidebar */}
+                    <div className="lg:col-span-1 space-y-6">
+                        {/* Navigation */}
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-2 sticky top-24 z-20">
                             <button
                                 onClick={() => setActiveTab('chat')}
-                                className={`w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 transition-all mb-1 ${activeTab === 'chat'
-                                    ? 'bg-green-50 text-green-700 font-bold shadow-sm'
-                                    : 'text-gray-600 hover:bg-gray-50'
+                                className={`w-full text-left px-5 py-3.5 rounded-xl flex items-center gap-3 transition-all font-bold ${activeTab === 'chat'
+                                    ? 'bg-green-50 text-green-700 shadow-sm'
+                                    : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
                                     }`}
                             >
                                 <Send className="w-5 h-5" />
@@ -239,168 +216,190 @@ const CommunityDetails = () => {
                             </button>
                             <button
                                 onClick={() => setActiveTab('members')}
-                                className={`w-full text-left px-4 py-3 rounded-xl flex items-center gap-3 transition-all ${activeTab === 'members'
-                                    ? 'bg-green-50 text-green-700 font-bold shadow-sm'
-                                    : 'text-gray-600 hover:bg-gray-50'
+                                className={`w-full text-left px-5 py-3.5 rounded-xl flex items-center gap-3 transition-all font-bold ${activeTab === 'members'
+                                    ? 'bg-green-50 text-green-700 shadow-sm'
+                                    : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
                                     }`}
                             >
                                 <Users className="w-5 h-5" />
                                 Members
-                                <span className="ml-auto bg-gray-100 text-gray-500 text-xs py-0.5 px-2 rounded-full">{members.length}</span>
+                                <span className="ml-auto bg-gray-100 text-gray-500 text-xs py-1 px-2.5 rounded-full font-bold">{members.length}</span>
                             </button>
                         </div>
 
-                        {/* About Block */}
-                        <div className="mt-6 bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sticky top-60 hidden lg:block">
-                            <h3 className="font-bold text-gray-900 mb-4">About Community</h3>
-                            <p className="text-gray-600 text-sm leading-relaxed mb-4">{community.description}</p>
-                            <div className="space-y-3">
-                                <div className="flex items-center gap-3 text-sm text-gray-500">
-                                    <MapPin className="w-4 h-4" />
-                                    <span>From: <span className="font-medium text-gray-900">{community.originCountry}</span></span>
+                        {/* Info Card */}
+                        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hidden lg:block">
+                            <h3 className="font-bold text-gray-900 mb-4 uppercase text-xs tracking-wider">Community Info</h3>
+                            <div className="space-y-4">
+                                <div className="flex items-center justify-between text-sm">
+                                    <span className="text-gray-500">Total Members</span>
+                                    <span className="font-bold text-gray-900">{members.length}</span>
                                 </div>
-                                <div className="flex items-center gap-3 text-sm text-gray-500">
-                                    <MapPin className="w-4 h-4" />
-                                    <span>To: <span className="font-medium text-gray-900">{community.destinationCountry}</span></span>
+                                <div className="flex items-center justify-between text-sm">
+                                    <span className="text-gray-500">Online Now</span>
+                                    <span className="font-bold text-green-600 flex items-center gap-1">
+                                        <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                                        {onlineMembers.length}
+                                    </span>
+                                </div>
+                                <div className="border-t border-gray-100 pt-4 mt-2">
+                                    <p className="text-xs text-center text-gray-400">Created in 2024</p>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Right Column: Content */}
+                    {/* Main Content */}
                     <div className="lg:col-span-3">
-                        {activeTab === 'chat' ? (
-                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 h-[600px] flex flex-col overflow-hidden">
-                                {/* Chat Header */}
-                                <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/30">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                                        <span className="font-bold text-gray-700">Community Chat</span>
-                                    </div>
-                                    <span className="text-xs text-gray-400">Real-time</span>
-                                </div>
-
-                                {/* Messages */}
-                                <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/50">
-                                    {messages.length === 0 ? (
-                                        <div className="h-full flex flex-col items-center justify-center text-gray-400">
-                                            <Send className="w-12 h-12 mb-2 opacity-20" />
-                                            <p>No messages yet. Say hello!</p>
+                        <AnimatePresence mode="wait">
+                            {activeTab === 'chat' ? (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                                    className="bg-white rounded-3xl shadow-xl shadow-gray-200/50 border border-gray-100 h-[650px] flex flex-col overflow-hidden"
+                                >
+                                    {/* Chat Header */}
+                                    <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white/80 backdrop-blur-sm z-10">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-3 h-3 bg-green-500 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.6)] animate-pulse"></div>
+                                            <div>
+                                                <h3 className="font-bold text-gray-900 text-lg">General Channel</h3>
+                                                <p className="text-xs text-green-600 font-medium">{onlineMembers.length} online now</p>
+                                            </div>
                                         </div>
-                                    ) : (
-                                        messages.map((msg, idx) => {
-                                            const isMe = msg.senderId === (userData?.id || userData?.userId);
-                                            return (
-                                                <div key={idx} className={`flex gap-3 ${isMe ? 'flex-row-reverse' : ''}`}>
-                                                    <img
-                                                        src={msg.senderAvatar || `https://ui-avatars.com/api/?name=${msg.senderName}`}
-                                                        alt={msg.senderName}
-                                                        className="w-8 h-8 rounded-full shadow-sm mt-1"
-                                                    />
-                                                    <div className={`max-w-[70%] space-y-1 ${isMe ? 'items-end flex flex-col' : ''}`}>
-                                                        <div className="flex items-center gap-2">
-                                                            {!isMe && <span className="text-xs font-bold text-gray-700">{msg.senderName}</span>}
-                                                            <span className="text-[10px] text-gray-400">{formatDistanceToNow(new Date(msg.timestamp), { addSuffix: true })}</span>
+                                    </div>
+
+                                    {/* Messages Area */}
+                                    <div className="flex-1 overflow-y-auto p-6 space-y-6 bg-gray-50/30">
+                                        {messages.length === 0 ? (
+                                            <div className="h-full flex flex-col items-center justify-center text-gray-400">
+                                                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                                                    <Send className="w-8 h-8 opacity-40" />
+                                                </div>
+                                                <p className="font-bold text-gray-500">No messages yet</p>
+                                                <p className="text-sm mt-1">Be the first to say hello!</p>
+                                            </div>
+                                        ) : (
+                                            messages.map((msg, idx) => {
+                                                const isMe = msg.senderId === (userData?.id || userData?.userId);
+                                                return (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, scale: 0.95 }}
+                                                        animate={{ opacity: 1, scale: 1 }}
+                                                        key={idx}
+                                                        className={`flex gap-4 ${isMe ? 'flex-row-reverse' : ''}`}
+                                                    >
+                                                        <img
+                                                            src={msg.senderAvatar || `https://ui-avatars.com/api/?name=${msg.senderName}`}
+                                                            alt={msg.senderName}
+                                                            className="w-10 h-10 rounded-full shadow-sm object-cover border-2 border-white"
+                                                        />
+                                                        <div className={`max-w-[70%] space-y-1 ${isMe ? 'items-end flex flex-col' : ''}`}>
+                                                            <div className="flex items-center gap-2 mb-1 px-1">
+                                                                {!isMe && <span className="text-xs font-bold text-gray-700">{msg.senderName}</span>}
+                                                                <span className="text-[10px] text-gray-400 font-medium">{formatDistanceToNow(new Date(msg.timestamp), { addSuffix: true })}</span>
+                                                            </div>
+                                                            <div className={`px-5 py-3 rounded-2xl text-sm leading-relaxed shadow-sm ${isMe
+                                                                    ? 'bg-gradient-to-br from-green-600 to-green-700 text-white rounded-tr-none'
+                                                                    : 'bg-white border border-gray-100 rounded-tl-none text-gray-800'
+                                                                }`}>
+                                                                {msg.content}
+                                                            </div>
                                                         </div>
-                                                        <div className={`px-4 py-2 rounded-2xl text-sm leading-relaxed ${isMe ? 'bg-green-600 text-white rounded-tr-none' : 'bg-white border border-gray-100 rounded-tl-none shadow-sm text-gray-800'
-                                                            }`}>
-                                                            {msg.content}
+                                                    </motion.div>
+                                                )
+                                            })
+                                        )}
+                                        <div ref={messagesEndRef} />
+                                    </div>
+
+                                    {/* Input Area */}
+                                    <div className="p-4 bg-white border-t border-gray-100">
+                                        <form onSubmit={handleSendMessage} className="flex gap-3 items-center relative">
+                                            <input
+                                                type="text"
+                                                value={newMessage}
+                                                onChange={(e) => setNewMessage(e.target.value)}
+                                                placeholder="Type your message..."
+                                                className="flex-1 bg-gray-50 border border-gray-200 rounded-2xl px-6 py-4 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 focus:bg-white transition-all outline-none font-medium placeholder-gray-400"
+                                            />
+                                            <button
+                                                type="submit"
+                                                disabled={!newMessage.trim()}
+                                                className="absolute right-2 top-2 bottom-2 bg-green-600 hover:bg-green-700 text-white px-6 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md flex items-center justify-center group"
+                                            >
+                                                <Send className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                                            </button>
+                                        </form>
+                                    </div>
+                                </motion.div>
+                            ) : (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                                    className="space-y-6"
+                                >
+                                    {/* Online Members */}
+                                    {onlineMembers.length > 0 && (
+                                        <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
+                                            <h3 className="font-bold text-gray-900 mb-6 flex items-center gap-2 text-lg">
+                                                Online Now <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full">{onlineMembers.length}</span>
+                                            </h3>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                {onlineMembers.map(member => (
+                                                    <div key={member.userId} className="flex items-center gap-4 p-4 hover:bg-green-50/50 rounded-2xl transition-all border border-gray-100 hover:border-green-200 group cursor-pointer">
+                                                        <div className="relative">
+                                                            <div className="absolute inset-0 bg-green-500 rounded-full blur opacity-20 group-hover:opacity-40 transition-opacity"></div>
+                                                            <img
+                                                                src={member.avatarUrl || `https://ui-avatars.com/api/?name=${member.fullName}`}
+                                                                alt={member.fullName}
+                                                                className="w-12 h-12 rounded-full object-cover border-2 border-white relative z-10"
+                                                            />
+                                                            <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full z-20"></div>
+                                                        </div>
+                                                        <div>
+                                                            <h4 className="font-bold text-gray-900 flex items-center gap-1 group-hover:text-green-700 transition-colors">
+                                                                {member.fullName}
+                                                                {member.isVerified && <CheckCircle className="w-4 h-4 text-blue-500" />}
+                                                            </h4>
+                                                            <p className="text-xs text-gray-500 font-medium">{member.isHelper ? 'Community Helper' : 'Member'}</p>
                                                         </div>
                                                     </div>
-                                                </div>
-                                            )
-                                        })
+                                                ))}
+                                            </div>
+                                        </div>
                                     )}
-                                    <div ref={messagesEndRef} />
-                                </div>
 
-                                {/* Input */}
-                                <div className="p-4 bg-white border-t border-gray-100">
-                                    <form onSubmit={handleSendMessage} className="flex gap-3 items-center">
-                                        <input
-                                            type="text"
-                                            value={newMessage}
-                                            onChange={(e) => setNewMessage(e.target.value)}
-                                            placeholder="Type a message..."
-                                            className="flex-1 bg-gray-100 border-0 rounded-xl px-4 py-3 focus:ring-2 focus:ring-green-500 focus:bg-white transition-all outline-none"
-                                        />
-                                        <button
-                                            type="submit"
-                                            disabled={!newMessage.trim()}
-                                            className="bg-green-600 hover:bg-green-700 text-white p-3 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg active:scale-95"
-                                        >
-                                            <Send className="w-5 h-5" />
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="space-y-6">
-                                {/* Online Members */}
-                                {onlineMembers.length > 0 && (
-                                    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                                        <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                            Online <span className="text-green-500">●</span>
-                                            <span className="text-gray-400 text-sm font-normal">({onlineMembers.length})</span>
+                                    {/* All Members */}
+                                    <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
+                                        <h3 className="font-bold text-gray-900 mb-6 flex items-center gap-2 text-lg">
+                                            All Members <span className="bg-gray-100 text-gray-600 text-xs px-2 py-0.5 rounded-full">{members.length}</span>
                                         </h3>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {onlineMembers.map(member => (
-                                                <div key={member.userId} className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl transition-colors border border-transparent hover:border-gray-100 cursor-pointer">
-                                                    <div className="relative">
-                                                        <img
-                                                            src={member.avatarUrl || `https://ui-avatars.com/api/?name=${member.fullName}`}
-                                                            alt={member.fullName}
-                                                            className="w-12 h-12 rounded-full object-cover"
-                                                        />
-                                                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
-                                                    </div>
+                                            {offlineMembers.map(member => (
+                                                <div key={member.userId} className="flex items-center gap-4 p-4 hover:bg-gray-50 rounded-2xl transition-all border border-transparent hover:border-gray-100 group cursor-pointer opacity-80 hover:opacity-100">
+                                                    <img
+                                                        src={member.avatarUrl || `https://ui-avatars.com/api/?name=${member.fullName}`}
+                                                        alt={member.fullName}
+                                                        className="w-12 h-12 rounded-full object-cover border-2 border-gray-100 grayscale group-hover:grayscale-0 transition-all"
+                                                    />
                                                     <div>
-                                                        <h4 className="font-bold text-sm text-gray-900 flex items-center gap-1">
+                                                        <h4 className="font-bold text-gray-900 flex items-center gap-1">
                                                             {member.fullName}
-                                                            {member.isVerified && <CheckCircle className="w-3 h-3 text-blue-500" />}
+                                                            {member.isVerified && <CheckCircle className="w-3.5 h-3.5 text-blue-500" />}
                                                         </h4>
-                                                        <p className="text-xs text-gray-500">{member.isHelper ? 'Helper' : 'Member'}</p>
+                                                        <p className="text-xs text-gray-500 font-medium">{member.isHelper ? 'Community Helper' : 'Member'}</p>
                                                     </div>
                                                 </div>
                                             ))}
                                         </div>
                                     </div>
-                                )}
-
-                                {/* Offline Members */}
-                                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                                    <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-                                        Offline <span className="text-gray-400">●</span>
-                                        <span className="text-gray-400 text-sm font-normal">({offlineMembers.length})</span>
-                                    </h3>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        {offlineMembers.map(member => (
-                                            <div key={member.userId} className="flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl transition-colors border border-transparent hover:border-gray-100 cursor-pointer opacity-80 hover:opacity-100">
-                                                <div className="relative">
-                                                    <img
-                                                        src={member.avatarUrl || `https://ui-avatars.com/api/?name=${member.fullName}`}
-                                                        alt={member.fullName}
-                                                        className="w-12 h-12 rounded-full object-cover grayscale"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <h4 className="font-bold text-sm text-gray-900 flex items-center gap-1">
-                                                        {member.fullName}
-                                                        {member.isVerified && <CheckCircle className="w-3 h-3 text-blue-500" />}
-                                                    </h4>
-                                                    <p className="text-xs text-gray-500">{member.isHelper ? 'Helper' : 'Member'}</p>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        )}
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
                 </div>
-            </div>
+            </main>
             <Footer />
-        </div >
+        </div>
     );
 };
 

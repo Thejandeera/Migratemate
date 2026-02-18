@@ -3,10 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { searchServices, getAllServices } from '../utils/serviceApi';
+import { searchServices, getAllServices, getServiceById } from '../utils/serviceApi';
 import {
     Search,
-    Bot,
     Star,
     MapPin,
     CheckCircle,
@@ -18,18 +17,18 @@ import {
     Briefcase,
     MessageCircle,
     FileText,
-    X,
     Loader2,
     AlertCircle,
-    RefreshCw
+    RefreshCw,
+    X
 } from 'lucide-react';
 
 // Map backend categories to display names and icons
 const CATEGORY_MAP = {
-    'TRANSPORT': { name: 'Transport', icon: Plane },
-    'HOUSING': { name: 'Housing', icon: Home },
-    'DOCUMENTATION': { name: 'Documentation', icon: FileText },
-    'CULTURAL_SUPPORT': { name: 'Cultural Support', icon: MessageCircle },
+    'TRANSPORT': { name: 'Transport', icon: Plane, color: 'text-blue-600', bg: 'bg-blue-50' },
+    'HOUSING': { name: 'Housing', icon: Home, color: 'text-green-600', bg: 'bg-green-50' },
+    'DOCUMENTATION': { name: 'Documentation', icon: FileText, color: 'text-purple-600', bg: 'bg-purple-50' },
+    'CULTURAL_SUPPORT': { name: 'Cultural Support', icon: MessageCircle, color: 'text-pink-600', bg: 'bg-pink-50' },
 };
 
 const CATEGORIES = [
@@ -42,7 +41,7 @@ const CATEGORIES = [
 
 const LOCATIONS = ['All Locations', 'Sydney', 'Melbourne', 'Brisbane', 'Perth', 'Adelaide', 'Online'];
 
-// Service Card Component - adapted for API data format
+// Service Card Component
 const ServiceCard = ({ service }) => {
     const navigate = useNavigate();
     const {
@@ -58,108 +57,77 @@ const ServiceCard = ({ service }) => {
         imageUrls = [],
         providerName,
         providerProfilePicture,
-        description,
         isVerified = true,
     } = service;
 
-    // Get display name for category
-    const categoryDisplay = CATEGORY_MAP[category]?.name || category;
-
-    // Get first image or use placeholder
+    const categoryConfig = CATEGORY_MAP[category] || { name: category, icon: Briefcase, color: 'text-gray-600', bg: 'bg-gray-50' };
+    const CategoryIcon = categoryConfig.icon;
     const displayImage = imageUrls?.[0] || 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80&w=1000';
-
-    // Format price display
     const priceDisplay = currency ? `${price?.toFixed(0) || 0} ${currency}` : `${price?.toFixed(0) || 0}`;
-
-    // Get provider initial
     const providerInitial = providerName?.charAt(0)?.toUpperCase() || 'P';
-
-    // Location display - prefer specificLocation, then destination
-    const locationDisplay = specificLocation || destination || 'Location TBD';
-
-    // Handle card click to navigate to service detail
-    const handleCardClick = () => {
-        navigate(`/service/${id}`);
-    };
+    const locationDisplay = specificLocation || destination || 'Online';
 
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            onClick={handleCardClick}
-            className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden transition-transform duration-200 hover:-translate-y-1 hover:shadow-md group cursor-pointer h-full"
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            whileHover={{ y: -5 }}
+            onClick={() => navigate(`/service/${id}`)}
+            className="group bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer flex flex-col h-full"
         >
-            {/* Image */}
             <div className="relative h-48 overflow-hidden">
                 <img
                     src={displayImage}
                     alt={title}
-                    className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    onError={(e) => {
-                        e.target.src = 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80&w=1000';
-                    }}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&q=80&w=1000'; }}
                 />
-                {/* Price Badge */}
-                <div className="absolute top-3 right-3">
-                    <span className="bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-bold text-gray-900 shadow-sm">
+                <div className="absolute top-3 left-3">
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${categoryConfig.bg} ${categoryConfig.color} shadow-sm backdrop-blur-md bg-opacity-90`}>
+                        <CategoryIcon className="w-3.5 h-3.5" />
+                        {categoryConfig.name}
+                    </span>
+                </div>
+                <div className="absolute bottom-3 right-3">
+                    <span className="bg-white/95 backdrop-blur-sm px-3 py-1.5 rounded-xl text-sm font-bold text-gray-900 shadow-lg">
                         {priceDisplay}
                     </span>
                 </div>
             </div>
 
-            {/* Content */}
-            <div className="p-5">
-                {/* Category & Rating */}
-                <div className="flex justify-between items-start mb-2">
-                    <span className="text-xs font-semibold text-[#22C55E] uppercase tracking-wide">
-                        {categoryDisplay}
-                    </span>
-                    <div className="flex items-center text-yellow-400 text-sm font-bold">
-                        <Star className="w-4 h-4 fill-current mr-1" />
-                        {averageRating?.toFixed(1) || '0.0'}
+            <div className="p-5 flex flex-col flex-1">
+                <div className="flex justify-between items-start mb-3">
+                    <div className="flex items-center text-xs text-gray-500 font-medium bg-gray-50 px-2 py-1 rounded-lg">
+                        <MapPin className="w-3.5 h-3.5 mr-1 text-gray-400" />
+                        {locationDisplay}
+                    </div>
+                    <div className="flex items-center text-yellow-500 text-xs font-bold bg-yellow-50 px-2 py-1 rounded-lg">
+                        <Star className="w-3.5 h-3.5 fill-current mr-1" />
+                        {averageRating?.toFixed(1)} <span className="text-gray-400 font-normal ml-1">({totalReviews})</span>
                     </div>
                 </div>
 
-                {/* Title */}
-                <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-[#22C55E] transition-colors">
+                <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 group-hover:text-green-600 transition-colors">
                     {title}
                 </h3>
 
-                {/* Location */}
-                <div className="flex items-center text-gray-500 text-sm mb-4">
-                    <MapPin className="w-4 h-4 mr-1.5" />
-                    {locationDisplay}
-                </div>
-
-                {/* Provider Section */}
-                <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                    <div className="flex items-center gap-3">
+                <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
                         {providerProfilePicture ? (
-                            <img
-                                src={providerProfilePicture}
-                                alt={providerName}
-                                className="w-8 h-8 rounded-full object-cover"
-                                onError={(e) => {
-                                    e.target.style.display = 'none';
-                                    e.target.nextSibling.style.display = 'flex';
-                                }}
-                            />
-                        ) : null}
-                        <div
-                            className={`w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-medium text-sm ${providerProfilePicture ? 'hidden' : ''}`}
-                        >
-                            {providerInitial}
-                        </div>
-                        <span className="text-sm font-medium text-gray-700">
-                            {providerName || 'Provider'}
-                        </span>
+                            <img src={providerProfilePicture} alt={providerName} className="w-8 h-8 rounded-full object-cover ring-2 ring-white shadow-sm" />
+                        ) : (
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-100 to-green-200 flex items-center justify-center text-green-700 font-bold text-xs ring-2 ring-white shadow-sm">
+                                {providerInitial}
+                            </div>
+                        )}
+                        <span className="text-sm font-semibold text-gray-700 truncate max-w-[100px]">{providerName}</span>
                     </div>
                     {isVerified && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full">
-                            <CheckCircle className="w-3 h-3" />
-                            Verified
-                        </span>
+                        <div className="flex items-center gap-1 text-green-600 bg-green-50 px-2 py-1 rounded-full" title="Verified Provider">
+                            <CheckCircle className="w-3.5 h-3.5" />
+                            <span className="text-[10px] font-bold uppercase tracking-wider">Verified</span>
+                        </div>
                     )}
                 </div>
             </div>
@@ -167,144 +135,167 @@ const ServiceCard = ({ service }) => {
     );
 };
 
-// Filter Sidebar Component
+// Filter Sidebar
 const FilterSidebar = ({ selectedCategory, setSelectedCategory, selectedLocation, setSelectedLocation, priceRange, setPriceRange, verifiedOnly, setVerifiedOnly }) => {
-    // Price range options
-    const PRICE_RANGES = [
-        { label: 'Any Price', value: 200, id: 'any' },
-        { label: 'Under $50', value: 50, id: 'under-50' },
-        { label: '$50 - $100', value: 100, id: '50-100' },
-        { label: '$100+', value: 200, id: 'over-100' },
-    ];
-
     return (
-        <div className="space-y-8">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-                <h2 className="text-lg font-bold text-gray-900">Filters</h2>
-                <Filter className="w-5 h-5 text-gray-400" />
+        <div className="bg-white rounded-2xl border border-gray-100 p-6 shadow-sm sticky top-24">
+            <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                    <Filter className="w-5 h-5 text-gray-400" />
+                    Filters
+                </h2>
+                {(selectedCategory || selectedLocation !== 'All Locations' || verifiedOnly) && (
+                    <button
+                        onClick={() => { setSelectedCategory(null); setSelectedLocation('All Locations'); setVerifiedOnly(false); setPriceRange(200); }}
+                        className="text-xs font-semibold text-green-600 hover:text-green-700 hover:underline"
+                    >
+                        Reset All
+                    </button>
+                )}
             </div>
 
-            {/* Categories */}
-            <div>
-                <h3 className="text-sm font-semibold text-gray-900 mb-4">Category</h3>
-                <div className="space-y-3">
-                    {CATEGORIES.map((cat) => (
-                        <label
-                            key={cat.name}
-                            className="flex items-center group cursor-pointer"
+            <div className="space-y-8">
+                {/* Categories */}
+                <div>
+                    <h3 className="text-sm font-bold text-gray-900 mb-4 uppercase tracking-wider">Category</h3>
+                    <div className="space-y-2">
+                        {CATEGORIES.map((cat) => (
+                            <button
+                                key={cat.name}
+                                onClick={() => setSelectedCategory(selectedCategory === cat.value ? null : cat.value)}
+                                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-sm transition-all group ${selectedCategory === cat.value
+                                        ? 'bg-green-50 text-green-700 font-semibold'
+                                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                    }`}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <cat.icon className={`w-4 h-4 ${selectedCategory === cat.value ? 'text-green-600' : 'text-gray-400 group-hover:text-gray-600'}`} />
+                                    <span>{cat.name}</span>
+                                </div>
+                                {selectedCategory === cat.value && <CheckCircle className="w-4 h-4 text-green-600" />}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Location */}
+                <div>
+                    <h3 className="text-sm font-bold text-gray-900 mb-4 uppercase tracking-wider">Location</h3>
+                    <div className="relative">
+                        <select
+                            value={selectedLocation}
+                            onChange={(e) => setSelectedLocation(e.target.value)}
+                            className="w-full pl-4 pr-10 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none appearance-none cursor-pointer transition-all hover:bg-white"
                         >
+                            {LOCATIONS.map((loc) => (
+                                <option key={loc} value={loc}>{loc}</option>
+                            ))}
+                        </select>
+                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                    </div>
+                </div>
+
+                {/* Price Range */}
+                <div>
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Max Price</h3>
+                        <span className="text-sm font-bold text-green-600">${priceRange}</span>
+                    </div>
+                    <input
+                        type="range"
+                        min="50"
+                        max="500"
+                        step="50"
+                        value={priceRange}
+                        onChange={(e) => setPriceRange(Number(e.target.value))}
+                        className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-green-600"
+                    />
+                    <div className="flex justify-between mt-2 text-xs text-gray-400 font-medium">
+                        <span>$50</span>
+                        <span>$500+</span>
+                    </div>
+                </div>
+
+                {/* Verified Toggle */}
+                <div className="bg-green-50/50 rounded-xl p-4 border border-green-100">
+                    <label className="flex items-center justify-between cursor-pointer group">
+                        <div className="flex items-center gap-3">
+                            <div className="bg-white p-1.5 rounded-lg shadow-sm text-green-600">
+                                <CheckCircle className="w-4 h-4" />
+                            </div>
+                            <span className="text-sm font-semibold text-gray-900 group-hover:text-green-700 transition-colors">Verified Only</span>
+                        </div>
+                        <div className="relative">
                             <input
                                 type="checkbox"
-                                checked={selectedCategory === cat.value}
-                                onChange={() => setSelectedCategory(selectedCategory === cat.value ? null : cat.value)}
-                                className="w-4 h-4 text-[#22C55E] border-gray-300 rounded focus:ring-[#22C55E] cursor-pointer accent-[#22C55E]"
+                                checked={verifiedOnly}
+                                onChange={(e) => setVerifiedOnly(e.target.checked)}
+                                className="sr-only peer"
                             />
-                            <div className="ml-3 flex items-center gap-2">
-                                <cat.icon className="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
-                                <span className="text-gray-600 group-hover:text-gray-900 text-sm">
-                                    {cat.name}
-                                </span>
-                            </div>
-                        </label>
-                    ))}
+                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500 shadow-inner"></div>
+                        </div>
+                    </label>
                 </div>
-            </div>
-
-            {/* Location */}
-            <div>
-                <h3 className="text-sm font-semibold text-gray-900 mb-4">Location</h3>
-                <div className="relative">
-                    <select
-                        value={selectedLocation}
-                        onChange={(e) => setSelectedLocation(e.target.value)}
-                        className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 focus:ring-2 focus:ring-[#22C55E] focus:border-[#22C55E] outline-none appearance-none cursor-pointer"
-                    >
-                        {LOCATIONS.map((loc) => (
-                            <option key={loc} value={loc}>{loc}</option>
-                        ))}
-                    </select>
-                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                </div>
-            </div>
-
-            {/* Price Range */}
-            <div>
-                <h3 className="text-sm font-semibold text-gray-900 mb-4">Price Range</h3>
-                <div className="space-y-3">
-                    {PRICE_RANGES.map((item) => (
-                        <label
-                            key={item.id}
-                            className="flex items-center group cursor-pointer"
-                        >
-                            <input
-                                type="radio"
-                                name="price"
-                                id={item.id}
-                                checked={priceRange === item.value}
-                                onChange={() => setPriceRange(item.value)}
-                                className="w-4 h-4 text-[#22C55E] border-gray-300 focus:ring-[#22C55E] cursor-pointer accent-[#22C55E]"
-                            />
-                            <span className="ml-3 text-gray-600 group-hover:text-gray-900 text-sm">
-                                {item.label}
-                            </span>
-                        </label>
-                    ))}
-                </div>
-            </div>
-
-            {/* Verified Only Toggle */}
-            <div>
-                <label className="flex items-center justify-between cursor-pointer">
-                    <span className="text-sm font-semibold text-gray-900">Verified Helpers Only</span>
-                    <div className="relative">
-                        <input
-                            type="checkbox"
-                            checked={verifiedOnly}
-                            onChange={(e) => setVerifiedOnly(e.target.checked)}
-                            className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#22C55E]/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#22C55E]"></div>
-                    </div>
-                </label>
             </div>
         </div>
     );
 };
 
-// Main MarketPlace Component
 const MarketPlace = () => {
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedCategory, setSelectedCategory] = useState(null); // null = All Categories
+    const [selectedCategory, setSelectedCategory] = useState(null);
     const [selectedLocation, setSelectedLocation] = useState('All Locations');
     const [priceRange, setPriceRange] = useState(200);
     const [verifiedOnly, setVerifiedOnly] = useState(false);
-    const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-
-    // API state
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [visibleCount, setVisibleCount] = useState(6);
+    const [showMobileFilters, setShowMobileFilters] = useState(false);
 
-    // Fetch services from API based on filters
     const fetchServices = useCallback(async () => {
         setLoading(true);
         setError(null);
-
         try {
-            // Build filter object for API search
+            if (searchQuery && /^[0-9a-fA-F]{24}$/.test(searchQuery)) {
+                try {
+                    const service = await getServiceById(searchQuery);
+                    if (service) {
+                        setServices([service]);
+                        setVisibleCount(6);
+                        setLoading(false);
+                        return;
+                    }
+                } catch (e) { console.log("Detail lookup failed, falling back"); }
+            }
+
+            let overrideCategory = selectedCategory;
+            let overrideSearchTerm = searchQuery;
+
+            if (searchQuery && !selectedCategory) {
+                const normalizedQuery = searchQuery.trim().toLowerCase();
+                const matchedCategory = CATEGORIES.find(cat =>
+                    cat.name.toLowerCase() === normalizedQuery ||
+                    (cat.value && cat.value.toLowerCase() === normalizedQuery)
+                );
+                if (matchedCategory && matchedCategory.value) {
+                    overrideCategory = matchedCategory.value;
+                    overrideSearchTerm = '';
+                }
+            }
+
             const filters = {
-                category: selectedCategory || undefined,
-                maxPrice: priceRange < 200 ? priceRange : undefined,
-                searchTerm: searchQuery || undefined,
+                category: overrideCategory || undefined,
+                maxPrice: priceRange < 500 ? priceRange : undefined,
+                searchTerm: overrideSearchTerm || undefined,
                 destination: selectedLocation !== 'All Locations' ? selectedLocation : undefined,
                 availableOnly: true,
             };
 
             const data = await searchServices(filters);
-            // Filter out inactive services (double-check on frontend)
             const activeServices = (data || []).filter(s => s.isAvailable !== false && s.available !== false);
             setServices(activeServices);
+            setVisibleCount(6);
         } catch (err) {
             console.error('Failed to fetch services:', err);
             setError(err.message || 'Failed to load services');
@@ -314,65 +305,83 @@ const MarketPlace = () => {
         }
     }, [selectedCategory, priceRange, searchQuery, selectedLocation]);
 
-    // Initial fetch and refetch when filters change
     useEffect(() => {
-        // Debounce search queries to avoid too many API calls
         const timeoutId = setTimeout(() => {
             fetchServices();
-        }, searchQuery ? 300 : 0); // Debounce only for search queries
-
+        }, searchQuery ? 300 : 0);
         return () => clearTimeout(timeoutId);
     }, [fetchServices]);
 
-    // Reset filters
-    const handleResetFilters = () => {
-        setSearchQuery('');
-        setSelectedCategory(null);
-        setSelectedLocation('All Locations');
-        setPriceRange(200);
-        setVerifiedOnly(false);
-    };
-
     return (
-        <div className="min-h-screen bg-gray-50 flex flex-col font-sans relative">
+        <div className="min-h-screen bg-gray-50/50 font-sans relative">
             <Navbar />
 
-            {/* Top gradient shadow */}
-            <div className="absolute top-0 left-0 right-0 h-32 bg-gradient-to-b from-black/10 to-transparent pointer-events-none z-10"></div>
+            {/* Background Decoration */}
+            <div className="fixed inset-0 pointer-events-none z-0">
+                <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-green-100/40 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
+                <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-100/40 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2"></div>
+            </div>
 
-            <main className="flex-grow">
-                {/* Hero / Search Section */}
-                <div className="pb-8 pt-32 px-4 sm:px-6 lg:px-8">
-                    <div className="max-w-7xl mx-auto">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                            <div>
-                                <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                                    Service Marketplace
-                                </h1>
-                                <p className="text-gray-500">
-                                    Find trusted help for your move.
-                                </p>
-                            </div>
-                            <div className="w-full md:w-96">
-                                <div className="relative">
-                                    <input
-                                        type="text"
-                                        value={searchQuery}
-                                        onChange={(e) => setSearchQuery(e.target.value)}
-                                        placeholder="Search services..."
-                                        className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#22C55E] focus:border-[#22C55E] outline-none transition-all"
-                                    />
-                                    <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
+            <main className="relative z-10 pt-24 pb-12 px-4 sm:px-6 lg:px-8">
+                {/* Header */}
+                <div className="max-w-7xl mx-auto mb-12">
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-center max-w-2xl mx-auto mb-10"
+                    >
+                        <span className="text-green-600 font-bold tracking-wider uppercase text-xs mb-2 block">Marketplace</span>
+                        <h1 className="text-4xl font-extrabold text-gray-900 mb-4 tracking-tight">
+                            Find Verified <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-600 to-emerald-500">Services</span>
+                        </h1>
+                        <p className="text-lg text-gray-500">
+                            Connect with verified locals for housing, transport, and support. Safe, secure, and easy.
+                        </p>
+                    </motion.div>
+
+                    {/* Search Bar */}
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.1 }}
+                        className="max-w-2xl mx-auto relative z-20"
+                    >
+                        <div className="relative group">
+                            <div className="absolute inset-0 bg-green-500 rounded-2xl blur opacity-20 group-hover:opacity-30 transition-opacity"></div>
+                            <div className="relative bg-white rounded-2xl shadow-lg flex items-center p-2 border border-gray-100">
+                                <div className="pl-4 text-gray-400">
+                                    <Search className="w-6 h-6" />
                                 </div>
+                                <input
+                                    type="text"
+                                    value={searchQuery}
+                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    placeholder="Search for 'Housing', 'Transport', or specific needs..."
+                                    className="w-full px-4 py-3 bg-transparent border-none focus:ring-0 text-gray-900 placeholder-gray-400 text-base"
+                                />
+                                <button className="px-6 py-2.5 bg-green-600 text-white rounded-xl font-bold hover:bg-green-700 transition-colors shadow-md">
+                                    Search
+                                </button>
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
                 </div>
 
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div className="max-w-7xl mx-auto">
+                    {/* Mobile Filter Toggle */}
+                    <div className="lg:hidden mb-6">
+                        <button
+                            onClick={() => setShowMobileFilters(!showMobileFilters)}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-white border border-gray-200 rounded-xl font-semibold text-gray-700 shadow-sm"
+                        >
+                            <Filter className="w-5 h-5" />
+                            {showMobileFilters ? 'Hide Filters' : 'Show Filters'}
+                        </button>
+                    </div>
+
                     <div className="flex flex-col lg:flex-row gap-8">
                         {/* Sidebar */}
-                        <aside className="w-full lg:w-64 flex-shrink-0">
+                        <aside className={`lg:w-72 flex-shrink-0 ${showMobileFilters ? 'block' : 'hidden lg:block'}`}>
                             <FilterSidebar
                                 selectedCategory={selectedCategory}
                                 setSelectedCategory={setSelectedCategory}
@@ -385,69 +394,60 @@ const MarketPlace = () => {
                             />
                         </aside>
 
-                        {/* Grid */}
+                        {/* Results */}
                         <div className="flex-1">
-                            {/* Loading State */}
-                            {loading && (
-                                <div className="flex flex-col items-center justify-center py-16">
-                                    <Loader2 className="w-12 h-12 text-[#22C55E] animate-spin mb-4" />
-                                    <p className="text-gray-500 font-medium">Loading services...</p>
+                            {loading ? (
+                                <div className="flex flex-col items-center justify-center py-20">
+                                    <Loader2 className="w-10 h-10 text-green-500 animate-spin mb-4" />
+                                    <p className="text-gray-500 font-medium">Finding the best matches...</p>
                                 </div>
-                            )}
-
-                            {/* Error State */}
-                            {error && !loading && (
-                                <div className="text-center py-16">
-                                    <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                            ) : error ? (
+                                <div className="text-center py-20 bg-white rounded-3xl border border-red-100">
+                                    <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
                                         <AlertCircle className="w-8 h-8 text-red-500" />
                                     </div>
-                                    <h3 className="text-xl font-bold text-gray-900 mb-2">Failed to load services</h3>
+                                    <h3 className="text-xl font-bold text-gray-900 mb-2">Something went wrong</h3>
                                     <p className="text-gray-500 mb-6">{error}</p>
-                                    <button
-                                        onClick={fetchServices}
-                                        className="px-6 py-2.5 bg-[#22C55E] text-white font-semibold rounded-lg hover:bg-[#16A34A] transition-colors inline-flex items-center gap-2"
-                                    >
-                                        <RefreshCw className="w-4 h-4" />
-                                        Try Again
-                                    </button>
+                                    <button onClick={fetchServices} className="px-6 py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700">Try Again</button>
                                 </div>
-                            )}
-
-                            {/* Services Grid */}
-                            {!loading && !error && services.length > 0 && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                                    {services.map((service) => (
-                                        <ServiceCard key={service.id} service={service} />
-                                    ))}
-                                </div>
-                            )}
-
-                            {/* Empty State */}
-                            {!loading && !error && services.length === 0 && (
-                                <div className="text-center py-16">
-                                    <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                                        <Search className="w-8 h-8 text-gray-400" />
+                            ) : services.length === 0 ? (
+                                <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
+                                    <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <Search className="w-10 h-10 text-gray-400" />
                                     </div>
                                     <h3 className="text-xl font-bold text-gray-900 mb-2">No services found</h3>
-                                    <p className="text-gray-500 mb-6">Try adjusting your filters or search query</p>
+                                    <p className="text-gray-500 mb-6 max-w-md mx-auto">We couldn't find matches for your current filters. Try adjusting your search or filters.</p>
                                     <button
-                                        onClick={handleResetFilters}
-                                        className="px-6 py-2.5 bg-[#22C55E] text-white font-semibold rounded-lg hover:bg-[#16A34A] transition-colors"
+                                        onClick={() => { setSearchQuery(''); setSelectedCategory(null); setSelectedLocation('All Locations'); }}
+                                        className="px-6 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg font-bold hover:bg-gray-50"
                                     >
-                                        Reset Filters
+                                        Clear Filters
                                     </button>
                                 </div>
+                            ) : (
+                                <>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                                        {services.slice(0, visibleCount).map((service) => (
+                                            <ServiceCard key={service.id} service={service} />
+                                        ))}
+                                    </div>
+
+                                    {visibleCount < services.length && (
+                                        <div className="mt-12 text-center">
+                                            <button
+                                                onClick={() => setVisibleCount(prev => prev + 6)}
+                                                className="px-8 py-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-full shadow-sm hover:shadow-md hover:border-green-500 hover:text-green-600 transition-all"
+                                            >
+                                                Load More Results
+                                            </button>
+                                        </div>
+                                    )}
+                                </>
                             )}
                         </div>
                     </div>
                 </div>
             </main>
-
-            {/* Floating Chat Bot */}
-            <button className="fixed bottom-8 right-8 w-14 h-14 bg-[#22C55E] rounded-full shadow-lg flex items-center justify-center text-white hover:bg-[#16A34A] transition-colors z-40 hover:scale-110 duration-200">
-                <Bot className="w-7 h-7" />
-            </button>
-
             <Footer />
         </div>
     );
