@@ -1,4 +1,5 @@
 package com.example.migratemate.ServiceManagement.Entity;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -53,6 +54,9 @@ public class ServiceEntity {
     private Integer totalBookings;
     private Double averageRating;
     private Integer totalReviews;
+
+    // Status
+    private String status; // INREVIEW, APPROVED, ADVICED
 
     // Timestamps
     private LocalDateTime createdAt;

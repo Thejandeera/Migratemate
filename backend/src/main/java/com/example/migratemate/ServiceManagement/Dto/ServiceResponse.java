@@ -52,6 +52,9 @@ public class ServiceResponse {
     private Double averageRating;
     private Integer totalReviews;
 
+    // Status
+    private String status;
+
     // Timestamps
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

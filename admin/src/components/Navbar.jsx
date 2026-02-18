@@ -66,6 +66,7 @@ const Navbar = () => {
                     {isLoggedIn && (
                         <div className="hidden md:flex items-center space-x-8">
                             <Link to="/users" className="text-sm font-medium text-gray-500 hover:text-gray-900">View Users</Link>
+                            <Link to="/gigs" className="text-sm font-medium text-gray-500 hover:text-gray-900">Manage Gigs</Link>
                             <Link to="/reports" className="text-sm font-medium text-gray-500 hover:text-gray-900">Reports</Link>
                             <Link to="/communities" className="text-sm font-medium text-gray-500 hover:text-gray-900">Communities</Link>
                             <Link to="/bookings" className="text-sm font-medium text-gray-500 hover:text-gray-900 border-b-2 border-transparent hover:border-gray-900 transition-all">Bookings</Link>
@@ -112,6 +113,7 @@ const Navbar = () => {
                             {isLoggedIn && (
                                 <>
                                     <Link to="/users" className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">View Users</Link>
+                                    <Link to="/gigs" className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">Manage Gigs</Link>
                                     <Link to="/reports" className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">Reports</Link>
                                     <Link to="/communities" className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50 rounded-md">Communities</Link>
 

@@ -362,4 +362,252 @@ public class EmailService {
                 "</body>" +
                 "</html>";
     }
+
+    /**
+     * Send service deletion email
+     */
+    @Async
+    public void sendServiceDeletionEmail(String email, String serviceTitle, String reason) {
+        try {
+            String subject = "Service Deletion Notification - " + appName;
+            String htmlBody = buildServiceDeletionEmailTemplate(serviceTitle, reason);
+
+            EmailDTO emailDTO = EmailDTO.builder()
+                    .to(email)
+                    .subject(subject)
+                    .htmlBody(htmlBody)
+                    .build();
+
+            sendHtmlEmail(emailDTO);
+        } catch (Exception e) {
+            log.error("❌ Failed to send service deletion email to: {}", email, e);
+        }
+    }
+
+    /**
+     * Build service deletion email HTML template
+     */
+    private String buildServiceDeletionEmailTemplate(String serviceTitle, String reason) {
+        return "<!DOCTYPE html>" +
+                "<html>" +
+                "<head>" +
+                "    <meta charset='UTF-8'>" +
+                "    <style>" +
+                "        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }" +
+                "        .container { max-width: 600px; margin: 0 auto; padding: 20px; }" +
+                "        .header { background: #e53e3e; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }"
+                +
+                "        .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 5px 5px; }" +
+                "        .reason-box { background: #fff; border-left: 4px solid #e53e3e; padding: 15px; margin: 20px 0; font-style: italic; color: #555; }"
+                +
+                "        .footer { text-align: center; margin-top: 20px; color: #777; font-size: 12px; }" +
+                "    </style>" +
+                "</head>" +
+                "<body>" +
+                "    <div class='container'>" +
+                "        <div class='header'><h1>Service Removed</h1></div>" +
+                "        <div class='content'>" +
+                "            <p>Hello,</p>" +
+                "            <p>We are writing to inform you that your service <strong>" + serviceTitle
+                + "</strong> has been removed from " + appName + " by an administrator.</p>" +
+                "            <p><strong>Reason for deletion:</strong></p>" +
+                "            <div class='reason-box'>" +
+                "                \"" + reason + "\"" +
+                "            </div>" +
+                "            <p>If you believe this was a mistake or have any questions, please contact our support team.</p>"
+                +
+                "        </div>" +
+                "        <div class='footer'><p>&copy; 2024 " + appName + "</p></div>" +
+                "    </div>" +
+                "</body>" +
+                "</html>";
+    }
+
+    /**
+     * Send service approval email
+     */
+    @Async
+    public void sendServiceApprovalEmail(String email, String serviceTitle) {
+        try {
+            String subject = "Your Service Has Been Approved! ✅ - " + appName;
+            String htmlBody = buildServiceApprovalEmailTemplate(serviceTitle);
+
+            EmailDTO emailDTO = EmailDTO.builder()
+                    .to(email)
+                    .subject(subject)
+                    .htmlBody(htmlBody)
+                    .build();
+
+            sendHtmlEmail(emailDTO);
+        } catch (Exception e) {
+            log.error("❌ Failed to send service approval email to: {}", email, e);
+        }
+    }
+
+    /**
+     * Build service approval email HTML template
+     */
+    private String buildServiceApprovalEmailTemplate(String serviceTitle) {
+        return "<!DOCTYPE html>" +
+                "<html>" +
+                "<head>" +
+                "    <meta charset='UTF-8'>" +
+                "    <meta name='viewport' content='width=device-width, initial-scale=1.0'>" +
+                "    <style>" +
+                "        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4; margin: 0; padding: 0; }"
+                +
+                "        .container { max-width: 600px; margin: 20px auto; background: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow: hidden; }"
+                +
+                "        .header { background: linear-gradient(135deg, #38a169 0%, #2f855a 100%); color: white; padding: 40px 20px; text-align: center; }"
+                +
+                "        .header h1 { margin: 0; font-size: 28px; font-weight: 600; }" +
+                "        .content { padding: 40px 30px; }" +
+                "        .content h2 { color: #38a169; margin-top: 0; }" +
+                "        .content p { margin: 15px 0; color: #555; }" +
+                "        .service-box { background: #f0fff4; border-left: 4px solid #38a169; padding: 15px 20px; margin: 20px 0; border-radius: 0 8px 8px 0; }"
+                +
+                "        .service-title { font-size: 18px; font-weight: 600; color: #2f855a; margin: 0; }" +
+                "        .checkmark { font-size: 48px; margin-bottom: 10px; }" +
+                "        .next-steps { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }" +
+                "        .next-steps ul { list-style: none; padding: 0; margin: 0; }" +
+                "        .next-steps li { padding: 8px 0; color: #555; }" +
+                "        .next-steps li:before { content: '✓ '; color: #38a169; font-weight: bold; margin-right: 10px; }"
+                +
+                "        .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #777; font-size: 14px; }"
+                +
+                "    </style>" +
+                "</head>" +
+                "<body>" +
+                "    <div class='container'>" +
+                "        <div class='header'>" +
+                "            <div class='checkmark'>✅</div>" +
+                "            <h1>Service Approved!</h1>" +
+                "        </div>" +
+                "        <div class='content'>" +
+                "            <h2>Congratulations!</h2>" +
+                "            <p>Great news! Your service has been reviewed and approved by our admin team. It is now live and visible to all users on "
+                + appName + ".</p>" +
+                "            <div class='service-box'>" +
+                "                <p class='service-title'>" + serviceTitle + "</p>" +
+                "            </div>" +
+                "            <div class='next-steps'>" +
+                "                <h3>What happens next?</h3>" +
+                "                <ul>" +
+                "                    <li>Your service is now visible in the marketplace</li>" +
+                "                    <li>Users can browse and book your service</li>" +
+                "                    <li>You will be notified when someone makes a booking</li>" +
+                "                    <li>Keep your service details up to date for best results</li>" +
+                "                </ul>" +
+                "            </div>" +
+                "            <p>Thank you for being a valued service provider on " + appName + "!</p>" +
+                "            <p style='margin-top: 30px;'><strong>The " + appName + " Team</strong></p>" +
+                "        </div>" +
+                "        <div class='footer'>" +
+                "            <p>&copy; 2024 " + appName + ". All rights reserved.</p>" +
+                "        </div>" +
+                "    </div>" +
+                "</body>" +
+                "</html>";
+    }
+
+    /**
+     * Send service advice email
+     */
+    @Async
+    public void sendServiceAdviceEmail(String email, String serviceTitle, String reason) {
+        try {
+            String subject = "Action Required: Update Your Service Listing - " + appName;
+            String htmlBody = buildServiceAdviceEmailTemplate(serviceTitle, reason);
+
+            EmailDTO emailDTO = EmailDTO.builder()
+                    .to(email)
+                    .subject(subject)
+                    .htmlBody(htmlBody)
+                    .build();
+
+            sendHtmlEmail(emailDTO);
+        } catch (Exception e) {
+            log.error("❌ Failed to send service advice email to: {}", email, e);
+        }
+    }
+
+    /**
+     * Build service advice email HTML template
+     */
+    private String buildServiceAdviceEmailTemplate(String serviceTitle, String reason) {
+        return "<!DOCTYPE html>" +
+                "<html>" +
+                "<head>" +
+                "    <meta charset='UTF-8'>" +
+                "    <meta name='viewport' content='width=device-width, initial-scale=1.0'>" +
+                "    <style>" +
+                "        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; background-color: #f4f4f4; margin: 0; padding: 0; }"
+                +
+                "        .container { max-width: 600px; margin: 20px auto; background: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow: hidden; }"
+                +
+                "        .header { background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: white; padding: 40px 20px; text-align: center; }"
+                +
+                "        .header h1 { margin: 0; font-size: 28px; font-weight: 600; }" +
+                "        .icon { font-size: 48px; margin-bottom: 10px; }" +
+                "        .content { padding: 40px 30px; }" +
+                "        .content h2 { color: #1d4ed8; margin-top: 0; }" +
+                "        .content p { margin: 15px 0; color: #555; }" +
+                "        .reason-box { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px 20px; margin: 20px 0; border-radius: 0 8px 8px 0; }"
+                +
+                "        .service-title { font-weight: 600; color: #1d4ed8; }" +
+                "        .warning-box { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 15px 20px; margin: 20px 0; border-radius: 0 8px 8px 0; }"
+                +
+                "        .steps { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; }" +
+                "        .steps ol { margin: 10px 0; padding-left: 20px; }" +
+                "        .steps li { padding: 6px 0; color: #555; }" +
+                "        .footer { background: #f8f9fa; padding: 20px; text-align: center; color: #777; font-size: 14px; }"
+                +
+                "    </style>" +
+                "</head>" +
+                "<body>" +
+                "    <div class='container'>" +
+                "        <div class='header'>" +
+                "            <div class='icon'>⚠️</div>" +
+                "            <h1>Action Required</h1>" +
+                "        </div>" +
+                "        <div class='content'>" +
+                "            <h2>Your Service Needs Updates</h2>" +
+                "            <p>Our admin team has reviewed your service listing <span class='service-title'>\""
+                + serviceTitle + "\"</span> and found that it needs some changes to comply with our guidelines.</p>" +
+                "            <div class='reason-box'>" +
+                "                <p style='margin: 0; font-weight: 600; color: #1d4ed8;'>Issue identified:</p>" +
+                "                <p style='margin: 8px 0 0 0; color: #555; font-style: italic;'>\"" + reason + "\"</p>"
+                +
+                "            </div>" +
+                "            <div class='warning-box'>" +
+                "                <p style='margin: 0; color: #92400e;'><strong>⏰ Important:</strong> Please update your service listing to address the above issue as soon as possible.</p>"
+                +
+                "            </div>" +
+                "            <div class='steps'>" +
+                "                <h3 style='margin-top: 0;'>How to update your listing:</h3>" +
+                "                <ol>" +
+                "                    <li>Log in to your " + appName + " account</li>" +
+                "                    <li>Go to your Service Dashboard</li>" +
+                "                    <li>Find the service and click Edit</li>" +
+                "                    <li>Make the necessary changes and save</li>" +
+                "                </ol>" +
+                "            </div>" +
+                "            <div style='background: #fef3c7; border: 1px solid #f59e0b; border-radius: 8px; padding: 15px; margin: 20px 0;'>"
+                +
+                "                <p style='margin: 0 0 5px 0; font-weight: 600; color: #92400e; font-size: 13px;'>⚠️ Disclaimer</p>"
+                +
+                "                <p style='margin: 0; color: #78350f; font-size: 12px; line-height: 1.5;'>This notice is part of our routine quality and compliance review process. Providers are requested to review and update their listings accordingly. Continued non-compliance may lead to restricted visibility or removal of the service from the platform.</p>"
+                +
+                "            </div>" +
+                "            <p>If you have any questions or need clarification, please don't hesitate to contact our support team.</p>"
+                +
+                "            <p style='margin-top: 30px;'><strong>The " + appName + " Team</strong></p>" +
+                "        </div>" +
+                "        <div class='footer'>" +
+                "            <p>&copy; 2024 " + appName + ". All rights reserved.</p>" +
+                "        </div>" +
+                "    </div>" +
+                "</body>" +
+                "</html>";
+    }
 }

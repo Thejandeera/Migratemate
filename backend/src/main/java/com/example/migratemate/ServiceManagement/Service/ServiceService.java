@@ -2,6 +2,7 @@ package com.example.migratemate.ServiceManagement.Service;
 
 import com.example.migratemate.ServiceManagement.Dto.*;
 import com.example.migratemate.ServiceManagement.Entity.ServiceEntity;
+import com.example.migratemate.ServiceManagement.Entity.ServiceStatus;
 import com.example.migratemate.ServiceManagement.Repository.ServiceRepository;
 import com.example.migratemate.UserManagement.Entity.User;
 import com.example.migratemate.UserManagement.Repository.UserRepository;
@@ -22,6 +23,7 @@ public class ServiceService {
     private final ServiceRepository serviceRepository;
     private final UserRepository userRepository;
     private final ImageUploadService imageUploadService;
+    private final com.example.migratemate.MailManagement.Service.EmailService emailService;
 
     // Create a new service
     public ServiceResponse createService(String email, CreateServiceRequest request) throws IOException {
@@ -75,6 +77,9 @@ public class ServiceService {
         service.setTotalBookings(0);
         service.setAverageRating(0.0);
         service.setTotalReviews(0);
+
+        // Status - default to INREVIEW
+        service.setStatus(ServiceStatus.INREVIEW.name());
 
         // Timestamps
         service.setCreatedAt(LocalDateTime.now());
@@ -188,6 +193,60 @@ public class ServiceService {
         log.info("Service deleted successfully: {}", serviceId);
     }
 
+    // Admin delete service with reason
+    public void adminDeleteService(String serviceId, String reason) {
+        ServiceEntity service = serviceRepository.findById(serviceId)
+                .orElseThrow(() -> new RuntimeException("Service not found"));
+
+        // Fetch provider to get email
+        User provider = userRepository.findById(service.getProviderId())
+                .orElseThrow(() -> new RuntimeException("Provider not found"));
+
+        // Send email notification
+        emailService.sendServiceDeletionEmail(provider.getEmail(), service.getTitle(), reason);
+
+        // Delete service
+        serviceRepository.delete(service);
+        log.info("Service deleted by admin: {} Reason: {}", serviceId, reason);
+    }
+
+    // Update service status (admin only)
+    public ServiceResponse updateServiceStatus(String serviceId, String status, String reason) {
+        ServiceEntity service = serviceRepository.findById(serviceId)
+                .orElseThrow(() -> new RuntimeException("Service not found"));
+
+        // Validate status value
+        try {
+            ServiceStatus.valueOf(status);
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException(
+                    "Invalid status: " + status + ". Valid values are: INREVIEW, APPROVED, ADVICED");
+        }
+
+        service.setStatus(status);
+        service.setUpdatedAt(LocalDateTime.now());
+
+        ServiceEntity updatedService = serviceRepository.save(service);
+        log.info("Service status updated: {} -> {}", serviceId, status);
+
+        // Send email notifications based on status
+        try {
+            User provider = userRepository.findById(service.getProviderId())
+                    .orElse(null);
+            if (provider != null) {
+                if ("APPROVED".equals(status)) {
+                    emailService.sendServiceApprovalEmail(provider.getEmail(), service.getTitle());
+                } else if ("ADVICED".equals(status) && reason != null && !reason.isEmpty()) {
+                    emailService.sendServiceAdviceEmail(provider.getEmail(), service.getTitle(), reason);
+                }
+            }
+        } catch (Exception e) {
+            log.error("Failed to send status email for service: {}", serviceId, e);
+        }
+
+        return mapToResponse(updatedService);
+    }
+
     // Get service by ID
     public ServiceResponse getServiceById(String serviceId) {
         ServiceEntity service = serviceRepository.findById(serviceId)
@@ -195,9 +254,25 @@ public class ServiceService {
         return mapToResponse(service);
     }
 
-    // Get all active services
+    // Get all active and APPROVED services (public)
     public List<ServiceResponse> getAllServices() {
-        return serviceRepository.findByIsActiveTrue()
+        return serviceRepository.findAllActive()
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    // Get all services for admin (all statuses)
+    public List<ServiceResponse> getAllServicesAdmin() {
+        return serviceRepository.findAll()
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    // Get services by status (admin)
+    public List<ServiceResponse> getServicesByStatus(String status) {
+        return serviceRepository.findByStatus(status)
                 .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
@@ -331,6 +406,7 @@ public class ServiceService {
                 .totalBookings(entity.getTotalBookings())
                 .averageRating(entity.getAverageRating())
                 .totalReviews(entity.getTotalReviews())
+                .status(entity.getStatus())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();

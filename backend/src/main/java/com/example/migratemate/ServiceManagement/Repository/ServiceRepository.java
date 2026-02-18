@@ -26,24 +26,30 @@ public interface ServiceRepository extends MongoRepository<ServiceEntity, String
 
     List<ServiceEntity> findByOriginContainingIgnoreCase(String origin);
 
-    @Query("{ $or: [ { 'title': { $regex: ?0, $options: 'i' } }, { 'description': { $regex: ?0, $options: 'i' } } ], 'isActive': true }")
+    @Query("{ $or: [ { 'title': { $regex: ?0, $options: 'i' } }, { 'description': { $regex: ?0, $options: 'i' } } ], 'isActive': true, 'status': 'APPROVED' }")
     List<ServiceEntity> searchByKeyword(String keyword);
 
     List<ServiceEntity> findByPriceBetweenAndIsActiveTrue(Double minPrice, Double maxPrice);
 
-    // Simple query - filtering will be done in service layer for null handling
-    @Query("{ 'isActive': true }")
+    // Public queries - only return APPROVED services
+    @Query("{ 'isActive': true, 'status': 'APPROVED' }")
     List<ServiceEntity> findAllActive();
 
-    // Category-based search
-    @Query("{ 'isActive': true, 'category': ?0 }")
+    // Category-based search (approved only)
+    @Query("{ 'isActive': true, 'status': 'APPROVED', 'category': ?0 }")
     List<ServiceEntity> findByCategoryActive(String category);
 
-    // Origin-based search (case-insensitive)
-    @Query("{ 'isActive': true, 'origin': { $regex: ?0, $options: 'i' } }")
+    // Origin-based search (case-insensitive, approved only)
+    @Query("{ 'isActive': true, 'status': 'APPROVED', 'origin': { $regex: ?0, $options: 'i' } }")
     List<ServiceEntity> findByOriginActive(String origin);
 
-    // Destination-based search (case-insensitive)
-    @Query("{ 'isActive': true, 'destination': { $regex: ?0, $options: 'i' } }")
+    // Destination-based search (case-insensitive, approved only)
+    @Query("{ 'isActive': true, 'status': 'APPROVED', 'destination': { $regex: ?0, $options: 'i' } }")
     List<ServiceEntity> findByDestinationActive(String destination);
+
+    // Admin queries - return all services regardless of status
+    List<ServiceEntity> findByStatus(String status);
+
+    @Query("{ 'isActive': true }")
+    List<ServiceEntity> findAllForAdmin();
 }

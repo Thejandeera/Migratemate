@@ -8,6 +8,7 @@ import Bookings from './Pages/Bookings'
 import BookingDetails from './Pages/BookingDetails'
 import UserDetails from './Pages/UserDetails'
 import GigDetails from './Pages/GigDetails';
+import ManageGigs from './Pages/ManageGigs';
 import CommunityManagement from './Pages/CommunityManagement';
 import CommunityChat from './Pages/CommunityChat';
 import { isAuthenticated } from './utils/auth'
@@ -40,6 +41,12 @@ const App = () => {
       <Route path="/users" element={
         <ProtectedRoute>
           <ViewUsers />
+        </ProtectedRoute>
+      } />
+
+      <Route path="/gigs" element={
+        <ProtectedRoute>
+          <ManageGigs />
         </ProtectedRoute>
       } />
 

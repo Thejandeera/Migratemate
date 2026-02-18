@@ -24,7 +24,11 @@ Authorization: Bearer <your_jwt_token>
 | GET `/api/services/search` | ❌ No |
 | PUT `/api/services/{id}` | ✅ Yes (Owner only) |
 | DELETE `/api/services/{id}` | ✅ Yes (Owner only) |
+| DELETE `/api/services/admin/{id}` | ✅ Yes (Admin only) |
 | PATCH `/api/services/{id}/toggle` | ✅ Yes (Owner only) |
+| GET `/api/services/admin/all` | ✅ Yes (Admin only) |
+| GET `/api/services/admin/status/{status}` | ✅ Yes (Admin only) |
+| PATCH `/api/services/admin/{id}/status` | ✅ Yes (Admin only) |
 
 ---
 
@@ -104,6 +108,7 @@ Creates a new service listing with optional image uploads.
     "maxCapacity": 4,
     "duration": 60,
     "durationType": "MINUTES",
+    "status": "INREVIEW",
     "isActive": true,
     "isAvailable": true,
     "availableDays": ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY"],
@@ -119,10 +124,10 @@ Creates a new service listing with optional image uploads.
 
 ---
 
-### 2. Get All Services
+### 2. Get All Services (Public)
 **GET** `/api/services`
 
-Returns all active services.
+Returns all active services with `APPROVED` status only. Services in other statuses (INREVIEW, REJECTED, ADVICED) are not visible to the public.
 
 **Response (200 OK):**
 ```json
@@ -306,7 +311,33 @@ Deletes a service. Only the service owner can delete.
 
 ---
 
-### 10. Toggle Service Availability
+### 10. Admin Delete Service
+**DELETE** `/api/services/admin/{id}`
+
+Deletes a service by an administrator and sends an email notification to the provider with a reason.
+
+**Path Parameters:**
+- `id` - Service ID
+
+**Request Body:**
+```json
+{
+  "reason": "Violation of terms of service regarding prohibited items."
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Service deleted by admin successfully",
+  "data": null
+}
+```
+
+---
+
+### 11. Toggle Service Availability
 **PATCH** `/api/services/{id}/toggle`
 
 Toggles the `isAvailable` status of a service.
@@ -324,6 +355,94 @@ Toggles the `isAvailable` status of a service.
     "isAvailable": false,
     ...
   }
+}
+```
+
+---
+
+### 12. Get All Services (Admin)
+**GET** `/api/services/admin/all`
+
+Returns all services regardless of status. For admin dashboard use.
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "All services retrieved successfully",
+  "data": [
+    {
+      "id": "65abc123def456",
+      "title": "Airport Pickup Service",
+      "status": "INREVIEW",
+      ...
+    }
+  ]
+}
+```
+
+---
+
+### 13. Get Services by Status (Admin)
+**GET** `/api/services/admin/status/{status}`
+
+Returns services filtered by a specific status.
+
+**Path Parameters:**
+- `status` - Service status (`INREVIEW`, `APPROVED`, `REJECTED`, `ADVICED`)
+
+**Example Request:**
+```
+GET /api/services/admin/status/INREVIEW
+```
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Services retrieved by status successfully",
+  "data": [...]
+}
+```
+
+---
+
+### 14. Update Service Status (Admin)
+**PATCH** `/api/services/admin/{id}/status`
+
+Updates the review status of a service.
+
+**Path Parameters:**
+- `id` - Service ID
+
+**Request Body:**
+```json
+{
+  "status": "APPROVED"
+}
+```
+
+**Valid Status Values:** `INREVIEW`, `APPROVED`, `REJECTED`, `ADVICED`
+
+**Response (200 OK):**
+```json
+{
+  "success": true,
+  "message": "Service status updated to APPROVED",
+  "data": {
+    "id": "65abc123def456",
+    "title": "Airport Pickup Service",
+    "status": "APPROVED",
+    ...
+  }
+}
+```
+
+**Error Response (400 Bad Request):**
+```json
+{
+  "success": false,
+  "message": "Invalid status: INVALID. Valid values are: INREVIEW, APPROVED, REJECTED, ADVICED"
 }
 ```
 
@@ -353,6 +472,7 @@ Toggles the `isAvailable` status of a service.
 | `maxCapacity` | Integer | Maximum booking capacity |
 | `duration` | Integer | Service duration |
 | `durationType` | String | MINUTES, HOURS, DAYS |
+| `status` | String | Service review status (INREVIEW, APPROVED, REJECTED, ADVICED) |
 | `isActive` | Boolean | Service visibility |
 | `isAvailable` | Boolean | Booking availability |
 | `availableDays` | List<String> | Available weekdays |
@@ -365,7 +485,18 @@ Toggles the `isAvailable` status of a service.
 
 ---
 
-## Category Values
+## Enums
+
+### ServiceStatus
+
+| Value | Display Name | Description |
+|-------|-------------|-------------|
+| `INREVIEW` | In Review | Default status for newly created services, pending admin review |
+| `APPROVED` | Approved | Service is approved and visible to the public |
+| `REJECTED` | Rejected | Service has been rejected by an admin |
+| `ADVICED` | Adviced | Service needs changes as advised by an admin |
+
+### Category Values
 
 | Category | Description |
 |----------|-------------|
@@ -374,9 +505,7 @@ Toggles the `isAvailable` status of a service.
 | `DOCUMENTATION` | Visa, legal documents assistance |
 | `CULTURAL_SUPPORT` | Language, cultural integration |
 
----
-
-## Pricing Types
+### Pricing Types
 
 | Type | Description |
 |------|-------------|
@@ -419,14 +548,16 @@ Toggles the `isAvailable` status of a service.
 
 ## Notes
 
-1. **Image Upload**: Base64 encoded images can be sent via `imagesBase64` (create) or `newImagesBase64` (update). They are automatically uploaded to Cloudinary and stored as URLs.
+1. **Service Status Workflow**: New services default to `INREVIEW`. Only `APPROVED` services are visible to public users via `GET /api/services`, search, and category/location filters. Service owners can always see all their services via `GET /api/services/my-services` regardless of status.
 
-2. **Image Deletion**: When removing images via `removeImageUrls`, they are automatically deleted from Cloudinary.
+2. **Image Upload**: Base64 encoded images can be sent via `imagesBase64` (create) or `newImagesBase64` (update). They are automatically uploaded to Cloudinary and stored as URLs.
 
-3. **Provider Info**: Provider details (`providerName`, `providerProfilePicture`) are automatically populated from the authenticated user's profile.
+3. **Image Deletion**: When removing images via `removeImageUrls`, they are automatically deleted from Cloudinary.
 
-4. **Timestamps**: `createdAt` and `updatedAt` are managed automatically by the system.
+4. **Provider Info**: Provider details (`providerName`, `providerProfilePicture`) are automatically populated from the authenticated user's profile.
 
-5. **Initial Values**: New services are created with `isActive=true`, `isAvailable=true`, `totalBookings=0`, `averageRating=0.0`, `totalReviews=0`.
+5. **Timestamps**: `createdAt` and `updatedAt` are managed automatically by the system.
 
-6. **Cloudinary Folder**: Service images are stored in `migratemate/services` folder on Cloudinary.
+6. **Initial Values**: New services are created with `isActive=true`, `isAvailable=true`, `status=INREVIEW`, `totalBookings=0`, `averageRating=0.0`, `totalReviews=0`.
+
+7. **Cloudinary Folder**: Service images are stored in `migratemate/services` folder on Cloudinary.

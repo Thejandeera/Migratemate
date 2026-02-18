@@ -61,6 +61,100 @@ public class ServiceController {
         }
     }
 
+    // Admin: Get all services (all statuses) - MUST be before /{id} to avoid route
+    // conflict
+    @GetMapping("/admin/all")
+    public ResponseEntity<ApiResponse<List<ServiceResponse>>> getAllServicesAdmin() {
+        try {
+            List<ServiceResponse> services = serviceService.getAllServicesAdmin();
+            return ResponseEntity.ok(ApiResponse.<List<ServiceResponse>>builder()
+                    .success(true)
+                    .message("All services retrieved successfully")
+                    .data(services)
+                    .build());
+        } catch (Exception e) {
+            log.error("Failed to get all services for admin: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<List<ServiceResponse>>builder()
+                            .success(false)
+                            .message("Failed to retrieve services")
+                            .build());
+        }
+    }
+
+    // Admin: Get services by status - MUST be before /{id}
+    @GetMapping("/admin/status/{status}")
+    public ResponseEntity<ApiResponse<List<ServiceResponse>>> getServicesByStatus(@PathVariable String status) {
+        try {
+            List<ServiceResponse> services = serviceService.getServicesByStatus(status);
+            return ResponseEntity.ok(ApiResponse.<List<ServiceResponse>>builder()
+                    .success(true)
+                    .message("Services retrieved by status successfully")
+                    .data(services)
+                    .build());
+        } catch (Exception e) {
+            log.error("Failed to get services by status: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(ApiResponse.<List<ServiceResponse>>builder()
+                            .success(false)
+                            .message("Failed to retrieve services by status")
+                            .build());
+        }
+    }
+
+    // Admin: Update service status - MUST be before /{id}
+    @PatchMapping("/admin/{id}/status")
+    public ResponseEntity<ApiResponse<ServiceResponse>> updateServiceStatus(
+            @PathVariable String id,
+            @RequestBody java.util.Map<String, String> request) {
+        try {
+            String status = request.get("status");
+            String reason = request.get("reason");
+            if (status == null || status.isEmpty()) {
+                return ResponseEntity.badRequest()
+                        .body(ApiResponse.<ServiceResponse>builder()
+                                .success(false)
+                                .message("Status is required")
+                                .build());
+            }
+            ServiceResponse response = serviceService.updateServiceStatus(id, status, reason);
+            return ResponseEntity.ok(ApiResponse.<ServiceResponse>builder()
+                    .success(true)
+                    .message("Service status updated to " + status)
+                    .data(response)
+                    .build());
+        } catch (RuntimeException e) {
+            log.error("Failed to update service status: {}", e.getMessage());
+            return ResponseEntity.badRequest()
+                    .body(ApiResponse.<ServiceResponse>builder()
+                            .success(false)
+                            .message(e.getMessage())
+                            .build());
+        }
+    }
+
+    // Admin delete service (requires authentication, admin only) - MUST be before
+    // /{id}
+    @DeleteMapping("/admin/{id}")
+    public ResponseEntity<ApiResponse<Void>> adminDeleteService(
+            @PathVariable String id,
+            @RequestBody DeleteServiceRequest request) {
+        try {
+            serviceService.adminDeleteService(id, request.getReason());
+            return ResponseEntity.ok(ApiResponse.<Void>builder()
+                    .success(true)
+                    .message("Service deleted by admin successfully")
+                    .build());
+        } catch (RuntimeException e) {
+            log.error("Failed to admin delete service: {}", e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.<Void>builder()
+                            .success(false)
+                            .message(e.getMessage())
+                            .build());
+        }
+    }
+
     // Get service by ID (public)
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<ServiceResponse>> getServiceById(@PathVariable String id) {

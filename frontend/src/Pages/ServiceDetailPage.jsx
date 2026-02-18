@@ -78,7 +78,7 @@ const ReviewCard = ({ name, initial, date, rating, text, verified = true }) => (
 
 // Booking Card Component
 const BookingCard = ({ service }) => {
-    const priceDisplay = `$${service.price?.toFixed(0) || 0} ${service.currency || 'AUD'}`;
+    const priceDisplay = service.currency ? `${service.price?.toFixed(0) || 0} ${service.currency}` : `${service.price?.toFixed(0) || 0}`;
     const pricingType = PRICING_TYPE_NAMES[service.pricingType] || service.pricingType;
     const navigate = useNavigate();
 
@@ -168,7 +168,7 @@ const BookingCard = ({ service }) => {
 
                 </div>
 
-                <button 
+                <button
                     onClick={handleBooking}
                     disabled={isSubmitting}
                     className={`w-full py-3 text-white font-semibold rounded-xl transition-colors shadow-lg mt-2 flex items-center justify-center gap-2 ${isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-[#22C55E] hover:bg-[#16A34A] shadow-[#22C55E]/20'}`}
@@ -187,7 +187,7 @@ const BookingCard = ({ service }) => {
                         Booking requested successfully! Check your dashboard.
                     </div>
                 )}
-                
+
                 {status === 'error' && (
                     <div className="bg-red-50 text-red-600 p-3 rounded-xl text-sm flex items-center gap-2 mt-2 border border-red-100">
                         <AlertCircle className="w-4 h-4 text-red-500" />
@@ -482,7 +482,7 @@ const ServiceDetailPage = () => {
                                         </div>
                                     </div>
                                     <div className="text-2xl font-bold text-[#22C55E]">
-                                        ${service.price?.toFixed(0) || 0} {service.currency || 'AUD'}
+                                        {service.price?.toFixed(0) || 0}{service.currency ? ` ${service.currency}` : ''}
                                     </div>
                                 </div>
 
