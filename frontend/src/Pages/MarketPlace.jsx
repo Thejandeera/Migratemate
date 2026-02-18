@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
-import { searchServices, getAllServices } from '../utils/serviceApi';
+import { searchServices, getAllServices, getServiceById } from '../utils/serviceApi';
 import {
     Search,
     Bot,
@@ -286,17 +286,54 @@ const MarketPlace = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
+    const [visibleCount, setVisibleCount] = useState(6);
+
     // Fetch services from API based on filters
     const fetchServices = useCallback(async () => {
         setLoading(true);
         setError(null);
 
         try {
+            // Priority 1: Check if search query is a specific Service ID
+            // MongoDB ObjectId pattern: 24 hex characters
+            if (searchQuery && /^[0-9a-fA-F]{24}$/.test(searchQuery)) {
+                try {
+                    const service = await getServiceById(searchQuery);
+                    if (service) {
+                        setServices([service]);
+                        setVisibleCount(6);
+                        setLoading(false);
+                        return; // Stop here if found by ID
+                    }
+                } catch (e) {
+                    // If ID lookup fails, continue to normal search
+                    console.log("Detail lookup failed, falling back to search");
+                }
+            }
+
+            // Priority 2: Check if search query matches a Category name
+            // If user types "Transport", treat it as a category filter
+            let overrideCategory = selectedCategory;
+            let overrideSearchTerm = searchQuery;
+
+            if (searchQuery && !selectedCategory) {
+                const normalizedQuery = searchQuery.trim().toLowerCase();
+                const matchedCategory = CATEGORIES.find(cat =>
+                    cat.name.toLowerCase() === normalizedQuery ||
+                    (cat.value && cat.value.toLowerCase() === normalizedQuery)
+                );
+
+                if (matchedCategory && matchedCategory.value) {
+                    overrideCategory = matchedCategory.value;
+                    overrideSearchTerm = ''; // Clear term so we get all items in that category
+                }
+            }
+
             // Build filter object for API search
             const filters = {
-                category: selectedCategory || undefined,
+                category: overrideCategory || undefined,
                 maxPrice: priceRange < 200 ? priceRange : undefined,
-                searchTerm: searchQuery || undefined,
+                searchTerm: overrideSearchTerm || undefined,
                 destination: selectedLocation !== 'All Locations' ? selectedLocation : undefined,
                 availableOnly: true,
             };
@@ -305,6 +342,7 @@ const MarketPlace = () => {
             // Filter out inactive services (double-check on frontend)
             const activeServices = (data || []).filter(s => s.isAvailable !== false && s.available !== false);
             setServices(activeServices);
+            setVisibleCount(6); // Reset pagination on filter change
         } catch (err) {
             console.error('Failed to fetch services:', err);
             setError(err.message || 'Failed to load services');
@@ -372,7 +410,7 @@ const MarketPlace = () => {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                     <div className="flex flex-col lg:flex-row gap-8">
                         {/* Sidebar */}
-                        <aside className="w-full lg:w-64 flex-shrink-0">
+                        <aside className="w-full lg:w-64 flex-shrink-0 lg:sticky lg:top-24 h-fit">
                             <FilterSidebar
                                 selectedCategory={selectedCategory}
                                 setSelectedCategory={setSelectedCategory}
@@ -415,11 +453,25 @@ const MarketPlace = () => {
 
                             {/* Services Grid */}
                             {!loading && !error && services.length > 0 && (
-                                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                                    {services.map((service) => (
-                                        <ServiceCard key={service.id} service={service} />
-                                    ))}
-                                </div>
+                                <>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                                        {services.slice(0, visibleCount).map((service) => (
+                                            <ServiceCard key={service.id} service={service} />
+                                        ))}
+                                    </div>
+
+                                    {/* Load More Button */}
+                                    {visibleCount < services.length && (
+                                        <div className="flex justify-center mt-10">
+                                            <button
+                                                onClick={() => setVisibleCount(prev => prev + 6)}
+                                                className="px-8 py-3 bg-white border border-gray-200 text-gray-700 font-semibold rounded-full hover:bg-gray-50 hover:border-[#22C55E] hover:text-[#22C55E] transition-all shadow-sm"
+                                            >
+                                                Load More Services
+                                            </button>
+                                        </div>
+                                    )}
+                                </>
                             )}
 
                             {/* Empty State */}
