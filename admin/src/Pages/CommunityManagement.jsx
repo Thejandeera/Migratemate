@@ -179,7 +179,7 @@ const CommunityManagement = () => {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -50 }}
                         className={`fixed top-24 right-4 z-[200] max-w-sm w-full p-4 rounded-2xl shadow-2xl backdrop-blur-md border border-white/20 ${notification.type === 'success'
-                            ? 'bg-emerald-500/90 text-white'
+                            ? 'bg-[#1a3a1d]/50/90 text-white'
                             : 'bg-red-500/90 text-white'
                             }`}
                     >
@@ -200,7 +200,7 @@ const CommunityManagement = () => {
                     </div>
                     <button
                         onClick={openCreateModal}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all font-bold shadow-lg shadow-green-200 hover:shadow-xl hover:-translate-y-0.5"
+                        className="flex items-center gap-2 px-5 py-2.5 bg-[#1a3a1d] text-white rounded-xl hover:bg-[#1a3a1d]/90 transition-all font-bold shadow-lg shadow-[#1a3a1d]/10 hover:shadow-xl hover:-translate-y-0.5"
                     >
                         <Plus className="w-5 h-5" />
                         Create Community
@@ -224,7 +224,7 @@ const CommunityManagement = () => {
                 {/* List */}
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-20">
-                        <div className="animate-spin rounded-full h-12 w-12 border-4 border-green-500 border-t-transparent mb-4"></div>
+                        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#1a3a1d] border-t-transparent mb-4"></div>
                         <p className="text-gray-500 font-medium">Loading communities...</p>
                     </div>
                 ) : (
@@ -246,7 +246,7 @@ const CommunityManagement = () => {
                                             className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
                                         />
                                         <div className="absolute top-3 right-3 z-20 flex gap-2">
-                                            <span className={`px-2.5 py-1 rounded-lg text-xs font-bold backdrop-blur-md border border-white/20 ${community.isActive ? 'bg-green-500/90 text-white' : 'bg-red-500/90 text-white'}`}>
+                                            <span className={`px-2.5 py-1 rounded-lg text-xs font-bold backdrop-blur-md border border-white/20 ${community.isActive ? 'bg-[#1a3a1d]/90 text-white' : 'bg-red-500/90 text-white'}`}>
                                                 {community.isActive ? 'Active' : 'Inactive'}
                                             </span>
                                         </div>
@@ -333,7 +333,7 @@ const CommunityManagement = () => {
                                         <input
                                             type="text"
                                             required
-                                            className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-green-500 focus:bg-white transition-all font-medium text-gray-900 placeholder-gray-400"
+                                            className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-[#1a3a1d] focus:bg-white transition-all font-medium text-gray-900 placeholder-gray-400"
                                             value={formData.name}
                                             onChange={e => setFormData({ ...formData, name: e.target.value })}
                                             placeholder="e.g. Sri Lankans in Australia"
@@ -348,7 +348,7 @@ const CommunityManagement = () => {
                                                 <input
                                                     type="text"
                                                     required
-                                                    className="w-full pl-11 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-green-500 focus:bg-white transition-all font-medium text-gray-900 placeholder-gray-400"
+                                                    className="w-full pl-11 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-[#1a3a1d] focus:bg-white transition-all font-medium text-gray-900 placeholder-gray-400"
                                                     value={formData.originCountry}
                                                     onChange={e => setFormData({ ...formData, originCountry: e.target.value })}
                                                     placeholder="e.g. Sri Lanka"
@@ -362,7 +362,7 @@ const CommunityManagement = () => {
                                                 <input
                                                     type="text"
                                                     required
-                                                    className="w-full pl-11 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-green-500 focus:bg-white transition-all font-medium text-gray-900 placeholder-gray-400"
+                                                    className="w-full pl-11 pr-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-[#1a3a1d] focus:bg-white transition-all font-medium text-gray-900 placeholder-gray-400"
                                                     value={formData.destinationCountry}
                                                     onChange={e => setFormData({ ...formData, destinationCountry: e.target.value })}
                                                     placeholder="e.g. Australia"
@@ -375,7 +375,7 @@ const CommunityManagement = () => {
                                         <label className="block text-sm font-bold text-gray-700 mb-2">Description</label>
                                         <textarea
                                             required
-                                            className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-green-500 focus:bg-white transition-all font-medium text-gray-900 placeholder-gray-400 min-h-[100px]"
+                                            className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-[#1a3a1d] focus:bg-white transition-all font-medium text-gray-900 placeholder-gray-400 min-h-[100px]"
                                             value={formData.description}
                                             onChange={e => setFormData({ ...formData, description: e.target.value })}
                                             placeholder="Describe the purpose of this community..."
@@ -388,7 +388,7 @@ const CommunityManagement = () => {
                                             Rules (Optional)
                                         </label>
                                         <textarea
-                                            className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-green-500 focus:bg-white transition-all font-medium text-gray-900 placeholder-gray-400 min-h-[80px]"
+                                            className="w-full px-4 py-3 bg-gray-50 border-none rounded-xl focus:ring-2 focus:ring-[#1a3a1d] focus:bg-white transition-all font-medium text-gray-900 placeholder-gray-400 min-h-[80px]"
                                             value={formData.rules}
                                             onChange={e => setFormData({ ...formData, rules: e.target.value })}
                                             placeholder="Community rules..."
@@ -397,7 +397,7 @@ const CommunityManagement = () => {
 
                                     <div>
                                         <label className="block text-sm font-bold text-gray-700 mb-2">Cover Image</label>
-                                        <div className="border-2 border-dashed border-gray-300 rounded-2xl p-6 text-center hover:border-green-500 hover:bg-green-50/50 transition cursor-pointer relative bg-gray-50 group">
+                                        <div className="border-2 border-dashed border-gray-300 rounded-2xl p-6 text-center hover:border-[#1a3a1d] hover:bg-[#1a3a1d]/5/50 transition cursor-pointer relative bg-gray-50 group">
                                             <input
                                                 type="file"
                                                 accept="image/*"
@@ -434,7 +434,7 @@ const CommunityManagement = () => {
                                         <button
                                             type="submit"
                                             disabled={submitting}
-                                            className="flex-1 py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition shadow-lg shadow-green-200 hover:shadow-green-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                            className="flex-1 py-3 bg-[#1a3a1d] text-white font-bold rounded-xl hover:bg-[#1a3a1d]/90 transition shadow-lg shadow-[#1a3a1d]/10 hover:shadow-[#1a3a1d]/15 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                                         >
                                             {submitting ? (
                                                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />

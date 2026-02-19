@@ -108,7 +108,7 @@ const CommunityChat = () => {
             <div className="flex flex-col min-h-screen bg-gray-50/30 font-sans">
                 <Navbar />
                 <div className="flex-1 flex flex-col items-center justify-center pt-20">
-                    <div className="animate-spin rounded-full h-12 w-12 border-4 border-green-500 border-t-transparent mb-4"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#1a3a1d] border-t-transparent mb-4"></div>
                     <p className="text-gray-500 font-medium">Loading chat...</p>
                 </div>
             </div>
@@ -162,7 +162,7 @@ const CommunityChat = () => {
                                     alt={community.name}
                                     className="w-10 h-10 rounded-full object-cover ring-2 ring-white shadow-sm"
                                 />
-                                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full"></div>
+                                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-[#1a3a1d] border-2 border-white rounded-full"></div>
                             </div>
 
                             <div>
@@ -177,7 +177,7 @@ const CommunityChat = () => {
                         </div>
 
                         <div className="flex items-center gap-2">
-                            <div className="bg-green-50 text-green-700 px-3 py-1.5 rounded-full text-xs font-bold border border-green-100 flex items-center gap-1.5">
+                            <div className="bg-[#1a3a1d]/5 text-[#1a3a1d] px-3 py-1.5 rounded-full text-xs font-bold border border-[#1a3a1d]/10 flex items-center gap-1.5">
                                 <Shield className="w-3 h-3" />
                                 Admin Mode
                             </div>
@@ -235,7 +235,7 @@ const CommunityChat = () => {
 
                                             <div
                                                 className={`px-5 py-3 text-sm leading-relaxed shadow-sm transition-all ${isMe
-                                                        ? 'bg-gradient-to-br from-green-600 to-green-500 text-white rounded-2xl rounded-tr-none'
+                                                        ? 'bg-gradient-to-br from-[#1a3a1d] to-green-500 text-white rounded-2xl rounded-tr-none'
                                                         : 'bg-white border border-gray-100 text-gray-800 rounded-2xl rounded-tl-none'
                                                     }`}
                                             >
@@ -256,7 +256,7 @@ const CommunityChat = () => {
                     {/* Input Area */}
                     <div className="p-4 bg-white border-t border-gray-100 z-20">
                         <form onSubmit={handleSendMessage} className="flex gap-3 items-end max-w-3xl mx-auto w-full">
-                            <div className="flex-1 bg-gray-50 border border-gray-200 rounded-3xl p-1.5 focus-within:ring-2 focus-within:ring-green-500/20 focus-within:border-green-500 transition-all flex items-center shadow-inner">
+                            <div className="flex-1 bg-gray-50 border border-gray-200 rounded-3xl p-1.5 focus-within:ring-2 focus-within:ring-[#1a3a1d]/20 focus-within:border-[#1a3a1d] transition-all flex items-center shadow-inner">
                                 <input
                                     type="text"
                                     value={newMessage}
@@ -270,7 +270,7 @@ const CommunityChat = () => {
                             <button
                                 type="submit"
                                 disabled={!newMessage.trim() || sending}
-                                className="bg-green-600 hover:bg-green-700 text-white p-3.5 rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-green-200 hover:shadow-xl active:scale-95 flex-shrink-0"
+                                className="bg-[#1a3a1d] hover:bg-[#1a3a1d]/90 text-white p-3.5 rounded-full transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#1a3a1d]/10 hover:shadow-xl active:scale-95 flex-shrink-0"
                             >
                                 <Send className="w-5 h-5 ml-0.5" />
                             </button>

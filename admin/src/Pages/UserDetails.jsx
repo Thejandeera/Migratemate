@@ -162,7 +162,7 @@ const UserDetails = () => {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -50 }}
                         className={`fixed top-24 right-4 z-[200] max-w-sm w-full p-4 rounded-xl shadow-2xl backdrop-blur-md border border-white/20 ${notification.type === 'success'
-                            ? 'bg-emerald-500/90 text-white'
+                            ? 'bg-[#1a3a1d]/50/90 text-white'
                             : 'bg-red-500/90 text-white'
                             }`}
                     >
@@ -259,7 +259,7 @@ const UserDetails = () => {
                                     disabled={verifying}
                                     className={`w-full py-3 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center justify-center ${user.isVerified
                                         ? 'bg-amber-50 text-amber-600 hover:bg-amber-100 border border-amber-200'
-                                        : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200'
+                                        : 'bg-[#1a3a1d]/5 text-[#1a3a1d] hover:bg-[#1a3a1d]/10 border border-[#1a3a1d]/15'
                                         }`}
                                 >
                                     {verifying ? (

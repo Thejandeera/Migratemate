@@ -74,7 +74,7 @@ const ZoomableImage = ({ src, alt, className }) => {
 
 const STATUS_CONFIG = {
     INREVIEW: { label: 'In Review', bg: 'bg-yellow-100', text: 'text-yellow-800', dot: 'bg-yellow-500', icon: AlertTriangle },
-    APPROVED: { label: 'Approved', bg: 'bg-green-100', text: 'text-green-800', dot: 'bg-green-500', icon: CheckCircle },
+    APPROVED: { label: 'Approved', bg: 'bg-[#1a3a1d]/10', text: 'text-[#1a3a1d]', dot: 'bg-[#1a3a1d]', icon: CheckCircle },
     ADVICED: { label: 'Adviced', bg: 'bg-blue-100', text: 'text-blue-800', dot: 'bg-blue-500', icon: HelpCircle },
 };
 
@@ -234,7 +234,7 @@ const GigDetails = () => {
 
     const getStatusBadge = (isActive, isAvailable) => {
         if (!isActive) return <span className="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-bold flex items-center gap-1"><XCircle className="w-3 h-3" /> Inactive</span>;
-        if (isAvailable) return <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-bold flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Available</span>;
+        if (isAvailable) return <span className="px-3 py-1 bg-[#1a3a1d]/10 text-[#1a3a1d] rounded-full text-xs font-bold flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Available</span>;
         return <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-bold flex items-center gap-1"><Clock className="w-3 h-3" /> Unavailable</span>;
     };
 
@@ -291,7 +291,7 @@ const GigDetails = () => {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -50 }}
                         className={`fixed top-24 right-4 z-[200] max-w-sm w-full p-4 rounded-2xl shadow-2xl backdrop-blur-md border border-white/20 ${notification.type === 'success'
-                            ? 'bg-emerald-500/90 text-white'
+                            ? 'bg-[#1a3a1d]/50/90 text-white'
                             : 'bg-red-500/90 text-white'
                             }`}
                     >
@@ -338,7 +338,7 @@ const GigDetails = () => {
                         <div className="flex items-center gap-3">
                             <div className="bg-white px-5 py-3 rounded-2xl shadow-lg shadow-gray-100 border border-gray-100 flex flex-col items-end">
                                 <span className="text-xs text-gray-400 uppercase font-bold tracking-wider">Price</span>
-                                <div className="text-3xl font-extrabold text-emerald-600 flex items-baseline">
+                                <div className="text-3xl font-extrabold text-[#1a3a1d] flex items-baseline">
                                     {service.currency} {service.price}
                                     <span className="text-sm text-gray-400 font-medium ml-1">/{service.pricingType?.toLowerCase()}</span>
                                 </div>
@@ -549,7 +549,7 @@ const GigDetails = () => {
                                     <button
                                         onClick={() => handleStatusUpdate('APPROVED')}
                                         disabled={updatingStatus}
-                                        className={`w-full py-3 bg-emerald-50 text-emerald-700 rounded-xl hover:bg-emerald-100 transition-colors font-bold text-sm flex items-center justify-center gap-2 border border-emerald-200 ${updatingStatus ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        className={`w-full py-3 bg-[#1a3a1d]/5 text-[#1a3a1d] rounded-xl hover:bg-[#1a3a1d]/10 transition-colors font-bold text-sm flex items-center justify-center gap-2 border border-[#1a3a1d]/15 ${updatingStatus ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                         <CheckCircle className="w-4 h-4" />
                                         Approve Service

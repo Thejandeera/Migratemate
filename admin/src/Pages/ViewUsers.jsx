@@ -204,7 +204,7 @@ const ViewUsers = () => {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -50 }}
                         className={`fixed top-24 right-4 z-[200] max-w-sm w-full p-4 rounded-2xl shadow-2xl backdrop-blur-md border border-white/20 ${notification.type === 'success'
-                            ? 'bg-emerald-500/90 text-white'
+                            ? 'bg-[#1a3a1d]/50/90 text-white'
                             : 'bg-red-500/90 text-white'
                             }`}
                     >
@@ -352,7 +352,7 @@ const ViewUsers = () => {
 
                                                     <div className="flex items-center gap-2">
                                                         {user.isVerified ? (
-                                                            <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
+                                                            <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-[#1a3a1d] bg-[#1a3a1d]/5 px-2 py-0.5 rounded-md border border-emerald-100">
                                                                 <CheckCircle size={10} /> Verified
                                                             </span>
                                                         ) : (
@@ -382,8 +382,8 @@ const ViewUsers = () => {
                                                     <button
                                                         onClick={() => handleToggleVerification(user)}
                                                         className={`p-2 rounded-xl transition-all ${user.isVerified
-                                                            ? 'text-emerald-600 hover:text-red-600 hover:bg-red-50'
-                                                            : 'text-gray-400 hover:text-emerald-600 hover:bg-emerald-50'
+                                                            ? 'text-[#1a3a1d] hover:text-red-600 hover:bg-red-50'
+                                                            : 'text-gray-400 hover:text-[#1a3a1d] hover:bg-[#1a3a1d]/5'
                                                             }`}
                                                         title={user.isVerified ? "Revoke Verification" : "Verify User"}
                                                     >
