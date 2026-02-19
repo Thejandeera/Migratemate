@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import Navbar from '../components/Navbar';
 import { ArrowRight, ArrowLeft, Camera, Upload, Check, Mail, User, Phone, MapPin, Shield, CheckCircle, Loader2, Image as ImageIcon } from 'lucide-react';
+import Button from '../components/ui/Button';
 
 const Signup = () => {
     const navigate = useNavigate();
@@ -113,7 +113,6 @@ const Signup = () => {
                         videoRef.current.srcObject = mediaStream;
                     }
                 } catch (err) {
-                    console.error("Error accessing camera:", err);
                     setError("Could not access camera. Please allow permissions.");
                     setCameraActive(false);
                 }
@@ -210,269 +209,198 @@ const Signup = () => {
             }
         }
         setStep(prev => Math.min(prev + 1, 3));
-        window.scrollTo(0, 0);
     };
 
     const prevStep = () => setStep(prev => Math.max(prev - 1, 1));
 
-    const steps = [
-        { id: 1, title: "Personal Details", icon: User },
-        { id: 2, title: "Identity Upload", icon: Upload },
-        { id: 3, title: "Liveness Check", icon: Camera }
-    ];
-
     return (
-        <div className="min-h-screen bg-white font-sans flex flex-col">
-            <Navbar />
+        <div className="min-h-screen bg-white font-sans flex flex-col lg:flex-row text-gray-900">
+            {/* Left Side - Form */}
+            <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 sm:p-12 lg:p-20 relative bg-white min-h-screen">
+                <Link to="/" className="absolute top-8 left-8 flex items-center gap-2 group">
+                    <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center text-white font-semibold text-sm">M</div>
+                    <span className="font-semibold text-black tracking-tight text-lg">MigrateMate</span>
+                </Link>
 
-            <div className="flex-1 pt-20 pb-12">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex flex-col lg:flex-row gap-12 lg:gap-24">
+                <div className="max-w-md w-full">
+                    <div className="text-center lg:text-left mb-10">
+                        <h1 className="text-4xl md:text-5xl font-semibold text-black tracking-tight mb-4">Create Account</h1>
+                        <p className="text-lg text-gray-500 font-normal leading-relaxed">
+                            Join MigrateMate and settle with confidence. Step {step} of 3.
+                        </p>
+                    </div>
 
-                        {/* Left Side: Steps & Info */}
-                        <div className="lg:w-1/3">
-                            <div className="sticky top-28">
-                                <h1 className="text-3xl font-extrabold text-gray-900 mb-2">Create Account</h1>
-                                <p className="text-gray-500 mb-8">Join the community in a few simple steps.</p>
+                    {/* Progress Indicators */}
+                    <div className="flex gap-2 mb-10">
+                        {[1, 2, 3].map(i => (
+                            <div key={i} className={`h-1.5 rounded-full flex-1 transition-all ${i <= step ? 'bg-black' : 'bg-gray-100'}`}></div>
+                        ))}
+                    </div>
 
-                                <div className="space-y-8 relative">
-                                    <div className="absolute left-6 top-8 bottom-8 w-0.5 bg-gray-100 -z-10"></div>
-                                    {steps.map((s) => (
-                                        <div key={s.id} className="flex items-center gap-4 relative">
-                                            <div className={`w-12 h-12 rounded-full border-2 flex items-center justify-center transition-colors shadow-sm bg-white ${step === s.id ? 'border-green-500 text-green-600' :
-                                                    step > s.id ? 'border-green-500 bg-green-500 text-white' : 'border-gray-200 text-gray-300'
-                                                }`}>
-                                                {step > s.id ? <Check size={20} /> : <s.icon size={20} />}
-                                            </div>
-                                            <div>
-                                                <h3 className={`font-bold text-sm ${step === s.id ? 'text-gray-900' : 'text-gray-400'}`}>{s.title}</h3>
-                                                {step === s.id && <p className="text-xs text-green-600 font-medium">In Progress</p>}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-
-                                <div className="mt-12 bg-green-50 p-6 rounded-2xl border border-green-100 hidden lg:block">
-                                    <div className="flex items-start gap-4">
-                                        <div className="bg-green-100 p-2 rounded-lg text-green-600">
-                                            <Shield size={24} />
-                                        </div>
-                                        <div>
-                                            <h4 className="font-bold text-gray-900 text-sm">Why do we need this?</h4>
-                                            <p className="text-xs text-gray-600 mt-2 leading-relaxed">
-                                                We verify every member to ensure the safety and trust of our community. Your data is encrypted and secure.
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                    {error && (
+                         <div className="bg-red-50 text-red-600 px-4 py-3 rounded-2xl text-sm flex items-center mb-6 font-medium">
+                            <Shield className="w-5 h-5 mr-3 flex-shrink-0" />
+                            {error}
                         </div>
+                    )}
 
-                        {/* Right Side: Form */}
-                        <div className="lg:w-2/3">
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="bg-white rounded-3xl lg:shadow-xl lg:border border-gray-100 lg:p-8"
-                            >
-                                {error && (
-                                    <div className="mb-6 bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl text-sm flex items-center">
-                                        <Shield className="w-5 h-5 mr-3" />
-                                        {error}
+                    <AnimatePresence mode='wait'>
+                        {step === 1 && (
+                            <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <input name="firstName" value={formData.firstName} onChange={handleChange} placeholder="First Name" className="w-full px-6 py-4 bg-white border border-gray-200 rounded-full focus:ring-2 focus:ring-black/10 focus:border-black outline-none transition-all placeholder:text-gray-400 font-medium text-[15px]" />
+                                    <input name="lastName" value={formData.lastName} onChange={handleChange} placeholder="Last Name" className="w-full px-6 py-4 bg-white border border-gray-200 rounded-full focus:ring-2 focus:ring-black/10 focus:border-black outline-none transition-all placeholder:text-gray-400 font-medium text-[15px]" />
+                                </div>
+
+                                <div className="relative">
+                                    <input
+                                        name="email"
+                                        type="email"
+                                        value={formData.email}
+                                        onChange={handleChange}
+                                        disabled={otpVerified}
+                                        placeholder="Email Address"
+                                        className={`w-full px-6 py-4 bg-white border border-gray-200 rounded-full focus:ring-2 focus:ring-black/10 focus:border-black outline-none transition-all placeholder:text-gray-400 font-medium text-[15px] ${otpVerified ? 'bg-green-50 text-green-700 border-green-200' : ''}`}
+                                    />
+                                    {!otpVerified && !otpSent && (
+                                        <button onClick={sendOtp} disabled={otpLoading} className="absolute right-2 top-2 bottom-2 px-5 bg-black text-white rounded-full text-xs font-bold hover:bg-gray-800 transition-all disabled:opacity-50">
+                                            {otpLoading ? <Loader2 className="animate-spin w-3 h-3" /> : 'Verify'}
+                                        </button>
+                                    )}
+                                </div>
+
+                                {otpSent && !otpVerified && (
+                                    <div className="p-4 bg-gray-50 rounded-3xl border border-gray-100">
+                                        <p className="text-xs font-bold text-gray-500 mb-2 ml-2">Verification Code</p>
+                                        <div className="flex gap-2">
+                                            <input value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="000000" className="flex-1 px-4 py-2 bg-white border border-gray-200 rounded-full text-center tracking-widest font-mono outline-none text-lg" maxLength={6} />
+                                            <button onClick={verifyOtp} disabled={otpLoading} className="px-5 bg-green-600 text-white rounded-full text-xs font-bold hover:bg-green-700 transition-all">
+                                                {otpLoading ? <Loader2 className="animate-spin w-3 h-3" /> : 'Confirm'}
+                                            </button>
+                                        </div>
                                     </div>
                                 )}
+                                {otpVerified && <p className="text-green-600 text-xs font-bold ml-4 flex items-center gap-1"><CheckCircle size={14} /> Email Verified</p>}
 
-                                <AnimatePresence mode='wait'>
-                                    {step === 1 && (
-                                        <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                <div>
-                                                    <label className="block text-sm font-bold text-gray-700 mb-2">First Name</label>
-                                                    <input name="firstName" value={formData.firstName} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all" placeholder="Jane" />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-sm font-bold text-gray-700 mb-2">Last Name</label>
-                                                    <input name="lastName" value={formData.lastName} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all" placeholder="Doe" />
-                                                </div>
-                                            </div>
+                                <input name="password" type="password" value={formData.password} onChange={handleChange} placeholder="Password" className="w-full px-6 py-4 bg-white border border-gray-200 rounded-full focus:ring-2 focus:ring-black/10 focus:border-black outline-none transition-all placeholder:text-gray-400 font-medium text-[15px]" />
+                                
+                                <input name="phone" value={formData.phone} onChange={handleChange} placeholder="Phone Number" className="w-full px-6 py-4 bg-white border border-gray-200 rounded-full focus:ring-2 focus:ring-black/10 focus:border-black outline-none transition-all placeholder:text-gray-400 font-medium text-[15px]" />
+                                
+                                <div className="grid grid-cols-2 gap-4">
+                                     <input name="countryOfOrigin" value={formData.countryOfOrigin} onChange={handleChange} placeholder="Origin Country" className="w-full px-6 py-4 bg-white border border-gray-200 rounded-full focus:ring-2 focus:ring-black/10 focus:border-black outline-none transition-all placeholder:text-gray-400 font-medium text-[15px]" />
+                                     <input name="destinationCountry" value={formData.destinationCountry} onChange={handleChange} placeholder="Destination" className="w-full px-6 py-4 bg-white border border-gray-200 rounded-full focus:ring-2 focus:ring-black/10 focus:border-black outline-none transition-all placeholder:text-gray-400 font-medium text-[15px]" />
+                                </div>
 
-                                            <div>
-                                                <label className="block text-sm font-bold text-gray-700 mb-2">Email Address</label>
-                                                <div className="flex gap-3">
-                                                    <input
-                                                        name="email"
-                                                        type="email"
-                                                        value={formData.email}
-                                                        onChange={handleChange}
-                                                        disabled={otpVerified}
-                                                        className={`flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all ${otpVerified ? 'bg-green-50 text-green-700 border-green-200' : ''}`}
-                                                        placeholder="name@example.com"
-                                                    />
-                                                    {!otpVerified && !otpSent && (
-                                                        <button
-                                                            onClick={sendOtp}
-                                                            disabled={otpLoading}
-                                                            className="px-6 py-3 bg-gray-900 text-white rounded-xl font-bold text-sm hover:bg-gray-800 transition-all disabled:opacity-50"
-                                                        >
-                                                            {otpLoading ? <Loader2 className="animate-spin w-4 h-4" /> : 'Verify'}
-                                                        </button>
-                                                    )}
-                                                </div>
-
-                                                {otpSent && !otpVerified && (
-                                                    <div className="mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200 animate-in fade-in slide-in-from-top-4">
-                                                        <label className="block text-xs font-bold text-gray-500 mb-2">Enter verification code sent to your email</label>
-                                                        <div className="flex gap-3">
-                                                            <input
-                                                                value={otp}
-                                                                onChange={(e) => setOtp(e.target.value)}
-                                                                className="flex-1 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm text-center tracking-widest font-mono"
-                                                                placeholder="000000"
-                                                                maxLength={6}
-                                                            />
-                                                            <button
-                                                                onClick={verifyOtp}
-                                                                disabled={otpLoading}
-                                                                className="px-4 py-2 bg-green-600 text-white rounded-lg font-bold text-sm hover:bg-green-700"
-                                                            >
-                                                                {otpLoading ? <Loader2 className="animate-spin w-4 h-4" /> : 'Confirm'}
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                                {otpVerified && <p className="text-green-600 text-xs font-bold mt-2 flex items-center gap-1"><CheckCircle size={14} /> Email Verified Successfully</p>}
-                                            </div>
-
-                                            <div>
-                                                <label className="block text-sm font-bold text-gray-700 mb-2">Password</label>
-                                                <input name="password" type="password" value={formData.password} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all" placeholder="Create a strong password" />
-                                            </div>
-
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                <div>
-                                                    <label className="block text-sm font-bold text-gray-700 mb-2">Phone</label>
-                                                    <input name="phone" value={formData.phone} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all" placeholder="+1 (555) 000-0000" />
-                                                </div>
-                                                <div>
-                                                    <label className="block text-sm font-bold text-gray-700 mb-2">Origin Country</label>
-                                                    <input name="countryOfOrigin" value={formData.countryOfOrigin} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all" placeholder="e.g. Brazil" />
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <label className="block text-sm font-bold text-gray-700 mb-2">Destination Country</label>
-                                                <input name="destinationCountry" value={formData.destinationCountry} onChange={handleChange} className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all" placeholder="e.g. Canada" />
-                                            </div>
-
-                                            <button onClick={nextStep} className="w-full py-4 bg-green-600 text-white rounded-xl font-bold shadow-lg shadow-green-200 hover:bg-green-700 hover:shadow-green-300 transition-all flex items-center justify-center gap-2 group">
-                                                Continue
-                                                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                                            </button>
-                                        </motion.div>
-                                    )}
-
-                                    {step === 2 && (
-                                        <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                {/* Passport Upload */}
-                                                <div className="relative group cursor-pointer">
-                                                    <input type="file" onChange={(e) => handleFileChange(e, 'passportImageBase64')} className="absolute inset-0 w-full h-full opacity-0 z-10 cursor-pointer" accept="image/*" />
-                                                    <div className={`border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center text-center transition-all h-64 ${formData.passportImageBase64 ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-400 hover:bg-gray-50'}`}>
-                                                        {formData.passportImageBase64 ? (
-                                                            <img src={formData.passportImageBase64} alt="Passport" className="w-full h-full object-contain rounded-lg" />
-                                                        ) : (
-                                                            <>
-                                                                <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-sm mb-4">
-                                                                    <Upload className="w-6 h-6 text-green-600" />
-                                                                </div>
-                                                                <h4 className="font-bold text-gray-900">Upload Password</h4>
-                                                                <p className="text-xs text-gray-500 mt-1">Click to browse</p>
-                                                            </>
-                                                        )}
-                                                    </div>
-                                                </div>
-
-                                                {/* Avatar Upload */}
-                                                <div className="relative group cursor-pointer">
-                                                    <input type="file" onChange={(e) => handleFileChange(e, 'avatarBase64')} className="absolute inset-0 w-full h-full opacity-0 z-10 cursor-pointer" accept="image/*" />
-                                                    <div className={`border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center text-center transition-all h-64 ${formData.avatarBase64 ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-green-400 hover:bg-gray-50'}`}>
-                                                        {formData.avatarBase64 ? (
-                                                            <img src={formData.avatarBase64} alt="Avatar" className="w-32 h-32 object-cover rounded-full shadow-md" />
-                                                        ) : (
-                                                            <>
-                                                                <div className="w-14 h-14 bg-white rounded-full flex items-center justify-center shadow-sm mb-4">
-                                                                    <ImageIcon className="w-6 h-6 text-green-600" />
-                                                                </div>
-                                                                <h4 className="font-bold text-gray-900">Profile Picture</h4>
-                                                                <p className="text-xs text-gray-500 mt-1">Click to browse</p>
-                                                            </>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="flex gap-4">
-                                                <button onClick={prevStep} className="w-1/3 py-4 border border-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-all">Back</button>
-                                                <button onClick={nextStep} className="w-2/3 py-4 bg-green-600 text-white rounded-xl font-bold shadow-lg shadow-green-200 hover:bg-green-700 transition-all">Continue</button>
-                                            </div>
-                                        </motion.div>
-                                    )}
-
-                                    {step === 3 && (
-                                        <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
-                                            <div className="bg-gray-900 rounded-3xl overflow-hidden aspect-[4/3] relative flex items-center justify-center">
-                                                {!formData.selfieImageBase64 && !cameraActive && (
-                                                    <div className="text-center">
-                                                        <div className="w-20 h-20 bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                                                            <Camera className="w-8 h-8 text-gray-400" />
-                                                        </div>
-                                                        <button onClick={startCamera} className="px-8 py-3 bg-white text-gray-900 rounded-full font-bold hover:scale-105 transition-transform">
-                                                            Start Camera
-                                                        </button>
-                                                    </div>
-                                                )}
-
-                                                {cameraActive && !formData.selfieImageBase64 && (
-                                                    <div className="relative w-full h-full">
-                                                        <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover transform scale-x-[-1]"></video>
-                                                        <canvas ref={canvasRef} className="hidden"></canvas>
-                                                        <div className="absolute bottom-8 left-0 right-0 flex justify-center z-10">
-                                                            <button onClick={captureSelfie} className="w-20 h-20 bg-white rounded-full border-4 border-green-500 p-1 cursor-pointer hover:scale-110 transition-transform">
-                                                                <div className="w-full h-full bg-white rounded-full border-2 border-gray-100"></div>
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                {formData.selfieImageBase64 && (
-                                                    <div className="relative w-full h-full">
-                                                        <img src={formData.selfieImageBase64} alt="Selfie" className="w-full h-full object-cover" />
-                                                        <button onClick={retakeSelfie} className="absolute bottom-8 left-1/2 -translate-x-1/2 px-6 py-2 bg-black/50 backdrop-blur-md text-white rounded-full text-sm font-bold border border-white/20 hover:bg-black/70 transition-all">
-                                                            Retake Photo
-                                                        </button>
-                                                    </div>
-                                                )}
-                                            </div>
-
-                                            <div className="flex gap-4 pt-4">
-                                                <button onClick={prevStep} className="w-1/3 py-4 border border-gray-200 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-all">Back</button>
-                                                <button
-                                                    onClick={handleSubmit}
-                                                    disabled={loading || !formData.selfieImageBase64}
-                                                    className="w-2/3 py-4 bg-green-600 text-white rounded-xl font-bold shadow-lg shadow-green-200 hover:bg-green-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-                                                >
-                                                    {loading ? <Loader2 className="animate-spin w-5 h-5" /> : 'Complete Registration'}
-                                                </button>
-                                            </div>
-                                        </motion.div>
-                                    )}
-                                </AnimatePresence>
+                                <Button onClick={nextStep} className="w-full py-4 bg-[#1a3a1d] hover:bg-black rounded-full text-white text-[15px] font-semibold shadow-xl mt-6 transition-all hover:scale-[1.01]">
+                                    Continue
+                                </Button>
                             </motion.div>
+                        )}
 
-                            <p className="text-center text-sm text-gray-500 mt-8">
-                                Already have an account? <Link to="/login" className="text-green-600 font-bold hover:text-green-700">Log in</Link>
-                            </p>
-                        </div>
+                        {step === 2 && (
+                            <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
+                                <h3 className="text-xl font-semibold text-black">Upload Identity Documents</h3>
+                                
+                                <div className="space-y-4">
+                                    <div className="relative group cursor-pointer">
+                                        <input type="file" onChange={(e) => handleFileChange(e, 'avatarBase64')} className="absolute inset-0 w-full h-full opacity-0 z-10 cursor-pointer" accept="image/*" />
+                                        <div className={`p-6 rounded-[2rem] border-2 border-dashed flex items-center gap-5 transition-all ${formData.avatarBase64 ? 'bg-green-50 border-green-500' : 'bg-gray-50 border-gray-200 hover:bg-gray-100 hover:border-gray-300'}`}>
+                                            <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center shadow-sm text-black">
+                                                {formData.avatarBase64 ? <CheckCircle className="text-green-600" /> : <ImageIcon />}
+                                            </div>
+                                            <div>
+                                                <p className="font-semibold text-black text-lg">Profile Picture</p>
+                                                <p className="text-sm text-gray-500 font-medium">{formData.avatarBase64 ? 'Uploaded successfully' : 'Tap to browse files'}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                     <div className="relative group cursor-pointer">
+                                        <input type="file" onChange={(e) => handleFileChange(e, 'passportImageBase64')} className="absolute inset-0 w-full h-full opacity-0 z-10 cursor-pointer" accept="image/*" />
+                                        <div className={`p-6 rounded-[2rem] border-2 border-dashed flex items-center gap-5 transition-all ${formData.passportImageBase64 ? 'bg-green-50 border-green-500' : 'bg-gray-50 border-gray-200 hover:bg-gray-100 hover:border-gray-300'}`}>
+                                            <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center shadow-sm text-black">
+                                                {formData.passportImageBase64 ? <CheckCircle className="text-green-600" /> : <Upload />}
+                                            </div>
+                                            <div>
+                                                <p className="font-semibold text-black text-lg">Passport Image</p>
+                                                <p className="text-sm text-gray-500 font-medium">{formData.passportImageBase64 ? 'Uploaded successfully' : 'Tap to browse files'}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-4 mt-8">
+                                    <button onClick={prevStep} className="w-1/3 py-4 bg-gray-100 text-gray-600 rounded-full font-semibold hover:bg-gray-200">Back</button>
+                                    <button onClick={nextStep} className="w-2/3 py-4 bg-[#1a3a1d] text-white rounded-full font-semibold hover:bg-black shadow-lg">Continue</button>
+                                </div>
+                            </motion.div>
+                        )}
+                        
+                         {step === 3 && (
+                            <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
+                                <h3 className="text-xl font-semibold text-black">Liveness Check</h3>
+                                
+                                <div className="aspect-square bg-black rounded-[2rem] overflow-hidden relative shadow-2xl ring-4 ring-black/5">
+                                    {!formData.selfieImageBase64 && !cameraActive && (
+                                        <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-8 text-center">
+                                            <Camera className="w-16 h-16 mb-6 opacity-30" />
+                                            <p className="mb-6 text-lg font-medium opacity-80">We need to verify it's really you.</p>
+                                            <button onClick={startCamera} className="px-8 py-3 bg-white text-black rounded-full font-bold hover:scale-105 transition-all shadow-xl">Start Camera</button>
+                                        </div>
+                                    )}
+                                    {cameraActive && !formData.selfieImageBase64 && (
+                                        <>
+                                            <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover transform scale-x-[-1]"></video>
+                                            <canvas ref={canvasRef} className="hidden"></canvas>
+                                            <button onClick={captureSelfie} className="absolute bottom-8 left-1/2 -translate-x-1/2 w-20 h-20 bg-white/20 backdrop-blur-md rounded-full border-4 border-white p-1 hover:scale-110 transition-transform">
+                                                <div className="w-full h-full bg-white rounded-full"></div>
+                                            </button>
+                                        </>
+                                    )}
+                                    {formData.selfieImageBase64 && (
+                                        <>
+                                            <img src={formData.selfieImageBase64} alt="Selfie" className="w-full h-full object-cover" />
+                                            <button onClick={retakeSelfie} className="absolute bottom-8 left-1/2 -translate-x-1/2 px-6 py-2 bg-black/60 text-white rounded-full text-sm font-bold backdrop-blur-md hover:bg-black/80 transition-colors">Retake Photo</button>
+                                        </>
+                                    )}
+                                </div>
+
+                                <div className="flex gap-4 mt-8">
+                                    <button onClick={prevStep} className="w-1/3 py-4 bg-gray-100 text-gray-600 rounded-full font-semibold hover:bg-gray-200">Back</button>
+                                    <button 
+                                        onClick={handleSubmit} 
+                                        disabled={loading || !formData.selfieImageBase64}
+                                        className="w-2/3 py-4 bg-[#1a3a1d] text-white rounded-full font-semibold hover:bg-black shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
+                                    >
+                                        {loading ? <Loader2 className="animate-spin w-5 h-5" /> : 'Complete Sign Up'}
+                                    </button>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+
+                     <div className="text-center mt-10">
+                         <p className="text-gray-500 font-medium">Already a member? <Link to="/login" className="text-black font-semibold hover:underline">Sign In</Link></p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Right Side - Features/Illustration (Similar to Login) */}
+            <div className="hidden lg:flex w-1/2 bg-[#f4fbf0] justify-center items-center relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-green-200/30 rounded-full blur-[120px] translate-x-1/3 -translate-y-1/3"></div>
+                <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-200/30 rounded-full blur-[120px] -translate-x-1/3 translate-y-1/3"></div>
+                
+                <div className="relative z-10 max-w-lg text-center">
+                    <img 
+                        src="https://illustrations.popsy.co/green/surr-delivery.svg" 
+                        alt="Signup Illustration" 
+                        className="w-full h-auto drop-shadow-2xl mb-8"
+                    />
+                    <h2 className="text-4xl font-semibold text-black leading-tight tracking-tight">Join 10,000+ happy migrants <br/>settling in effortlessly.</h2>
+                    <div className="flex justify-center gap-3 mt-8">
+                         <div className="w-2 h-2 bg-black/20 rounded-full"></div>
+                        <div className="w-8 h-2 bg-black rounded-full"></div>
+                        <div className="w-2 h-2 bg-black/20 rounded-full"></div>
                     </div>
                 </div>
             </div>

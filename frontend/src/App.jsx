@@ -15,26 +15,30 @@ import JourneyPlanner from './Pages/JourneyPlanner';
 import Community from './Pages/Community';
 import CommunityDetails from './Pages/CommunityDetails';
 
+import AuroraBackground from './components/layout/AuroraBackground';
+
 const App = () => {
   return (
-    <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/signup" element={<Signup />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/profile" element={<Profile />} />
-      <Route path="/marketplace" element={<MarketPlace />} />
-      <Route path="/service/:id" element={<ServiceDetailPage />} />
-      <Route path="/scanner" element={<LiveARScanner />} />
-      <Route path="/sos" element={
-        <ErrorBoundary>
-          <SosPage />
-        </ErrorBoundary>
-      } />
-      <Route path="/journey-planner" element={<JourneyPlanner />} />
-      <Route path="/community" element={<Community />} />
-      <Route path="/community/:id" element={<CommunityDetails />} />
-    </Routes>
+    <AuroraBackground>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/marketplace" element={<MarketPlace />} />
+        <Route path="/service/:id" element={<ServiceDetailPage />} />
+        <Route path="/scanner" element={<LiveARScanner />} />
+        <Route path="/sos" element={
+          <ErrorBoundary>
+            <SosPage />
+          </ErrorBoundary>
+        } />
+        <Route path="/journey-planner" element={<JourneyPlanner />} />
+        <Route path="/community" element={<Community />} />
+        <Route path="/community/:id" element={<CommunityDetails />} />
+      </Routes>
+    </AuroraBackground>
   )
 }
 
