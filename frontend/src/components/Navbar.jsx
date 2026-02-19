@@ -1,53 +1,42 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import ReactDOM from 'react-dom';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { clearAuthData, isAuthenticated, getUserData, getAuthData } from '../utils/auth';
 import { API_URL } from '../utils/api';
-import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, CheckCheck, Trash2, Box, MessageSquare, Star, Settings, Menu, X, LogOut, LayoutDashboard, User, ScanLine, Home, Store, Users, Compass, AlertTriangle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import Button from './ui/Button';
 import migrateIcon from '../assets/migrate-icon.png';
 
-// Extracted Components to prevent re-mounting and ensure smooth animation
-const NavLink = ({ to, label, isActive, onClick }) => (
+// Simple NavLink without internal indicator
+const NavLink = React.forwardRef(({ to, label, isActive, onClick }, ref) => (
     <Link
+        ref={ref}
         to={to}
         onClick={onClick}
         className={`relative px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 ${isActive ? 'text-white' : 'text-gray-600 hover:text-neural-dark hover:bg-black/5'}`}
     >
-        {isActive && (
-            <motion.div
-                layoutId="navbar-indicator"
-                className="absolute inset-0 bg-neural-dark rounded-full shadow-md"
-                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-            />
-        )}
         <span className="relative z-10">{label}</span>
     </Link>
-);
+));
 
-const NavIcon = ({ to, icon: Icon, isActive, title, onClick, className }) => (
-    <Link 
-        to={to} 
+// Simple NavIcon without internal indicator
+const NavIcon = React.forwardRef(({ to, icon: Icon, isActive, title, onClick, className }, ref) => (
+    <Link
+        ref={ref}
+        to={to}
         onClick={onClick}
         className={`relative p-2.5 rounded-full transition-colors duration-200 ${className} ${
-            isActive 
-            ? 'text-white' 
+            isActive
+            ? 'text-white'
             : 'text-gray-500 hover:text-neural-dark hover:bg-black/5'
         }`}
         title={title}
     >
-        {isActive && (
-            <motion.div
-                layoutId="navbar-indicator"
-                className="absolute inset-0 bg-neural-dark rounded-full shadow-md"
-                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-            />
-        )}
         <Icon className="w-5 h-5 relative z-10" />
     </Link>
-);
+));
 
 const Navbar = () => {
     const navigate = useNavigate();
@@ -63,6 +52,47 @@ const Navbar = () => {
     const notificationRef = useRef(null);
     const mobileNotificationRef = useRef(null);
     const [userData, setUserData] = useState(getUserData());
+
+    // Nav indicator refs
+    const navContainerRef = useRef(null);
+    const navLinkRefs = useRef({});
+    const [indicatorStyle, setIndicatorStyle] = useState(null);
+    const [indicatorVisible, setIndicatorVisible] = useState(false);
+
+    // All trackable nav paths
+    const allNavPaths = ['/marketplace', '/community', '/journey-planner', '/sos', '/scanner', '/dashboard', '/profile'];
+
+    const updateIndicator = useCallback(() => {
+        const activeRef = navLinkRefs.current[location.pathname];
+        const container = navContainerRef.current;
+        if (activeRef && container) {
+            const linkRect = activeRef.getBoundingClientRect();
+            const containerRect = container.getBoundingClientRect();
+            setIndicatorStyle({
+                left: linkRect.left - containerRect.left,
+                top: linkRect.top - containerRect.top,
+                width: linkRect.width,
+                height: linkRect.height,
+            });
+            setIndicatorVisible(true);
+        } else {
+            setIndicatorVisible(false);
+        }
+    }, [location.pathname]);
+
+    useEffect(() => {
+        // Small delay to let DOM settle after route change
+        const timer = setTimeout(updateIndicator, 50);
+        window.addEventListener('resize', updateIndicator);
+        return () => {
+            clearTimeout(timer);
+            window.removeEventListener('resize', updateIndicator);
+        };
+    }, [updateIndicator]);
+
+    const setNavRef = useCallback((path) => (el) => {
+        navLinkRefs.current[path] = el;
+    }, []);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -314,15 +344,29 @@ const Navbar = () => {
     );
 
     return (
-        <LayoutGroup>
         <nav
             className={`fixed top-4 left-0 right-0 z-[50] flex justify-center transition-all duration-500`}
         >
-            <div className={`
-                flex items-center justify-between px-2 pl-6 pr-2 py-2
-                bg-white/70 backdrop-blur-xl border border-white/40 shadow-xl shadow-black/5
-                rounded-full transition-all duration-500 w-[95%] max-w-5xl
-            `}>
+            <div
+                ref={navContainerRef}
+                className={`
+                    relative flex items-center justify-between px-2 pl-6 pr-2 py-2
+                    bg-white/70 backdrop-blur-xl border border-white/40 shadow-xl shadow-black/5
+                    rounded-full transition-all duration-500 w-[95%] max-w-5xl
+                `}
+            >
+                {/* Single animated indicator — always mounted, opacity controlled */}
+                {indicatorStyle && (
+                    <motion.div
+                        animate={{
+                            ...indicatorStyle,
+                            opacity: indicatorVisible ? 1 : 0,
+                        }}
+                        transition={{ type: 'spring', bounce: 0.15, duration: 0.5 }}
+                        className="absolute bg-neural-dark rounded-full shadow-md pointer-events-none"
+                        style={{ zIndex: 0 }}
+                    />
+                )}
                 <Link to="/" className="flex items-center gap-2 group mr-8">
                     <img
                         src={migrateIcon}
@@ -335,15 +379,16 @@ const Navbar = () => {
                 </Link>
 
                 <div className="hidden lg:flex items-center space-x-1">
-                    <NavLink to="/marketplace" onClick={handleAuthNavigation} label="Marketplace" isActive={location.pathname === '/marketplace'} />
-                    <NavLink to="/community" onClick={handleAuthNavigation} label="Community" isActive={location.pathname === '/community'} />
-                    <NavLink to="/journey-planner" label="Journey" isActive={location.pathname === '/journey-planner'} />
-                    <NavLink to="/sos" onClick={handleAuthNavigation} label="SOS" isActive={location.pathname === '/sos'} />
+                    <NavLink ref={setNavRef('/marketplace')} to="/marketplace" onClick={handleAuthNavigation} label="Marketplace" isActive={location.pathname === '/marketplace'} />
+                    <NavLink ref={setNavRef('/community')} to="/community" onClick={handleAuthNavigation} label="Community" isActive={location.pathname === '/community'} />
+                    <NavLink ref={setNavRef('/journey-planner')} to="/journey-planner" label="Journey" isActive={location.pathname === '/journey-planner'} />
+                    <NavLink ref={setNavRef('/sos')} to="/sos" onClick={handleAuthNavigation} label="SOS" isActive={location.pathname === '/sos'} />
                 </div>
 
                 <div className="flex items-center gap-2 ml-auto">
                     {/* Scanner Link Icon - Visible on desktop */}
-                    <NavIcon 
+                    <NavIcon
+                        ref={setNavRef('/scanner')}
                         to="/scanner" 
                         icon={ScanLine} 
                         isActive={location.pathname === '/scanner'} 
@@ -368,14 +413,16 @@ const Navbar = () => {
 
                     {isLoggedIn ? (
                         <div className="hidden md:flex items-center gap-2 pl-2 border-l border-gray-200/50">
-                            <NavIcon 
+                            <NavIcon
+                                ref={setNavRef('/dashboard')}
                                 to="/dashboard" 
                                 icon={LayoutDashboard} 
                                 isActive={location.pathname === '/dashboard'} 
                                 title="Dashboard"
                                 className="hover:text-neural-dark hover:bg-black/5"
                             />
-                            <NavIcon 
+                            <NavIcon
+                                ref={setNavRef('/profile')}
                                 to="/profile" 
                                 icon={User} 
                                 isActive={location.pathname === '/profile'} 
@@ -530,7 +577,6 @@ const Navbar = () => {
                 )}
             </AnimatePresence>
         </nav>
-        </LayoutGroup>
     );
 };
 
