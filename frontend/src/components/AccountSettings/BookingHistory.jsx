@@ -59,7 +59,7 @@ const BookingHistory = () => {
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-gray-100 shadow-sm min-h-[400px]">
-                <Loader2 className="w-10 h-10 text-green-600 animate-spin mb-4" />
+                <Loader2 className="w-10 h-10 text-[#1a3a1d] animate-spin mb-4" />
                 <p className="text-gray-500 font-medium">Loading your history...</p>
             </div>
         );
@@ -79,38 +79,38 @@ const BookingHistory = () => {
         <div className="space-y-6 animate-fade-in-up">
             {/* Stats Summary */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center justify-between">
+                <div className="glass-card p-8 rounded-[2rem] flex items-center justify-between group hover:-translate-y-1 transition-transform duration-300">
                     <div>
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Total Spent</p>
-                        <h3 className="text-2xl font-black text-gray-900 mt-1">${totalSpent.toFixed(2)}</h3>
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Total Spent</p>
+                        <h3 className="text-4xl font-light text-neural-dark tracking-tighter">${totalSpent.toFixed(2)}</h3>
                     </div>
-                    <div className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center text-green-600">
-                        <Receipt className="w-6 h-6" />
+                    <div className="w-14 h-14 bg-[#1a3a1d]/5 rounded-2xl flex items-center justify-center text-[#1a3a1d] group-hover:bg-[#1a3a1d] group-hover:text-white transition-colors duration-300">
+                        <Receipt className="w-7 h-7" />
                     </div>
                 </div>
-                <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center justify-between">
+                <div className="glass-card p-8 rounded-[2rem] flex items-center justify-between group hover:-translate-y-1 transition-transform duration-300">
                     <div>
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Completed Services</p>
-                        <h3 className="text-2xl font-black text-gray-900 mt-1">{completedCount}</h3>
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Completed Services</p>
+                        <h3 className="text-4xl font-light text-neural-dark tracking-tighter">{completedCount}</h3>
                     </div>
-                    <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center text-blue-600">
-                        <ShoppingBag className="w-6 h-6" />
+                    <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
+                        <ShoppingBag className="w-7 h-7" />
                     </div>
                 </div>
-                <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center justify-between">
+                <div className="glass-card p-8 rounded-[2rem] flex items-center justify-between group hover:-translate-y-1 transition-transform duration-300">
                     <div>
-                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">Active Bookings</p>
-                        <h3 className="text-2xl font-black text-gray-900 mt-1">{activeCount}</h3>
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Active Bookings</p>
+                        <h3 className="text-4xl font-light text-neural-dark tracking-tighter">{activeCount}</h3>
                     </div>
-                    <div className="w-12 h-12 bg-orange-50 rounded-full flex items-center justify-center text-orange-600">
-                        <Calendar className="w-6 h-6" />
+                    <div className="w-14 h-14 bg-orange-50 rounded-2xl flex items-center justify-center text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition-colors duration-300">
+                        <Calendar className="w-7 h-7" />
                     </div>
                 </div>
             </div>
 
-            <div className="bg-white border border-gray-100 rounded-3xl shadow-sm overflow-hidden">
-                <div className="p-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
-                    <h2 className="text-xl font-bold text-gray-900">Your Booking History</h2>
+            <div className="glass-card rounded-[2rem] overflow-hidden">
+                <div className="p-8 border-b border-gray-100 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <h2 className="text-2xl font-light text-neural-dark tracking-tight">Your Booking History</h2>
 
                     <div className="flex bg-gray-50 p-1 rounded-xl">
                         {['ALL', 'COMPLETED', 'CANCELLED'].map(status => (
@@ -118,8 +118,8 @@ const BookingHistory = () => {
                                 key={status}
                                 onClick={() => setFilterStatus(status)}
                                 className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${filterStatus === status
-                                    ? 'bg-white text-gray-900 shadow-sm'
-                                    : 'text-gray-500 hover:text-gray-700'
+                                    ? 'bg-neural-dark text-white shadow-sm'
+                                    : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
                                     }`}
                             >
                                 {status.charAt(0) + status.slice(1).toLowerCase()}
@@ -141,10 +141,10 @@ const BookingHistory = () => {
                             <div key={booking.id} className="p-6 hover:bg-gray-50 transition-colors flex flex-col md:flex-row gap-6">
                                 <div className="flex-1">
                                     <div className="flex justify-between items-start mb-2">
-                                        <h3 className="font-bold text-gray-900 text-lg">{booking.serviceTitle}</h3>
-                                        <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${booking.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
-                                            booking.status === 'CANCELLED' || booking.status === 'DECLINED' ? 'bg-red-100 text-red-700' :
-                                                'bg-blue-100 text-blue-700'
+                                        <h3 className="font-medium text-neural-dark text-lg tracking-tight">{booking.serviceTitle}</h3>
+                                        <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide ${booking.status === 'COMPLETED' ? 'bg-[#1a3a1d]/5 text-[#1a3a1d] border border-[#1a3a1d]/10' :
+                                            booking.status === 'CANCELLED' || booking.status === 'DECLINED' ? 'bg-red-50 text-red-700 border border-red-100' :
+                                                'bg-blue-50 text-blue-700 border border-blue-100'
                                             }`}>
                                             {booking.status}
                                         </span>

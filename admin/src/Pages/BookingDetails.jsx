@@ -48,7 +48,7 @@ const BookingDetails = () => {
         switch (status) {
             case 'PENDING': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
             case 'ACCEPTED': return 'bg-blue-100 text-blue-800 border-blue-200';
-            case 'COMPLETED': return 'bg-emerald-100 text-emerald-800 border-emerald-200';
+            case 'COMPLETED': return 'bg-[#1a3a1d]/10 text-emerald-800 border-[#1a3a1d]/15';
             case 'CANCELLED': return 'bg-red-100 text-red-800 border-red-200';
             case 'DECLINED': return 'bg-gray-100 text-gray-800 border-gray-200';
             default: return 'bg-gray-100 text-gray-800 border-gray-200';
@@ -102,7 +102,7 @@ const BookingDetails = () => {
 
             {/* Notification Toast */}
             {notification.show && (
-                <div className="fixed top-24 right-4 z-[200] max-w-sm w-full p-4 rounded-2xl shadow-2xl backdrop-blur-md border border-white/20 bg-emerald-500/90 text-white transition-all duration-300 transform translate-y-0 opacity-100">
+                <div className="fixed top-24 right-4 z-[200] max-w-sm w-full p-4 rounded-2xl shadow-2xl backdrop-blur-md border border-white/20 bg-[#1a3a1d]/50/90 text-white transition-all duration-300 transform translate-y-0 opacity-100">
                     <div className="flex items-center justify-between">
                         <span className="font-medium">{notification.message}</span>
                     </div>
@@ -146,7 +146,7 @@ const BookingDetails = () => {
 
                         <div className="bg-white px-6 py-4 rounded-2xl shadow-lg shadow-gray-100 border border-gray-100 flex flex-col items-end min-w-[200px]">
                             <span className="text-xs text-gray-400 uppercase font-bold tracking-wider mb-1">Total Amount</span>
-                            <div className="text-3xl font-black text-emerald-600">{booking.currency} {booking.totalAmount}</div>
+                            <div className="text-3xl font-black text-[#1a3a1d]">{booking.currency} {booking.totalAmount}</div>
                         </div>
                     </div>
                 </div>

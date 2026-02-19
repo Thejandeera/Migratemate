@@ -1,30 +1,33 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin, Box } from 'lucide-react';
+import migrateIcon from '../assets/migrate-icon.png';
 
 const Footer = () => {
     return (
-        <footer className="bg-white border-t border-gray-100 pt-16 pb-8">
+        <footer className="relative z-10 pt-16 pb-12 border-t border-gray-200/50 bg-white/30 backdrop-blur-sm">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
 
                     {/* Brand */}
                     <div className="space-y-6">
-                        <Link to="/" className="flex items-center gap-3 group">
-                            <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-2 rounded-xl shadow-lg shadow-green-200 group-hover:shadow-green-300 transition-all duration-300 group-hover:-translate-y-0.5">
-                                <Box className="w-5 h-5 text-white" strokeWidth={2.5} />
-                            </div>
-                            <span className="text-xl font-bold text-gray-900 tracking-tight">
+                        <Link to="/" className="flex items-center gap-2 group">
+                            <img
+                                src={migrateIcon}
+                                alt="Logo"
+                                className="w-8 h-8 group-hover:scale-110 transition-transform duration-300 object-contain"
+                            />
+                            <span className="text-xl font-semibold text-neural-dark tracking-tight">
                                 MigrateMate
                             </span>
                         </Link>
-                        <p className="text-sm text-gray-500 leading-relaxed">
-                            Building bridges for a better tomorrow. A trusted, AI-powered community helping migrants settle with confidence and ease.
+                        <p className="text-sm text-gray-500 leading-relaxed font-normal max-w-xs">
+                            Building bridges for a better tomorrow. A trusted, AI-powered community helping migrants settle with confidence.
                         </p>
-                        <div className="flex gap-4">
+                        <div className="flex gap-3">
                             {[Facebook, Twitter, Instagram, Linkedin].map((Icon, i) => (
-                                <a key={i} href="#" className="p-2 bg-gray-50 text-gray-400 rounded-xl hover:bg-green-50 hover:text-green-600 transition-all hover:-translate-y-1">
-                                    <Icon size={18} />
+                                <a key={i} href="#" className="p-2.5 bg-white text-gray-400 rounded-full hover:bg-deep-green hover:text-white transition-all hover:scale-110 shadow-sm border border-gray-100">
+                                    <Icon size={16} />
                                 </a>
                             ))}
                         </div>
@@ -32,11 +35,11 @@ const Footer = () => {
 
                     {/* Quick Links */}
                     <div>
-                        <h4 className="font-bold text-gray-900 mb-6">Platform</h4>
+                        <h4 className="font-semibold text-neural-dark mb-6">Platform</h4>
                         <ul className="space-y-3">
                             {['Marketplace', 'Community', 'Journey Planner', 'Emergency SOS'].map((item) => (
                                 <li key={item}>
-                                    <Link to="#" className="text-sm text-gray-500 hover:text-green-600 hover:pl-1 transition-all">
+                                    <Link to="#" className="text-sm font-medium text-gray-500 hover:text-deep-green hover:pl-1 transition-all">
                                         {item}
                                     </Link>
                                 </li>
@@ -46,11 +49,11 @@ const Footer = () => {
 
                     {/* Support */}
                     <div>
-                        <h4 className="font-bold text-gray-900 mb-6">Support</h4>
+                        <h4 className="font-semibold text-neural-dark mb-6">Support</h4>
                         <ul className="space-y-3">
                             {['Help Center', 'Safety & Trust', 'Privacy Policy', 'Terms of Service'].map((item) => (
                                 <li key={item}>
-                                    <a href="#" className="text-sm text-gray-500 hover:text-green-600 hover:pl-1 transition-all">
+                                    <a href="#" className="text-sm font-medium text-gray-500 hover:text-deep-green hover:pl-1 transition-all">
                                         {item}
                                     </a>
                                 </li>
@@ -60,29 +63,32 @@ const Footer = () => {
 
                     {/* Contact */}
                     <div>
-                        <h4 className="font-bold text-gray-900 mb-6">Contact Us</h4>
+                        <h4 className="font-semibold text-neural-dark mb-6">Contact Us</h4>
                         <ul className="space-y-4">
-                            <li className="flex items-start gap-3">
-                                <Mail className="w-5 h-5 text-green-500 mt-0.5" />
-                                <span className="text-sm text-gray-500">support@migratemate.com</span>
+                            <li className="flex items-start gap-3 group cursor-pointer">
+                                <div className="p-1.5 bg-white rounded-full shadow-sm text-deep-green group-hover:bg-deep-green group-hover:text-white transition-colors">
+                                    <Mail className="w-4 h-4" />
+                                </div>
+                                <span className="text-sm font-medium text-gray-500 mt-0.5">support@migratemate.com</span>
                             </li>
-                            <li className="flex items-start gap-3">
-                                <Phone className="w-5 h-5 text-green-500 mt-0.5" />
-                                <span className="text-sm text-gray-500">+94 71 886 09 59</span>
+                            <li className="flex items-start gap-3 group cursor-pointer">
+                                <div className="p-1.5 bg-white rounded-full shadow-sm text-deep-green group-hover:bg-deep-green group-hover:text-white transition-colors">
+                                    <Phone className="w-4 h-4" />
+                                </div>
+                                <span className="text-sm font-medium text-gray-500 mt-0.5">+94 71 886 09 59</span>
                             </li>
-                            <li className="flex items-start gap-3">
-                                <MapPin className="w-5 h-5 text-green-500 mt-0.5" />
-                                <span className="text-sm text-gray-500">Colombo, Sri Lanka</span>
+                            <li className="flex items-start gap-3 group cursor-pointer">
+                                <div className="p-1.5 bg-white rounded-full shadow-sm text-deep-green group-hover:bg-deep-green group-hover:text-white transition-colors">
+                                    <MapPin className="w-4 h-4" />
+                                </div>
+                                <span className="text-sm font-medium text-gray-500 mt-0.5">Colombo, Sri Lanka</span>
                             </li>
                         </ul>
                     </div>
                 </div>
 
-                <div className="border-t border-gray-100 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-                    <p className="text-xs font-medium text-gray-400">© 2026 MigrateMate. All rights reserved.</p>
-                    <p className="text-xs font-medium text-gray-400 flex items-center gap-1">
-                        Made with <span className="text-red-400">♥</span> by Hell Fire Club
-                    </p>
+                <div className="border-t border-gray-200/60 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">© 2026 MigrateMate. All rights reserved.</p>
                 </div>
             </div>
         </footer>

@@ -86,7 +86,7 @@ const Reports = () => {
                     </div>
                     <button
                         onClick={fetchReports}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-white text-gray-700 hover:text-green-600 border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all font-medium"
+                        className="flex items-center gap-2 px-5 py-2.5 bg-white text-gray-700 hover:text-[#1a3a1d] border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all font-medium"
                     >
                         <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
                         <span>Refresh List</span>
@@ -123,7 +123,7 @@ const Reports = () => {
                 {/* Content */}
                 {loading ? (
                     <div className="flex flex-col items-center justify-center py-20">
-                        <div className="animate-spin rounded-full h-12 w-12 border-4 border-green-500 border-t-transparent mb-4"></div>
+                        <div className="animate-spin rounded-full h-12 w-12 border-4 border-[#1a3a1d] border-t-transparent mb-4"></div>
                         <p className="text-gray-500 font-medium">Loading reports...</p>
                     </div>
                 ) : error ? (
@@ -155,11 +155,11 @@ const Reports = () => {
                                         >
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-4">
-                                                    <div className="flex-shrink-0 h-10 w-10 bg-green-50 rounded-xl flex items-center justify-center text-green-600">
+                                                    <div className="flex-shrink-0 h-10 w-10 bg-[#1a3a1d]/5 rounded-xl flex items-center justify-center text-[#1a3a1d]">
                                                         <TrendingUp size={20} />
                                                     </div>
                                                     <div>
-                                                        <div className="font-bold text-gray-900 group-hover:text-green-600 transition-colors">
+                                                        <div className="font-bold text-gray-900 group-hover:text-[#1a3a1d] transition-colors">
                                                             {report.planName}
                                                         </div>
                                                         <div className="text-xs text-gray-400 font-mono">
@@ -177,7 +177,7 @@ const Reports = () => {
                                             </td>
                                             <td className="px-6 py-4">
                                                 <div className="flex items-center gap-1.5 text-sm font-bold text-gray-900">
-                                                    <div className="p-1 bg-green-100 text-green-600 rounded-md">
+                                                    <div className="p-1 bg-[#1a3a1d]/10 text-[#1a3a1d] rounded-md">
                                                         <DollarSign size={12} strokeWidth={3} />
                                                     </div>
                                                     {report.budget?.toLocaleString()}
@@ -202,7 +202,7 @@ const Reports = () => {
                                             <td className="px-6 py-4 text-right">
                                                 <button
                                                     onClick={() => handleViewReport(report)}
-                                                    className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-xl transition-all"
+                                                    className="p-2 text-gray-400 hover:text-[#1a3a1d] hover:bg-[#1a3a1d]/5 rounded-xl transition-all"
                                                     title="View Full Report"
                                                 >
                                                     <Eye size={18} />
@@ -285,7 +285,7 @@ const Reports = () => {
                                         </div>
                                         <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
                                             <div className="flex items-center gap-2 mb-2">
-                                                <div className="p-1.5 bg-green-50 text-green-600 rounded-lg">
+                                                <div className="p-1.5 bg-[#1a3a1d]/5 text-[#1a3a1d] rounded-lg">
                                                     <DollarSign size={16} />
                                                 </div>
                                                 <span className="text-xs font-bold text-gray-400 uppercase">Budget</span>

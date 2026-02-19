@@ -30,7 +30,7 @@ import {
 
 const STATUS_CONFIG = {
     INREVIEW: { label: 'In Review', bg: 'bg-yellow-100', text: 'text-yellow-800', dot: 'bg-yellow-500', icon: AlertTriangle },
-    APPROVED: { label: 'Approved', bg: 'bg-green-100', text: 'text-green-800', dot: 'bg-green-500', icon: CheckCircle },
+    APPROVED: { label: 'Approved', bg: 'bg-[#1a3a1d]/10', text: 'text-[#1a3a1d]', dot: 'bg-[#1a3a1d]', icon: CheckCircle },
     ADVICED: { label: 'Adviced', bg: 'bg-blue-100', text: 'text-blue-800', dot: 'bg-blue-500', icon: HelpCircle },
 };
 
@@ -227,7 +227,7 @@ const ManageGigs = () => {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -50 }}
                         className={`fixed top-24 right-4 z-[200] max-w-sm w-full p-4 rounded-2xl shadow-2xl backdrop-blur-md border border-white/20 ${notification.type === 'success'
-                            ? 'bg-emerald-500/90 text-white'
+                            ? 'bg-[#1a3a1d]/50/90 text-white'
                             : 'bg-red-500/90 text-white'
                             }`}
                     >
@@ -404,7 +404,7 @@ const ManageGigs = () => {
                                                         {service.status !== 'APPROVED' && (
                                                             <button
                                                                 onClick={() => handleStatusUpdate(service.id, 'APPROVED')}
-                                                                className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all"
+                                                                className="p-2 text-gray-400 hover:text-[#1a3a1d] hover:bg-[#1a3a1d]/5 rounded-xl transition-all"
                                                                 title="Approve"
                                                             >
                                                                 <CheckCircle size={18} />

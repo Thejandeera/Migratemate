@@ -9,7 +9,7 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import SockJS from 'sockjs-client';
 import { Stomp } from '@stomp/stompjs';
-import Navbar from '../components/Navbar';
+
 import Footer from '../components/Footer';
 
 // Fix for default marker icons in React-Leaflet
@@ -358,7 +358,15 @@ const SosPage = () => {
 
     return (
         <div className="flex flex-col min-h-screen bg-gray-50">
-            <Navbar />
+            {/* Reveal Overlay */}
+            <motion.div
+                initial={{ scaleY: 1 }}
+                animate={{ scaleY: 0 }}
+                transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+                style={{ originY: 0 }}
+                className="fixed inset-0 z-50 bg-[#1a3a1d]"
+            />
+
             <div className="flex-grow pt-24 pb-12 px-4 sm:px-6 relative overflow-hidden">
                 {/* Background red pulse for emergency feel */}
                 <div className="absolute top-0 left-0 w-full h-96 bg-gradient-to-b from-red-50 to-transparent -z-10" />
@@ -370,13 +378,13 @@ const SosPage = () => {
                         animate={{ opacity: 1, y: 0 }}
                         className="text-center mb-10"
                     >
-                        <div className="inline-flex items-center justify-center p-3 bg-red-100 rounded-full mb-4 animate-pulse">
+                        <div className="inline-flex items-center justify-center p-3 bg-red-50 rounded-full mb-6 animate-pulse">
                             <Shield className="w-8 h-8 text-red-600" />
                         </div>
-                        <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight mb-2">
-                            Emergency <span className="text-red-600">Response</span>
+                        <h1 className="text-5xl md:text-7xl font-light text-neural-dark tracking-tighter mb-4">
+                            Emergency <span className="text-red-600 font-normal">Response</span>
                         </h1>
-                        <p className="text-gray-500 text-lg max-w-2xl mx-auto">
+                        <p className="text-gray-500 text-xl font-light max-w-2xl mx-auto">
                             Quickly alert nearby users and emergency contacts when you need urgent help.
                         </p>
                     </motion.div>
@@ -389,27 +397,27 @@ const SosPage = () => {
                             className="lg:col-span-1 space-y-6"
                         >
                             {/* SOS Action Card */}
-                            <div className={`rounded-3xl shadow-xl overflow-hidden border-2 transition-colors ${hasActiveAlert ? 'bg-red-600 border-red-700' : 'bg-white border-red-100'}`}>
+                            <div className={`rounded-[2rem] premium-shadow overflow-hidden border transition-colors ${hasActiveAlert ? 'bg-red-600 border-red-700' : 'bg-white border-white/60'}`}>
                                 <div className="p-8 text-center">
                                     {hasActiveAlert ? (
                                         <div className="text-white">
                                             <div className="w-24 h-24 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-6 animate-ping-slow">
                                                 <Radio className="w-12 h-12 text-white" />
                                             </div>
-                                            <h2 className="text-2xl font-bold mb-2">SOS Active!</h2>
-                                            <p className="text-white/80 mb-8">Alert sent to nearby community. Help is on the way.</p>
+                                            <h2 className="text-3xl font-light tracking-tight mb-2">SOS Active!</h2>
+                                            <p className="text-white/80 mb-8 font-light">Alert sent to nearby community. Help is on the way.</p>
 
                                             <div className="grid gap-3">
                                                 <button
                                                     onClick={handleResolveSOS}
-                                                    className="w-full bg-white text-green-600 font-bold py-4 px-6 rounded-xl shadow-lg hover:bg-green-50 transition-all flex items-center justify-center gap-2"
+                                                    className="w-full bg-white text-deep-green font-medium py-4 px-6 rounded-2xl shadow-lg hover:bg-[#1a3a1d]/5 transition-all flex items-center justify-center gap-2"
                                                 >
                                                     <CheckCircle className="w-5 h-5" />
                                                     I'm Safe Now
                                                 </button>
                                                 <button
                                                     onClick={handleCancelSOS}
-                                                    className="w-full bg-red-800/50 text-white font-semibold py-3 px-6 rounded-xl hover:bg-red-800 transition-all flex items-center justify-center gap-2"
+                                                    className="w-full bg-red-800/50 text-white font-medium py-3 px-6 rounded-2xl hover:bg-red-800 transition-all flex items-center justify-center gap-2"
                                                 >
                                                     <X className="w-5 h-5" />
                                                     Cancel Alert
@@ -418,28 +426,28 @@ const SosPage = () => {
                                         </div>
                                     ) : (
                                         <div>
-                                            <h2 className="text-2xl font-bold text-gray-900 mb-6">Need Help?</h2>
+                                            <h2 className="text-2xl font-medium text-neural-dark mb-6">Need Help?</h2>
 
                                             <div className="mb-6 text-left">
                                                 <div className="flex items-center gap-2 mb-2">
-                                                    <div className={`w-2 h-2 rounded-full ${userLocation ? 'bg-green-500' : 'bg-orange-500 animate-pulse'}`} />
-                                                    <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Your Location</span>
+                                                    <div className={`w-2 h-2 rounded-full ${userLocation ? 'bg-deep-green' : 'bg-orange-500 animate-pulse'}`} />
+                                                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Your Location</span>
                                                 </div>
-                                                <div className="bg-gray-50 p-3 rounded-xl border border-gray-100 flex items-start gap-3">
+                                                <div className="bg-gray-50/50 p-4 rounded-2xl border border-gray-100 flex items-start gap-3">
                                                     <Locate className="w-5 h-5 text-gray-400 mt-0.5" />
-                                                    <p className="text-sm text-gray-700 font-medium break-words">
+                                                    <p className="text-sm text-gray-700 font-light break-words leading-relaxed">
                                                         {address || 'Detecting location...'}
                                                     </p>
                                                 </div>
                                             </div>
 
                                             <div className="mb-6 text-left">
-                                                <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Emergency Message</label>
+                                                <label className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Emergency Message</label>
                                                 <textarea
                                                     value={message}
                                                     onChange={(e) => setMessage(e.target.value)}
                                                     placeholder="Describe the emergency..."
-                                                    className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-red-500/20 focus:border-red-500 outline-none transition-all resize-none text-sm"
+                                                    className="w-full px-4 py-3 bg-gray-50/50 border border-gray-100 rounded-2xl focus:ring-2 focus:ring-red-500/10 focus:border-red-500/50 outline-none transition-all resize-none text-sm font-light placeholder:text-gray-400"
                                                     rows="2"
                                                 />
                                             </div>
@@ -447,14 +455,14 @@ const SosPage = () => {
                                             <button
                                                 onClick={handleSendSOS}
                                                 disabled={loading || !userLocation}
-                                                className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-bold py-4 px-6 rounded-2xl transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-red-200 flex items-center justify-center gap-3 group"
+                                                className="w-full bg-red-600 hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium py-4 px-6 rounded-[1.5rem] transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-red-200 flex items-center justify-center gap-3 group"
                                             >
                                                 <div className="bg-white/20 p-2 rounded-full group-hover:bg-white/30 transition-colors">
                                                     <AlertCircle className="w-6 h-6" />
                                                 </div>
-                                                <span className="text-lg">SEND SOS ALERT</span>
+                                                <span className="text-lg tracking-tight">SEND SOS ALERT</span>
                                             </button>
-                                            <p className="mt-4 text-xs text-gray-400">
+                                            <p className="mt-4 text-xs text-gray-400 font-light">
                                                 Pressing this will instantly alert all nearby MigrateMate users.
                                             </p>
                                         </div>
@@ -524,7 +532,7 @@ const SosPage = () => {
                                                                     <a
                                                                         href={`tel:${alert.userPhone}`}
                                                                         onClick={(e) => e.stopPropagation()}
-                                                                        className="flex-1 bg-green-50 text-green-700 text-[10px] font-bold py-1.5 rounded-lg hover:bg-green-100 transition-colors flex items-center justify-center gap-1"
+                                                                        className="flex-1 bg-[#1a3a1d]/5 text-deep-green text-[10px] font-bold py-1.5 rounded-lg hover:bg-[#1a3a1d]/10 transition-colors flex items-center justify-center gap-1"
                                                                     >
                                                                         <Phone className="w-3 h-3" /> Call
                                                                     </a>
@@ -533,7 +541,7 @@ const SosPage = () => {
                                                         )}
 
                                                         {alert.helperName && (
-                                                            <div className="mt-2 text-[10px] bg-green-50 text-green-700 px-2 py-1 rounded border border-green-100 flex items-center gap-1">
+                                                            <div className="mt-2 text-[10px] bg-[#1a3a1d]/5 text-deep-green px-2 py-1 rounded border border-[#1a3a1d]/10 flex items-center gap-1">
                                                                 <CheckCircle className="w-3 h-3" /> {alert.helperName} is responding
                                                             </div>
                                                         )}

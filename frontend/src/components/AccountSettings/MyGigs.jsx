@@ -120,7 +120,7 @@ const MyGigs = () => {
         return (
             <div className="flex justify-center items-center py-20 bg-white rounded-3xl shadow-sm border border-gray-100 min-h-[400px]">
                 <div className="flex flex-col items-center">
-                    <Loader2 className="w-10 h-10 text-green-600 animate-spin mb-4" />
+                    <Loader2 className="w-10 h-10 text-[#1a3a1d] animate-spin mb-4" />
                     <p className="text-gray-500 font-medium">Loading your services...</p>
                 </div>
             </div>
@@ -145,43 +145,43 @@ const MyGigs = () => {
 
     return (
         <div className="space-y-6 animate-fade-in-up">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-                <div>
-                    <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight">My Services</h2>
-                    <p className="text-gray-500 mt-1">Manage, edit, and track your offered services</p>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 glass-card p-8 rounded-[2rem] relative overflow-hidden">
+                <div className="relative z-10">
+                    <h2 className="text-3xl font-light text-neural-dark tracking-tight">My Services</h2>
+                    <p className="text-gray-500 mt-1 font-light">Manage, edit, and track your offered services</p>
                 </div>
                 <button
                     onClick={() => {
                         setEditingGig(null);
                         setIsCreateModalOpen(true);
                     }}
-                    className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition-all shadow-lg hover:shadow-green-200 hover:-translate-y-0.5"
+                    className="relative z-10 flex items-center gap-2 px-8 py-4 bg-neural-dark text-white font-medium rounded-2xl hover:bg-black transition-all shadow-lg hover:shadow-xl hover:-translate-y-1 group"
                 >
-                    <Plus className="w-5 h-5" />
-                    Create New Service
+                    <Plus className="w-5 h-5 group-hover:rotate-90 transition-transform duration-300" />
+                    <span>Create New Service</span>
                 </button>
             </div>
 
             {/* Filters */}
-            <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-4">
-                <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <div className="glass-card p-4 rounded-[1.5rem] flex flex-col md:flex-row gap-4 items-center">
+                <div className="relative flex-1 w-full">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
                         type="text"
                         placeholder="Search your services..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition"
+                        className="w-full pl-12 pr-4 py-3 bg-white/50 border border-gray-200/50 rounded-xl focus:ring-2 focus:ring-neural-dark/5 focus:border-neural-dark/10 outline-none transition font-light text-neural-dark"
                     />
                 </div>
-                <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0">
+                <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 w-full md:w-auto">
                     {['ALL', 'ACTIVE', 'INACTIVE'].map((status) => (
                         <button
                             key={status}
                             onClick={() => setFilterStatus(status)}
-                            className={`px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${filterStatus === status
-                                ? 'bg-green-100 text-green-700 border border-green-200'
-                                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                            className={`px-5 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${filterStatus === status
+                                ? 'bg-neural-dark text-white shadow-md'
+                                : 'bg-white/50 text-gray-600 hover:bg-white hover:text-neural-dark'
                                 }`}
                         >
                             {status === 'ALL' ? 'All Services' : status.charAt(0) + status.slice(1).toLowerCase()}
@@ -204,7 +204,7 @@ const MyGigs = () => {
                     {!searchTerm && filterStatus === 'ALL' && (
                         <button
                             onClick={() => setIsCreateModalOpen(true)}
-                            className="px-6 py-2.5 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition shadow-lg"
+                            className="px-6 py-2.5 bg-[#1a3a1d] text-white font-bold rounded-xl hover:bg-black transition shadow-lg"
                         >
                             Create Your First Service
                         </button>
@@ -220,7 +220,7 @@ const MyGigs = () => {
                                 initial={{ opacity: 0, scale: 0.9 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 exit={{ opacity: 0, scale: 0.9 }}
-                                className={`bg-white rounded-3xl overflow-hidden border transition-all hover:shadow-xl group ${gig.isAvailable ? 'border-gray-100' : 'border-gray-200 opacity-75'
+                                className={`glass-card rounded-[2rem] overflow-hidden transition-all hover:shadow-[0_20px_40px_rgb(0,0,0,0.12)] group hover:-translate-y-1 ${gig.isAvailable ? 'border-white/20' : 'border-gray-200 opacity-75 grayscale-[0.5]'
                                     }`}
                             >
                                 <div className="relative h-48 overflow-hidden">
@@ -232,7 +232,7 @@ const MyGigs = () => {
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
 
                                     <div className="absolute top-4 right-4 flex gap-2">
-                                        <div className={`px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md shadow-sm border border-white/20 text-white ${gig.isAvailable ? 'bg-green-500/80' : 'bg-gray-500/80'
+                                        <div className={`px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md shadow-sm border border-white/20 text-white ${gig.isAvailable ? 'bg-[#1a3a1d]/90' : 'bg-gray-500/80'
                                             }`}>
                                             {gig.isAvailable ? 'Active' : 'Inactive'}
                                         </div>
@@ -249,7 +249,7 @@ const MyGigs = () => {
 
                                 <div className="p-5">
                                     <div className="flex items-center justify-between mb-4">
-                                        <span className="text-2xl font-bold text-green-600">
+                                        <span className="text-3xl font-light text-neural-dark tracking-tight">
                                             {gig.currency} {gig.price}
                                         </span>
                                         <span className="text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded-lg uppercase tracking-wide">
@@ -275,7 +275,7 @@ const MyGigs = () => {
                                             onClick={() => toggleAvailability(gig)}
                                             className={`p-2 rounded-xl transition-colors ${gig.isAvailable
                                                 ? 'bg-yellow-50 text-yellow-600 hover:bg-yellow-100'
-                                                : 'bg-green-50 text-green-600 hover:bg-green-100'
+                                                : 'bg-[#1a3a1d]/5 text-[#1a3a1d] hover:bg-[#1a3a1d]/10'
                                                 }`}
                                             title={gig.isAvailable ? "Mark as Inactive" : "Mark as Active"}
                                         >

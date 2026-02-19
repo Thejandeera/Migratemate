@@ -351,9 +351,9 @@ const CreateGigForm = ({ isOpen, onClose, onSuccess, editGig = null }) => {
                             {steps.map((step, index) => (
                                 <div key={step.number} className="flex items-center">
                                     <div className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold transition-all ${currentStep > step.number
-                                        ? 'bg-green-500 text-white'
+                                        ? 'bg-deep-green text-white'
                                         : currentStep === step.number
-                                            ? 'bg-green-600 text-white shadow-lg shadow-green-200 ring-2 ring-green-100'
+                                            ? 'bg-deep-green text-white shadow-lg shadow-[#1a3a1d]/20 ring-2 ring-[#1a3a1d]/20'
                                             : 'bg-gray-200 text-gray-500'
                                         }`}>
                                         {currentStep > step.number ? <Check className="w-4 h-4" /> : step.number}
@@ -362,7 +362,7 @@ const CreateGigForm = ({ isOpen, onClose, onSuccess, editGig = null }) => {
                                         {step.title}
                                     </span>
                                     {index < steps.length - 1 && (
-                                        <div className={`w-12 h-0.5 mx-4 ${currentStep > step.number ? 'bg-green-300' : 'bg-gray-200'}`} />
+                                        <div className={`w-12 h-0.5 mx-4 ${currentStep > step.number ? 'bg-[#1a3a1d]/40' : 'bg-gray-200'}`} />
                                     )}
                                 </div>
                             ))}
@@ -399,7 +399,7 @@ const CreateGigForm = ({ isOpen, onClose, onSuccess, editGig = null }) => {
                                             value={formData.title}
                                             onChange={handleInputChange}
                                             placeholder="e.g., Professional Airport Pickup"
-                                            className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition font-medium text-gray-900"
+                                            className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#1a3a1d]/20 focus:border-deep-green outline-none transition font-medium text-gray-900"
                                         />
                                     </div>
                                 </div>
@@ -412,7 +412,7 @@ const CreateGigForm = ({ isOpen, onClose, onSuccess, editGig = null }) => {
                                         onChange={handleInputChange}
                                         placeholder="Describe what you offer in detail..."
                                         rows={4}
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition font-medium text-gray-900 resize-none"
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#1a3a1d]/20 focus:border-deep-green outline-none transition font-medium text-gray-900 resize-none"
                                     />
                                 </div>
 
@@ -422,7 +422,7 @@ const CreateGigForm = ({ isOpen, onClose, onSuccess, editGig = null }) => {
                                         name="category"
                                         value={formData.category}
                                         onChange={handleInputChange}
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition font-medium text-gray-900 appearance-none"
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#1a3a1d]/20 focus:border-deep-green outline-none transition font-medium text-gray-900 appearance-none"
                                     >
                                         <option value="">Select a category</option>
                                         {CATEGORIES.map(cat => (
@@ -442,21 +442,21 @@ const CreateGigForm = ({ isOpen, onClose, onSuccess, editGig = null }) => {
                                                 value={formData.origin}
                                                 onChange={handleInputChange}
                                                 placeholder="e.g., Sri Lanka"
-                                                className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition font-medium text-gray-900"
+                                                className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#1a3a1d]/20 focus:border-deep-green outline-none transition font-medium text-gray-900"
                                             />
                                         </div>
                                     </div>
                                     <div>
                                         <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Destination <span className="text-red-500">*</span></label>
                                         <div className="relative">
-                                            <MapPin className="absolute left-4 top-3.5 w-5 h-5 text-green-500" />
+                                            <MapPin className="absolute left-4 top-3.5 w-5 h-5 text-deep-green" />
                                             <input
                                                 type="text"
                                                 name="destination"
                                                 value={formData.destination}
                                                 onChange={handleInputChange}
                                                 placeholder="e.g., Melbourne"
-                                                className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition font-medium text-gray-900"
+                                                className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#1a3a1d]/20 focus:border-deep-green outline-none transition font-medium text-gray-900"
                                             />
                                         </div>
                                     </div>
@@ -470,7 +470,7 @@ const CreateGigForm = ({ isOpen, onClose, onSuccess, editGig = null }) => {
                                         value={formData.specificLocation}
                                         onChange={handleInputChange}
                                         placeholder="e.g., CBD, Carlton, Monash Campus"
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition font-medium text-gray-900"
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#1a3a1d]/20 focus:border-deep-green outline-none transition font-medium text-gray-900"
                                     />
                                 </div>
                             </motion.div>
@@ -495,7 +495,7 @@ const CreateGigForm = ({ isOpen, onClose, onSuccess, editGig = null }) => {
                                                 onChange={handleInputChange}
                                                 placeholder="0.00"
                                                 min="0"
-                                                className="w-full pl-9 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition font-medium text-gray-900"
+                                                className="w-full pl-9 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#1a3a1d]/20 focus:border-deep-green outline-none transition font-medium text-gray-900"
                                             />
                                         </div>
                                     </div>
@@ -505,7 +505,7 @@ const CreateGigForm = ({ isOpen, onClose, onSuccess, editGig = null }) => {
                                             name="currency"
                                             value={formData.currency}
                                             onChange={handleInputChange}
-                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition font-bold text-gray-900"
+                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#1a3a1d]/20 focus:border-deep-green outline-none transition font-bold text-gray-900"
                                         >
                                             {CURRENCIES.map(cur => (
                                                 <option key={cur.value} value={cur.value}>{cur.label}</option>
@@ -518,7 +518,7 @@ const CreateGigForm = ({ isOpen, onClose, onSuccess, editGig = null }) => {
                                             name="pricingType"
                                             value={formData.pricingType}
                                             onChange={handleInputChange}
-                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition font-medium text-gray-900"
+                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#1a3a1d]/20 focus:border-deep-green outline-none transition font-medium text-gray-900"
                                         >
                                             {PRICING_TYPES.map(pt => (
                                                 <option key={pt.value} value={pt.value}>{pt.label}</option>
@@ -535,7 +535,7 @@ const CreateGigForm = ({ isOpen, onClose, onSuccess, editGig = null }) => {
                                         value={formData.features}
                                         onChange={handleInputChange}
                                         placeholder="e.g., Air conditioning, WiFi, Luggage space"
-                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition font-medium text-gray-900"
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#1a3a1d]/20 focus:border-deep-green outline-none transition font-medium text-gray-900"
                                     />
                                 </div>
 
@@ -549,7 +549,7 @@ const CreateGigForm = ({ isOpen, onClose, onSuccess, editGig = null }) => {
                                             onChange={handleInputChange}
                                             placeholder="e.g., 4"
                                             min="1"
-                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition font-medium text-gray-900"
+                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#1a3a1d]/20 focus:border-deep-green outline-none transition font-medium text-gray-900"
                                         />
                                     </div>
                                     <div>
@@ -561,7 +561,7 @@ const CreateGigForm = ({ isOpen, onClose, onSuccess, editGig = null }) => {
                                             onChange={handleInputChange}
                                             placeholder="2"
                                             min="1"
-                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition font-medium text-gray-900"
+                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#1a3a1d]/20 focus:border-deep-green outline-none transition font-medium text-gray-900"
                                         />
                                     </div>
                                     <div>
@@ -570,7 +570,7 @@ const CreateGigForm = ({ isOpen, onClose, onSuccess, editGig = null }) => {
                                             name="durationType"
                                             value={formData.durationType}
                                             onChange={handleInputChange}
-                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 outline-none transition font-medium text-gray-900"
+                                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-[#1a3a1d]/20 focus:border-deep-green outline-none transition font-medium text-gray-900"
                                         >
                                             {DURATION_TYPES.map(dt => (
                                                 <option key={dt.value} value={dt.value}>{dt.label}</option>
@@ -588,7 +588,7 @@ const CreateGigForm = ({ isOpen, onClose, onSuccess, editGig = null }) => {
                                                 type="button"
                                                 onClick={() => handleDayToggle(day)}
                                                 className={`px-3 py-2 text-sm font-bold rounded-xl transition-all ${formData.availableDays.includes(day)
-                                                    ? 'bg-green-600 text-white shadow-md'
+                                                    ? 'bg-deep-green text-white shadow-md'
                                                     : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'
                                                     }`}
                                             >
@@ -635,7 +635,7 @@ const CreateGigForm = ({ isOpen, onClose, onSuccess, editGig = null }) => {
                                     <div
                                         onDrop={handleImageDrop}
                                         onDragOver={handleDragOver}
-                                        className="border-2 border-dashed border-gray-200 rounded-3xl p-10 text-center hover:border-green-400 hover:bg-green-50 transition-all cursor-pointer bg-gray-50"
+                                        className="border-2 border-dashed border-gray-200 rounded-3xl p-10 text-center hover:border-deep-green/40 hover:bg-[#1a3a1d]/5 transition-all cursor-pointer bg-gray-50"
                                     >
                                         <input
                                             type="file"
@@ -647,7 +647,7 @@ const CreateGigForm = ({ isOpen, onClose, onSuccess, editGig = null }) => {
                                         />
                                         <label htmlFor="image-upload" className="cursor-pointer flex flex-col items-center">
                                             <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mb-4 shadow-sm border border-gray-100">
-                                                <Upload className="w-8 h-8 text-green-600" />
+                                                <Upload className="w-8 h-8 text-deep-green" />
                                             </div>
                                             <p className="text-gray-900 font-bold mb-1">
                                                 Click to upload or drag and drop
@@ -681,7 +681,7 @@ const CreateGigForm = ({ isOpen, onClose, onSuccess, editGig = null }) => {
                                             </div>
                                         ))}
                                         {imagePreviews.map((preview, index) => (
-                                            <div key={`new-${index}`} className="relative group aspect-square rounded-2xl overflow-hidden border-2 border-green-500/30">
+                                            <div key={`new-${index}`} className="relative group aspect-square rounded-2xl overflow-hidden border-2 border-deep-green/30">
                                                 <img
                                                     src={preview}
                                                     alt={`Preview ${index + 1}`}
@@ -717,7 +717,7 @@ const CreateGigForm = ({ isOpen, onClose, onSuccess, editGig = null }) => {
                         {currentStep < 3 ? (
                             <button
                                 onClick={nextStep}
-                                className="px-8 py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition shadow-lg shadow-green-200 flex items-center gap-2 transform hover:-translate-y-0.5"
+                                className="px-8 py-3 bg-deep-green text-white font-bold rounded-xl hover:bg-[#2d5a32] transition shadow-lg shadow-[#1a3a1d]/20 flex items-center gap-2 transform hover:-translate-y-0.5"
                             >
                                 Next Step
                                 <ChevronRight className="w-5 h-5" />
@@ -726,7 +726,7 @@ const CreateGigForm = ({ isOpen, onClose, onSuccess, editGig = null }) => {
                             <button
                                 onClick={handleSubmit}
                                 disabled={isSubmitting}
-                                className="px-8 py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition shadow-lg shadow-green-200 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-0.5"
+                                className="px-8 py-3 bg-deep-green text-white font-bold rounded-xl hover:bg-[#2d5a32] transition shadow-lg shadow-[#1a3a1d]/20 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-0.5"
                             >
                                 {isSubmitting ? (
                                     <>

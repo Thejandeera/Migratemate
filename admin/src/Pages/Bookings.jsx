@@ -23,7 +23,7 @@ import {
 const STATUS_CONFIG = {
     PENDING: { label: 'Pending', bg: 'bg-yellow-100', text: 'text-yellow-800', dot: 'bg-yellow-500', icon: Clock },
     ACCEPTED: { label: 'Accepted', bg: 'bg-blue-100', text: 'text-blue-800', dot: 'bg-blue-500', icon: CheckCircle },
-    COMPLETED: { label: 'Completed', bg: 'bg-emerald-100', text: 'text-emerald-800', dot: 'bg-emerald-500', icon: CheckCircle },
+    COMPLETED: { label: 'Completed', bg: 'bg-[#1a3a1d]/10', text: 'text-emerald-800', dot: 'bg-[#1a3a1d]/50', icon: CheckCircle },
     CANCELLED: { label: 'Cancelled', bg: 'bg-red-100', text: 'text-red-800', dot: 'bg-red-500', icon: XCircle },
     DECLINED: { label: 'Declined', bg: 'bg-gray-100', text: 'text-gray-800', dot: 'bg-gray-500', icon: XCircle },
 };
@@ -184,7 +184,7 @@ const Bookings = () => {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -50 }}
                         className={`fixed top-24 right-4 z-[200] max-w-sm w-full p-4 rounded-2xl shadow-2xl backdrop-blur-md border border-white/20 ${notification.type === 'success'
-                            ? 'bg-emerald-500/90 text-white'
+                            ? 'bg-[#1a3a1d]/50/90 text-white'
                             : 'bg-red-500/90 text-white'
                             }`}
                     >
@@ -332,7 +332,7 @@ const Bookings = () => {
                                                         <Calendar size={14} className="text-gray-400" />
                                                         {new Date(booking.requestedDate).toLocaleDateString()}
                                                     </div>
-                                                    <div className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg border border-emerald-100 w-fit">
+                                                    <div className="text-xs font-bold text-[#1a3a1d] bg-[#1a3a1d]/5 px-2 py-0.5 rounded-lg border border-emerald-100 w-fit">
                                                         {booking.currency} {booking.totalAmount}
                                                     </div>
                                                 </div>

@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Send, ArrowLeft, Users, MoreVertical, Loader2, Image as ImageIcon, MapPin, CheckCircle, Clock } from 'lucide-react';
 import { API_URL } from '../utils/api';
 import { getAuthData, isAuthenticated } from '../utils/auth';
-import Navbar from '../components/Navbar';
+
 import Footer from '../components/Footer';
 import { formatDistanceToNow, isAfter, subMinutes } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -142,7 +142,7 @@ const CommunityDetails = () => {
     if (loading) {
         return (
             <div className="flex justify-center items-center min-h-screen bg-gray-50">
-                <Loader2 className="w-10 h-10 text-green-600 animate-spin" />
+                <Loader2 className="w-10 h-10 text-deep-green animate-spin" />
             </div>
         );
     }
@@ -153,7 +153,7 @@ const CommunityDetails = () => {
                 <p className="text-gray-500 mb-4">Community not found.</p>
                 <button
                     onClick={() => navigate('/community')}
-                    className="text-green-600 hover:underline flex items-center gap-2"
+                    className="text-deep-green hover:underline flex items-center gap-2"
                 >
                     <ArrowLeft className="w-4 h-4" /> Back to Communities
                 </button>
@@ -162,19 +162,19 @@ const CommunityDetails = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50/50 font-sans flex flex-col">
-            <Navbar />
+        <div className="min-h-screen bg-gray-50 flex flex-col">
+
 
             {/* Background Decoration */}
             <div className="fixed inset-0 pointer-events-none z-0">
-                <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-green-100/30 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2"></div>
+                <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-[#1a3a1d]/5 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2"></div>
             </div>
 
             <main className="flex-grow pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full relative z-10">
                 {/* Back Link */}
                 <button
                     onClick={() => navigate('/community')}
-                    className="mb-6 flex items-center gap-2 text-gray-500 hover:text-green-600 transition-colors w-fit px-3 py-2 rounded-xl group"
+                    className="mb-6 flex items-center gap-2 text-gray-500 hover:text-deep-green transition-colors w-fit px-3 py-2 rounded-xl group"
                 >
                     <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
                     Back to Communities
@@ -194,8 +194,8 @@ const CommunityDetails = () => {
                                 <MapPin className="w-3 h-3" /> {community.originCountry} → {community.destinationCountry}
                             </span>
                         </div>
-                        <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-3 tracking-tight shadow-sm">{community.name}</h1>
-                        <p className="text-gray-300 max-w-2xl text-lg line-clamp-2 md:line-clamp-none leading-relaxed opacity-90">{community.description}</p>
+                        <h1 className="text-4xl md:text-6xl font-light text-white mb-3 tracking-tighter shadow-sm">{community.name}</h1>
+                        <p className="text-gray-200 max-w-2xl text-lg line-clamp-2 md:line-clamp-none leading-relaxed opacity-90 font-light">{community.description}</p>
                     </div>
                 </div>
 
@@ -207,7 +207,7 @@ const CommunityDetails = () => {
                             <button
                                 onClick={() => setActiveTab('chat')}
                                 className={`w-full text-left px-5 py-3.5 rounded-xl flex items-center gap-3 transition-all font-bold ${activeTab === 'chat'
-                                    ? 'bg-green-50 text-green-700 shadow-sm'
+                                    ? 'bg-[#1a3a1d]/5 text-deep-green shadow-sm'
                                     : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
                                     }`}
                             >
@@ -217,7 +217,7 @@ const CommunityDetails = () => {
                             <button
                                 onClick={() => setActiveTab('members')}
                                 className={`w-full text-left px-5 py-3.5 rounded-xl flex items-center gap-3 transition-all font-bold ${activeTab === 'members'
-                                    ? 'bg-green-50 text-green-700 shadow-sm'
+                                    ? 'bg-[#1a3a1d]/5 text-deep-green shadow-sm'
                                     : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
                                     }`}
                             >
@@ -237,8 +237,8 @@ const CommunityDetails = () => {
                                 </div>
                                 <div className="flex items-center justify-between text-sm">
                                     <span className="text-gray-500">Online Now</span>
-                                    <span className="font-bold text-green-600 flex items-center gap-1">
-                                        <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                                    <span className="font-bold text-deep-green flex items-center gap-1">
+                                        <span className="w-2 h-2 bg-deep-green rounded-full animate-pulse"></span>
                                         {onlineMembers.length}
                                     </span>
                                 </div>
@@ -260,10 +260,10 @@ const CommunityDetails = () => {
                                     {/* Chat Header */}
                                     <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-white/80 backdrop-blur-sm z-10">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-3 h-3 bg-green-500 rounded-full shadow-[0_0_8px_rgba(34,197,94,0.6)] animate-pulse"></div>
+                                            <div className="w-3 h-3 bg-deep-green rounded-full shadow-[0_0_8px_rgba(26,58,29,0.6)] animate-pulse"></div>
                                             <div>
                                                 <h3 className="font-bold text-gray-900 text-lg">General Channel</h3>
-                                                <p className="text-xs text-green-600 font-medium">{onlineMembers.length} online now</p>
+                                                <p className="text-xs text-deep-green font-medium">{onlineMembers.length} online now</p>
                                             </div>
                                         </div>
                                     </div>
@@ -299,7 +299,7 @@ const CommunityDetails = () => {
                                                                 <span className="text-[10px] text-gray-400 font-medium">{formatDistanceToNow(new Date(msg.timestamp), { addSuffix: true })}</span>
                                                             </div>
                                                             <div className={`px-5 py-3 rounded-2xl text-sm leading-relaxed shadow-sm ${isMe
-                                                                    ? 'bg-gradient-to-br from-green-600 to-green-700 text-white rounded-tr-none'
+                                                                    ? 'bg-gradient-to-br from-deep-green to-[#2d5a32] text-white rounded-tr-none'
                                                                     : 'bg-white border border-gray-100 rounded-tl-none text-gray-800'
                                                                 }`}>
                                                                 {msg.content}
@@ -320,12 +320,12 @@ const CommunityDetails = () => {
                                                 value={newMessage}
                                                 onChange={(e) => setNewMessage(e.target.value)}
                                                 placeholder="Type your message..."
-                                                className="flex-1 bg-gray-50 border border-gray-200 rounded-2xl px-6 py-4 focus:ring-2 focus:ring-green-500/20 focus:border-green-500 focus:bg-white transition-all outline-none font-medium placeholder-gray-400"
+                                                className="flex-1 bg-gray-50 border border-gray-200 rounded-2xl px-6 py-4 focus:ring-2 focus:ring-[#1a3a1d]/20 focus:border-deep-green focus:bg-white transition-all outline-none font-medium placeholder-gray-400"
                                             />
                                             <button
                                                 type="submit"
                                                 disabled={!newMessage.trim()}
-                                                className="absolute right-2 top-2 bottom-2 bg-green-600 hover:bg-green-700 text-white px-6 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md flex items-center justify-center group"
+                                                className="absolute right-2 top-2 bottom-2 bg-deep-green hover:bg-[#2d5a32] text-white px-6 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md flex items-center justify-center group"
                                             >
                                                 <Send className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                                             </button>
@@ -341,22 +341,22 @@ const CommunityDetails = () => {
                                     {onlineMembers.length > 0 && (
                                         <div className="bg-white rounded-3xl shadow-sm border border-gray-100 p-8">
                                             <h3 className="font-bold text-gray-900 mb-6 flex items-center gap-2 text-lg">
-                                                Online Now <span className="bg-green-100 text-green-700 text-xs px-2 py-0.5 rounded-full">{onlineMembers.length}</span>
+                                                Online Now <span className="bg-[#1a3a1d]/10 text-deep-green text-xs px-2 py-0.5 rounded-full">{onlineMembers.length}</span>
                                             </h3>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 {onlineMembers.map(member => (
-                                                    <div key={member.userId} className="flex items-center gap-4 p-4 hover:bg-green-50/50 rounded-2xl transition-all border border-gray-100 hover:border-green-200 group cursor-pointer">
+                                                    <div key={member.userId} className="flex items-center gap-4 p-4 hover:bg-[#1a3a1d]/5 rounded-2xl transition-all border border-gray-100 hover:border-[#1a3a1d]/20 group cursor-pointer">
                                                         <div className="relative">
-                                                            <div className="absolute inset-0 bg-green-500 rounded-full blur opacity-20 group-hover:opacity-40 transition-opacity"></div>
+                                                            <div className="absolute inset-0 bg-deep-green rounded-full blur opacity-20 group-hover:opacity-40 transition-opacity"></div>
                                                             <img
                                                                 src={member.avatarUrl || `https://ui-avatars.com/api/?name=${member.fullName}`}
                                                                 alt={member.fullName}
                                                                 className="w-12 h-12 rounded-full object-cover border-2 border-white relative z-10"
                                                             />
-                                                            <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 border-2 border-white rounded-full z-20"></div>
+                                                            <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-deep-green border-2 border-white rounded-full z-20"></div>
                                                         </div>
                                                         <div>
-                                                            <h4 className="font-bold text-gray-900 flex items-center gap-1 group-hover:text-green-700 transition-colors">
+                                                            <h4 className="font-bold text-gray-900 flex items-center gap-1 group-hover:text-deep-green transition-colors">
                                                                 {member.fullName}
                                                                 {member.isVerified && <CheckCircle className="w-4 h-4 text-blue-500" />}
                                                             </h4>

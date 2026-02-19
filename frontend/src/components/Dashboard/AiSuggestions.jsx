@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { API_URL } from '../../utils/api';
-import { Sparkles, MapPin, ArrowRight, Loader2 } from 'lucide-react';
+import { Sparkles, MapPin, ArrowRight, Loader2, Star } from 'lucide-react';
+import Card from '../ui/Card';
 
 const AiSuggestions = ({ user }) => {
     const [suggestions, setSuggestions] = useState([]);
@@ -82,92 +83,94 @@ const AiSuggestions = ({ user }) => {
 
     if (loading) {
         return (
-            <div className="bg-green-50/50 rounded-xl border border-green-100 p-6 flex flex-col items-center justify-center min-h-[200px]">
-                <Loader2 className="w-8 h-8 text-green-600 animate-spin mb-3" />
-                <p className="text-sm text-green-800 font-medium">AI is analyzing your profile...</p>
-                <p className="text-xs text-green-600">Finding the best services for you</p>
-            </div>
+            <Card className="min-h-[200px] flex flex-col items-center justify-center p-8 border-none bg-white/60">
+                <Loader2 className="w-10 h-10 text-deep-green animate-spin mb-4" />
+                <p className="text-sm text-neural-dark font-semibold">AI is analyzing your profile...</p>
+                <p className="text-xs text-gray-500 mt-1 font-medium">Finding the best services for you</p>
+            </Card>
         );
     }
 
     if (error) {
-        // Fallback or empty state
         return null;
     }
 
     if (suggestions.length === 0) {
         return (
-            <div className="bg-green-50/50 rounded-xl border border-green-100 p-6">
-                <div className="flex items-center gap-2 mb-4">
-                    <div className="bg-green-100 p-1.5 rounded-lg">
-                        <Sparkles className="w-4 h-4 text-green-600" />
+            <Card className="p-6 border-none bg-white/60">
+                <div className="flex items-center gap-3 mb-4">
+                    <div className="bg-neural-bg p-2 rounded-xl text-[#1a3a1d]">
+                        <Sparkles className="w-5 h-5" />
                     </div>
-                    <h2 className="text-lg font-semibold text-gray-900">AI Suggestions</h2>
+                    <h2 className="text-lg font-semibold text-neural-dark">AI Suggestions</h2>
                 </div>
-                <p className="text-sm text-gray-500">No specific recommendations found. Explore all services!</p>
-            </div>
+                <p className="text-sm text-gray-500 font-medium">No specific recommendations found. Explore all services!</p>
+            </Card>
         );
     }
 
     return (
-        <div className="bg-green-50/50 rounded-xl border border-green-100 p-6">
-            <div className="mb-6">
-                <div className="flex items-center gap-2 mb-1">
-                    <div className="bg-green-100 p-1.5 rounded-lg">
-                        <Sparkles className="w-4 h-4 text-green-600" />
+        <Card className="p-8 border-none bg-white/60">
+            <div className="mb-6 flex items-center justify-between">
+                <div>
+                    <div className="flex items-center gap-2 mb-1">
+                        <Sparkles className="w-5 h-5 text-[#1a3a1d]" />
+                        <h2 className="text-lg font-semibold text-neural-dark">AI Suggestions</h2>
                     </div>
-                    <h2 className="text-lg font-semibold text-gray-900">AI Suggestions for You</h2>
+                    <p className="text-sm text-gray-500 font-medium">Personalized for you</p>
                 </div>
-                <p className="text-sm text-gray-500">Personalized recommendations based on your profile</p>
+                <span className="text-[10px] bg-[#1a3a1d] text-white px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider">
+                    Beta
+                </span>
             </div>
 
             <div className="space-y-4">
-                {suggestions.map((service) => (
-                    <div key={service.id || service._id} className="bg-white rounded-xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow group cursor-pointer">
+                {suggestions.map((service, idx) => (
+                    <div
+                        key={service.id || service._id}
+                        className="bg-white rounded-2xl p-5 border border-white/60 shadow-sm hover:shadow-lg hover:shadow-black/5 hover:-translate-y-1 transition-all duration-300 cursor-pointer group"
+                    >
                         <div className="flex items-start gap-4">
-                            <div className="mt-1 bg-green-50 p-2.5 rounded-lg text-green-600 group-hover:bg-green-100 transition-colors">
-                                {/* Use a generic icon or service-specific one if available */}
+                            <div className="mt-1 bg-neural-bg p-3 rounded-xl text-[#1a3a1d] group-hover:bg-[#1a3a1d] group-hover:text-white transition-colors duration-300">
                                 {service.pricingType === 'FIXED' ? (
-                                    <span className="font-bold text-xs">{service.currency}</span>
+                                    <span className="font-semibold text-xs">{service.currency}</span>
                                 ) : (
-                                    <Sparkles className="w-5 h-5" />
+                                    <Star className="w-5 h-5 fill-current" />
                                 )}
                             </div>
-                            <div className="flex-1">
+                            <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between mb-1">
-                                    <h3 className="font-semibold text-gray-900 text-sm line-clamp-1">{service.title}</h3>
+                                    <h3 className="font-semibold text-neural-dark text-sm truncate pr-2">{service.title}</h3>
                                     {service.score > 5 && (
-                                        <span className="text-[10px] font-medium px-1.5 py-0.5 bg-green-100 text-green-700 rounded border border-green-200 uppercase tracking-wide whitespace-nowrap">
-                                            Best Match
+                                        <span className="flex-shrink-0 text-[10px] font-semibold px-2 py-0.5 bg-[#1a3a1d]/10 text-deep-green rounded-full uppercase tracking-wide">
+                                            Top Pick
                                         </span>
                                     )}
                                 </div>
 
-                                <p className="text-sm text-gray-600 mb-2 leading-relaxed line-clamp-2">{service.description}</p>
+                                <p className="text-sm text-gray-600 mb-3 leading-relaxed line-clamp-2">{service.description}</p>
 
-                                <div className="flex items-center gap-2 text-xs text-gray-400 mb-3">
-                                    {/* <MapPin className="w-3 h-3" /> */}
-                                    {/* <span>{service.destination}</span> */}
-                                    <span className="bg-gray-50 px-2 py-0.5 rounded text-gray-500 border border-gray-100">
+                                <div className="flex items-center justify-between mt-auto">
+                                    <span className="bg-gray-50 px-2.5 py-1 rounded-lg text-xs font-medium text-gray-500 border border-gray-100 line-clamp-1 max-w-[70%]">
                                         {service.matchReason}
                                     </span>
+                                    
+                                    <button className="text-xs font-semibold text-[#1a3a1d] flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                                        View
+                                        <ArrowRight className="w-3 h-3" />
+                                    </button>
                                 </div>
-
-                                <button className="text-xs font-semibold text-green-700 flex items-center gap-1 hover:underline group-hover:translate-x-1 transition-transform">
-                                    View Details
-                                    <ArrowRight className="w-3 h-3" />
-                                </button>
                             </div>
                         </div>
                     </div>
                 ))}
             </div>
 
-            <button className="w-full text-center text-xs text-gray-500 mt-4 hover:text-green-700 flex items-center justify-center gap-1 transition-colors">
+            <button className="w-full text-center text-xs font-semibold text-gray-400 mt-6 hover:text-[#1a3a1d] flex items-center justify-center gap-1 transition-colors uppercase tracking-wide transition-all">
                 View all suggestions
                 <ArrowRight className="w-3 h-3" />
             </button>
-        </div>
+        </Card>
     );
 };
 

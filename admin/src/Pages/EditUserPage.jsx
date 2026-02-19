@@ -143,7 +143,7 @@ const EditUserPage = () => {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -50 }}
                         className={`fixed top-24 right-4 z-[200] max-w-sm w-full p-4 rounded-2xl shadow-2xl backdrop-blur-md border border-white/20 ${notification.type === 'success'
-                            ? 'bg-emerald-500/90 text-white'
+                            ? 'bg-[#1a3a1d]/50/90 text-white'
                             : 'bg-red-500/90 text-white'
                             }`}
                     >

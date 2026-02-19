@@ -1,44 +1,133 @@
 @import "tailwindcss";
 
+@theme {
+  --font-jakarta: 'Plus Jakarta Sans', sans-serif;
+  
+  --color-neural-bg: #F5F5F7; /* Apple Gray */
+  --color-neural-dark: #1D1D1F; /* Apple Black */
+  --color-deep-green: #1a3a1d;
+  
+  /* Aurora Colors */
+  --color-aurora-purple: #e9d5ff; /* purple-200 */
+  --color-aurora-blue: #bfdbfe;   /* blue-200 */
+  --color-aurora-mint: #a7f3d0;   /* emerald-200 */
+}
+
 @layer base {
     html {
         scroll-behavior: smooth;
+        font-family: var(--font-jakarta);
     }
 
     body {
-        @apply bg-slate-50 text-gray-900 antialiased;
-        background-color: #f8fafc;
-        background-image:
-            linear-gradient(#e2e8f0 1px, transparent 1px),
-            linear-gradient(to right, #e2e8f0 1px, transparent 1px);
-        background-size: 40px 40px;
-        background-attachment: fixed;
-    }
-}
-
-@layer utilities {
-    .glass-nav {
-        @apply bg-white/80 backdrop-blur-md border-b border-gray-100;
+        @apply bg-[#F5F5F7] text-[#1D1D1F] antialiased; /* Apple Gray bg, new dark text */
+        font-family: var(--font-jakarta);
+        user-select: none;
+        cursor: default;
     }
 
-    .glass-card {
-        @apply bg-white/90 backdrop-blur-sm border border-gray-100 shadow-xl;
+    /* Allow text selection and cursor in inputs */
+    input, textarea, [contenteditable="true"], select, pre, code {
+        user-select: text;
+        cursor: text;
     }
-
-    .text-gradient {
-        @apply bg-clip-text text-transparent bg-gradient-to-r from-emerald-600 to-green-500;
+    button, a, [role="button"] {
+        cursor: pointer;
     }
 
     /* Custom Scrollbar */
     ::-webkit-scrollbar {
         width: 8px;
+        height: 8px;
     }
 
     ::-webkit-scrollbar-track {
-        @apply bg-transparent;
+        background: transparent;
     }
 
     ::-webkit-scrollbar-thumb {
-        @apply bg-gray-300 rounded-full hover:bg-gray-400 transition-colors;
+        background: #9CA3AF; /* Gray-400 for better visibility */
+        border-radius: 10px;
+        transition: background-color 0.3s ease;
     }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #1a3a1d; /* Deep Green on hover */
+    }
+}
+
+@layer utilities {
+    .glass-nav {
+         @apply bg-white/70 backdrop-blur-xl border-b border-white/40 supports-[backdrop-filter]:bg-white/60;
+    }
+
+    .glass-card {
+        @apply bg-white/60 backdrop-blur-2xl border border-white/40 shadow-sm transition-all duration-300;
+    }
+
+    .premium-shadow {
+        @apply shadow-[0_4px_24px_rgba(0,0,0,0.02)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.04)] transition-shadow duration-500;
+    }
+
+    .premium-shadow-hover {
+        @apply shadow-[0_20px_40px_rgba(0,0,0,0.06)];
+    }
+
+    .glass-card-hover {
+        @apply hover:bg-white/80 hover:scale-[1.005] transition-all duration-500 ease-out hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)];
+    }
+
+    .text-gradient {
+        @apply bg-clip-text text-transparent bg-gradient-to-br from-gray-900 to-gray-600;
+    }
+    
+    .animate-blob {
+        animation: blob 10s infinite;
+    }
+
+    .input-premium {
+        @apply bg-white/80 border-none shadow-[0_2px_10px_rgba(0,0,0,0.02)] focus:ring-1 focus:ring-gray-200 transition-all duration-300 placeholder:text-gray-400 font-light;
+    }
+    
+    .animation-delay-2000 {
+        animation-delay: 2s;
+    }
+    
+    .animation-delay-4000 {
+        animation-delay: 4s;
+    }
+
+    .animate-gradient-xy {
+        background-size: 200% 200%;
+        animation: gradient-xy 8s ease infinite;
+    }
+}
+
+@keyframes gradient-xy {
+    0%, 100% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+}
+
+@keyframes blob {
+    0% {
+        transform: translate(0px, 0px) scale(1);
+    }
+    33% {
+        transform: translate(30px, -50px) scale(1.1);
+    }
+    66% {
+        transform: translate(-20px, 20px) scale(0.9);
+    }
+    100% {
+        transform: translate(0px, 0px) scale(1);
+    }
+}
+
+/* Leaflet z-index fix: prevent map from overlapping fixed navbar */
+.leaflet-container {
+    z-index: 0 !important;
 }
