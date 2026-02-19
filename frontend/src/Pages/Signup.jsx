@@ -198,10 +198,6 @@ const Signup = () => {
                 setError("Please fill in all fields to continue.");
                 return;
             }
-            if (!otpVerified) {
-                setError("Please verify your email to continue.");
-                return;
-            }
         }
         if (step === 2) {
             if (!formData.passportImageBase64 || !formData.avatarBase64) {
@@ -246,7 +242,7 @@ const Signup = () => {
                     </div>
 
                     {error && (
-                         <div className="bg-red-50 text-red-600 px-4 py-3 rounded-2xl text-sm flex items-center mb-6 font-medium">
+                        <div className="bg-red-50 text-red-600 px-4 py-3 rounded-2xl text-sm flex items-center mb-6 font-medium">
                             <Shield className="w-5 h-5 mr-3 flex-shrink-0" />
                             {error}
                         </div>
@@ -291,12 +287,12 @@ const Signup = () => {
                                 {otpVerified && <p className="text-deep-green text-xs font-bold ml-4 flex items-center gap-1"><CheckCircle size={14} /> Email Verified</p>}
 
                                 <input name="password" type="password" value={formData.password} onChange={handleChange} placeholder="Password" className="w-full px-6 py-4 bg-white border border-gray-200 rounded-full focus:ring-2 focus:ring-black/10 focus:border-black outline-none transition-all placeholder:text-gray-400 font-medium text-[15px]" />
-                                
+
                                 <input name="phone" value={formData.phone} onChange={handleChange} placeholder="Phone Number" className="w-full px-6 py-4 bg-white border border-gray-200 rounded-full focus:ring-2 focus:ring-black/10 focus:border-black outline-none transition-all placeholder:text-gray-400 font-medium text-[15px]" />
-                                
+
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                     <input name="countryOfOrigin" value={formData.countryOfOrigin} onChange={handleChange} placeholder="Origin Country" className="w-full px-6 py-4 bg-white border border-gray-200 rounded-full focus:ring-2 focus:ring-black/10 focus:border-black outline-none transition-all placeholder:text-gray-400 font-medium text-[15px]" />
-                                     <input name="destinationCountry" value={formData.destinationCountry} onChange={handleChange} placeholder="Destination" className="w-full px-6 py-4 bg-white border border-gray-200 rounded-full focus:ring-2 focus:ring-black/10 focus:border-black outline-none transition-all placeholder:text-gray-400 font-medium text-[15px]" />
+                                    <input name="countryOfOrigin" value={formData.countryOfOrigin} onChange={handleChange} placeholder="Origin Country" className="w-full px-6 py-4 bg-white border border-gray-200 rounded-full focus:ring-2 focus:ring-black/10 focus:border-black outline-none transition-all placeholder:text-gray-400 font-medium text-[15px]" />
+                                    <input name="destinationCountry" value={formData.destinationCountry} onChange={handleChange} placeholder="Destination" className="w-full px-6 py-4 bg-white border border-gray-200 rounded-full focus:ring-2 focus:ring-black/10 focus:border-black outline-none transition-all placeholder:text-gray-400 font-medium text-[15px]" />
                                 </div>
 
                                 <Button onClick={nextStep} className="w-full py-4 bg-[#1a3a1d] hover:bg-black rounded-full text-white text-[15px] font-semibold shadow-xl mt-6 transition-all hover:scale-[1.01]">
@@ -308,7 +304,7 @@ const Signup = () => {
                         {step === 2 && (
                             <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
                                 <h3 className="text-xl font-semibold text-black">Upload Identity Documents</h3>
-                                
+
                                 <div className="space-y-4">
                                     <div className="relative group cursor-pointer">
                                         <input type="file" onChange={(e) => handleFileChange(e, 'avatarBase64')} className="absolute inset-0 w-full h-full opacity-0 z-10 cursor-pointer" accept="image/*" />
@@ -322,8 +318,8 @@ const Signup = () => {
                                             </div>
                                         </div>
                                     </div>
-                                    
-                                     <div className="relative group cursor-pointer">
+
+                                    <div className="relative group cursor-pointer">
                                         <input type="file" onChange={(e) => handleFileChange(e, 'passportImageBase64')} className="absolute inset-0 w-full h-full opacity-0 z-10 cursor-pointer" accept="image/*" />
                                         <div className={`p-6 rounded-[2rem] border-2 border-dashed flex items-center gap-5 transition-all ${formData.passportImageBase64 ? 'bg-[#1a3a1d]/5 border-deep-green' : 'bg-gray-50 border-gray-200 hover:bg-gray-100 hover:border-gray-300'}`}>
                                             <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center shadow-sm text-black">
@@ -343,11 +339,11 @@ const Signup = () => {
                                 </div>
                             </motion.div>
                         )}
-                        
-                         {step === 3 && (
+
+                        {step === 3 && (
                             <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
                                 <h3 className="text-xl font-semibold text-black">Liveness Check</h3>
-                                
+
                                 <div className="aspect-square bg-black rounded-[2rem] overflow-hidden relative shadow-2xl ring-4 ring-black/5">
                                     {!formData.selfieImageBase64 && !cameraActive && (
                                         <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-8 text-center">
@@ -375,8 +371,8 @@ const Signup = () => {
 
                                 <div className="flex gap-4 mt-8">
                                     <button onClick={prevStep} className="w-1/3 py-4 bg-gray-100 text-gray-600 rounded-full font-semibold hover:bg-gray-200">Back</button>
-                                    <button 
-                                        onClick={handleSubmit} 
+                                    <button
+                                        onClick={handleSubmit}
                                         disabled={loading || !formData.selfieImageBase64}
                                         className="w-2/3 py-4 bg-[#1a3a1d] text-white rounded-full font-semibold hover:bg-black shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
                                     >
@@ -387,8 +383,8 @@ const Signup = () => {
                         )}
                     </AnimatePresence>
 
-                     <div className="text-center mt-10">
-                         <p className="text-gray-500 font-medium">Already a member? <Link to="/login" className="text-black font-semibold hover:underline">Sign In</Link></p>
+                    <div className="text-center mt-10">
+                        <p className="text-gray-500 font-medium">Already a member? <Link to="/login" className="text-black font-semibold hover:underline">Sign In</Link></p>
                     </div>
                 </div>
             </div>
@@ -397,16 +393,16 @@ const Signup = () => {
             <div className="hidden lg:flex w-1/2 bg-[#f4fbf0] justify-center items-center relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#1a3a1d]/5 rounded-full blur-[120px] translate-x-1/3 -translate-y-1/3"></div>
                 <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-200/30 rounded-full blur-[120px] -translate-x-1/3 translate-y-1/3"></div>
-                
+
                 <div className="relative z-10 max-w-lg text-center">
                     {/* <img 
                         src="https://i.pinimg.com/736x/aa/1b/e4/aa1be4f6bea410b3626d7ef883abadee.jpg" 
                         alt="Signup Illustration" 
                         className="w-full h-auto drop-shadow-2xl mb-8 rounded-3xl object-cover"
                     /> */}
-                    <h2 className="text-4xl font-semibold text-black leading-tight tracking-tight">Join 10,000+ happy migrants <br/>settling in effortlessly.</h2>
+                    <h2 className="text-4xl font-semibold text-black leading-tight tracking-tight">Join 10,000+ happy migrants <br />settling in effortlessly.</h2>
                     <div className="flex justify-center gap-3 mt-8">
-                         <div className="w-2 h-2 bg-black/20 rounded-full"></div>
+                        <div className="w-2 h-2 bg-black/20 rounded-full"></div>
                         <div className="w-8 h-2 bg-black rounded-full"></div>
                         <div className="w-2 h-2 bg-black/20 rounded-full"></div>
                     </div>

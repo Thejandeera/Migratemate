@@ -12,18 +12,11 @@ import {
     AlertCircle,
     Navigation,
     Search,
-    Car,
-    Home,
-    Bot,
-    Calendar,
     ChevronRight,
     Shield,
-    BookOpen,
-    CreditCard,
     MapPin,
     Clock,
-    User,
-    Sparkles
+    User
 } from 'lucide-react';
 import AssistantChat from '../components/Assistant/AssistantChat';
 import { motion } from 'framer-motion';
@@ -80,32 +73,6 @@ const Dashboard = () => {
         };
     }, []);
 
-    const quickActions = [
-        {
-            title: "Book Airport Pickup",
-            desc: "Safe & verified drivers",
-            icon: Car,
-            color: "text-[#1a3a1d]",
-            bg: "bg-[#1a3a1d]/5",
-            link: "/services/transport"
-        },
-        {
-            title: "Find Housing",
-            desc: "Verified stays",
-            icon: Home,
-            color: "text-[#1a3a1d]",
-            bg: "bg-[#1a3a1d]/5",
-            link: "/marketplace"
-        },
-        {
-            title: "Ask AI Assistant",
-            desc: "Instant answers 24/7",
-            icon: Bot,
-            color: "text-[#1a3a1d]",
-            bg: "bg-[#1a3a1d]/5",
-            link: "#assistant"
-        }
-    ];
 
     const activeRequests = bookings.slice(0, 3).map(b => ({
         id: b.id,
@@ -114,15 +81,9 @@ const Dashboard = () => {
         status: b.status.charAt(0) + b.status.substring(1).toLowerCase(),
         statusColor: b.status === "ACCEPTED" ? "bg-[#1a3a1d]/10 text-[#1a3a1d]" : "bg-yellow-50 text-yellow-700",
         helper: b.providerName,
-        icon: Calendar
+        icon: Clock // Changed from Calendar to Clock as Calendar is removed
     }));
 
-    const resources = [
-        { title: "Getting a Tax File Number (TFN)", icon: BookOpen },
-        { title: "Opening a Bank Account", icon: CreditCard },
-        { title: "Understanding Medicare", icon: Shield },
-        { title: "Public Transport Guide", icon: MapPin }
-    ];
 
     useEffect(() => {
         if (!isAuthenticated()) {
@@ -183,7 +144,7 @@ const Dashboard = () => {
                 )}
 
                 {/* Hero Section */}
-                <motion.div 
+                <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
@@ -193,7 +154,7 @@ const Dashboard = () => {
                     <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay pointer-events-none"></div>
                     <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-white/5 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
                     <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-emerald-500/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/3 pointer-events-none"></div>
-                    
+
                     <div className="relative z-10 p-10 sm:p-14 w-full flex flex-col md:flex-row items-start md:items-center justify-between gap-10">
                         <div className="flex flex-col gap-6 max-w-3xl">
                             <div className="flex flex-col">
@@ -202,16 +163,16 @@ const Dashboard = () => {
                                     Hello, <span className="font-thin text-transparent bg-clip-text bg-gradient-to-r from-white to-white/80">{user.firstName || 'User'}..!</span>
                                 </h1>
                             </div>
-                            
+
                             <p className="text-lg sm:text-2xl text-white/60 font-light tracking-wide max-w-lg leading-relaxed">
-                                You're currently in <span className="text-white font-medium border-b border-white/20">{user.destinationCountry || 'Sri Lanka'}</span>. 
-                                <br/>What would you like to achieve today?
+                                You're currently in <span className="text-white font-medium border-b border-white/20">{user.destinationCountry || 'Sri Lanka'}</span>.
+                                <br />What would you like to achieve today?
                             </p>
                         </div>
 
                         {/* Glass SOS Button */}
                         <div className="w-full md:w-auto mt-4 md:mt-0 ml-auto md:ml-0">
-                             <motion.button
+                            <motion.button
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                                 onClick={() => navigate('/sos')}
@@ -246,29 +207,6 @@ const Dashboard = () => {
                             />
                         </div>
 
-                        {/* Quick Actions */}
-                        <div>
-                            <h2 className="text-xl font-bold text-neural-dark mb-6 flex items-center gap-2">
-                                <Sparkles className="w-5 h-5 text-[#1a3a1d]" />
-                                Quick Actions
-                            </h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                                {quickActions.map((action, idx) => (
-                                    <Card
-                                        key={idx}
-                                        onClick={() => action.link && navigate(action.link)}
-                                        className="p-6 border-none hover:bg-white/90 bg-white/60 cursor-pointer group flex flex-col items-center text-center sm:items-start sm:text-left"
-                                        delay={idx * 0.1}
-                                    >
-                                        <div className={`w-14 h-14 ${action.bg} ${action.color} rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm`}>
-                                            <action.icon className="w-7 h-7" />
-                                        </div>
-                                        <h3 className="font-medium text-neural-dark mb-1 text-lg">{action.title}</h3>
-                                        <p className="text-sm text-gray-500 font-light">{action.desc}</p>
-                                    </Card>
-                                ))}
-                            </div>
-                        </div>
 
                         {/* AI Suggestions */}
                         <AiSuggestions user={user} />
@@ -291,7 +229,7 @@ const Dashboard = () => {
                                 ) : activeRequests.length === 0 ? (
                                     <div className="text-center py-12 bg-white/50 rounded-3xl border border-dashed border-gray-200/60">
                                         <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                                            <Calendar className="w-8 h-8 text-gray-300" />
+                                            <Clock className="w-8 h-8 text-gray-300" />
                                         </div>
                                         <h3 className="text-lg font-medium text-neural-dark">No recent activity</h3>
                                         <p className="text-gray-500 font-light mt-1">Your planned journeys and bookings will appear here.</p>
@@ -330,7 +268,7 @@ const Dashboard = () => {
                     {/* Sidebar */}
                     <div className="space-y-8">
                         {/* Profile Summary */}
-                        <Card className="p-8 border-none bg-white/60">
+                        <Card className="sticky top-24 p-8 border-none bg-white/60">
                             <h3 className="font-light text-neural-dark mb-6 text-xl tracking-tight">My Profile</h3>
                             <div className="flex items-center gap-5 mb-8">
                                 <div className="w-16 h-16 rounded-2xl bg-gray-100 overflow-hidden shadow-md">
@@ -366,31 +304,6 @@ const Dashboard = () => {
                             </div>
                         </Card>
 
-                        {/* Resources */}
-                        <Card className="p-8 border-none bg-white/60">
-                            <div className="flex items-center gap-2 mb-2">
-                                <BookOpen className="w-5 h-5 text-[#1a3a1d]" />
-                                <h3 className="font-light text-neural-dark text-xl tracking-tight">Essential Guides</h3>
-                            </div>
-                            <p className="text-sm text-gray-500 mb-6 font-light">Curated for new arrivals in {user.destinationCountry || 'Australia'}.</p>
-
-                            <div className="space-y-3">
-                                {resources.map((res, idx) => (
-                                    <a key={idx} href="#" className="flex items-center gap-4 p-4 rounded-2xl bg-white/50 border border-white/50 hover:bg-white hover:shadow-md transition-all group">
-                                        <div className="bg-[#1a3a1d]/5 p-2.5 rounded-xl text-gray-400 group-hover:text-[#1a3a1d] group-hover:bg-[#1a3a1d]/10 transition-colors">
-                                            <res.icon className="w-5 h-5" />
-                                        </div>
-                                        <span className="text-sm font-medium text-gray-600 group-hover:text-neural-dark transition-colors">
-                                            {res.title}
-                                        </span>
-                                        <ChevronRight className="w-4 h-4 ml-auto text-gray-300 group-hover:text-[#1a3a1d] trantision-colors" />
-                                    </a>
-                                ))}
-                            </div>
-                            <Button variant="outline" className="w-full mt-6 border-gray-200 text-gray-600 hover:text-neural-dark hover:border-neural-dark">
-                                View Helper Hub
-                            </Button>
-                        </Card>
                     </div>
                 </div>
             </div>
