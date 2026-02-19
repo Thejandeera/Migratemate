@@ -3,13 +3,13 @@ import { motion } from 'framer-motion';
 
 const AuroraBackground = ({ children, className = "" }) => {
   return (
-    <div className={`relative w-full min-h-screen bg-slate-50 text-slate-900 transition-colors duration-500 overflow-hidden ${className}`}>
-      <div className="fixed inset-0 z-0 pointer-events-none">
+    <div className={`relative w-full min-h-screen bg-slate-50 text-slate-900 transition-colors duration-500 ${className}`}>
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
          {/* Deep Green Blob */}
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#1a3a1d]/10 rounded-full blur-[120px] mix-blend-multiply animate-blob filter" />
         
         {/* Mint/Aurora Blob */}
-        <div className="absolute top-[20%] right-[-10%] w-[60%] h-[60%] bg-emerald-100/40 rounded-full blur-[120px] mix-blend-multiply animate-blob animation-delay-2000 filter" />
+        <div className="absolute top-[20%] right-[-10%] w-[60%] h-[60%] bg-[#1a3a1d]/5 rounded-full blur-[120px] mix-blend-multiply animate-blob animation-delay-2000 filter" />
         
         {/* Soft Blue Blob */}
         <div className="absolute bottom-[-20%] left-[20%] w-[60%] h-[60%] bg-blue-100/40 rounded-full blur-[120px] mix-blend-multiply animate-blob animation-delay-4000 filter" />

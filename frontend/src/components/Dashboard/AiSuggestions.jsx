@@ -99,7 +99,7 @@ const AiSuggestions = ({ user }) => {
         return (
             <Card className="p-6 border-none bg-white/60">
                 <div className="flex items-center gap-3 mb-4">
-                    <div className="bg-neural-bg p-2 rounded-xl text-deep-green">
+                    <div className="bg-neural-bg p-2 rounded-xl text-[#1a3a1d]">
                         <Sparkles className="w-5 h-5" />
                     </div>
                     <h2 className="text-lg font-semibold text-neural-dark">AI Suggestions</h2>
@@ -114,12 +114,12 @@ const AiSuggestions = ({ user }) => {
             <div className="mb-6 flex items-center justify-between">
                 <div>
                     <div className="flex items-center gap-2 mb-1">
-                        <Sparkles className="w-5 h-5 text-deep-green" />
+                        <Sparkles className="w-5 h-5 text-[#1a3a1d]" />
                         <h2 className="text-lg font-semibold text-neural-dark">AI Suggestions</h2>
                     </div>
                     <p className="text-sm text-gray-500 font-medium">Personalized for you</p>
                 </div>
-                <span className="text-[10px] bg-deep-green text-white px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider">
+                <span className="text-[10px] bg-[#1a3a1d] text-white px-2 py-0.5 rounded-full font-semibold uppercase tracking-wider">
                     Beta
                 </span>
             </div>
@@ -131,7 +131,7 @@ const AiSuggestions = ({ user }) => {
                         className="bg-white rounded-2xl p-5 border border-white/60 shadow-sm hover:shadow-lg hover:shadow-black/5 hover:-translate-y-1 transition-all duration-300 cursor-pointer group"
                     >
                         <div className="flex items-start gap-4">
-                            <div className="mt-1 bg-neural-bg p-3 rounded-xl text-deep-green group-hover:bg-deep-green group-hover:text-white transition-colors duration-300">
+                            <div className="mt-1 bg-neural-bg p-3 rounded-xl text-[#1a3a1d] group-hover:bg-[#1a3a1d] group-hover:text-white transition-colors duration-300">
                                 {service.pricingType === 'FIXED' ? (
                                     <span className="font-semibold text-xs">{service.currency}</span>
                                 ) : (
@@ -142,7 +142,7 @@ const AiSuggestions = ({ user }) => {
                                 <div className="flex items-center justify-between mb-1">
                                     <h3 className="font-semibold text-neural-dark text-sm truncate pr-2">{service.title}</h3>
                                     {service.score > 5 && (
-                                        <span className="flex-shrink-0 text-[10px] font-semibold px-2 py-0.5 bg-green-100 text-deep-green rounded-full uppercase tracking-wide">
+                                        <span className="flex-shrink-0 text-[10px] font-semibold px-2 py-0.5 bg-[#1a3a1d]/10 text-deep-green rounded-full uppercase tracking-wide">
                                             Top Pick
                                         </span>
                                     )}
@@ -155,7 +155,7 @@ const AiSuggestions = ({ user }) => {
                                         {service.matchReason}
                                     </span>
                                     
-                                    <button className="text-xs font-semibold text-deep-green flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+                                    <button className="text-xs font-semibold text-[#1a3a1d] flex items-center gap-1 group-hover:translate-x-1 transition-transform">
                                         View
                                         <ArrowRight className="w-3 h-3" />
                                     </button>
@@ -166,7 +166,7 @@ const AiSuggestions = ({ user }) => {
                 ))}
             </div>
 
-            <button className="w-full text-center text-xs font-semibold text-gray-400 mt-6 hover:text-deep-green flex items-center justify-center gap-1 transition-colors uppercase tracking-wide transition-all">
+            <button className="w-full text-center text-xs font-semibold text-gray-400 mt-6 hover:text-[#1a3a1d] flex items-center justify-center gap-1 transition-colors uppercase tracking-wide transition-all">
                 View all suggestions
                 <ArrowRight className="w-3 h-3" />
             </button>

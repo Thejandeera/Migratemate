@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Facebook, Twitter, Instagram, Linkedin, Mail, Phone, MapPin, Box } from 'lucide-react';
+import migrateIcon from '../assets/migrate-icon.png';
 
 const Footer = () => {
     return (
@@ -11,9 +12,11 @@ const Footer = () => {
                     {/* Brand */}
                     <div className="space-y-6">
                         <Link to="/" className="flex items-center gap-2 group">
-                            <div className="bg-neural-dark p-1.5 rounded-full shadow-lg group-hover:scale-110 transition-transform duration-300">
-                                <Box className="w-4 h-4 text-white" strokeWidth={2.5} />
-                            </div>
+                            <img
+                                src={migrateIcon}
+                                alt="Logo"
+                                className="w-8 h-8 group-hover:scale-110 transition-transform duration-300 object-contain"
+                            />
                             <span className="text-xl font-semibold text-neural-dark tracking-tight">
                                 MigrateMate
                             </span>

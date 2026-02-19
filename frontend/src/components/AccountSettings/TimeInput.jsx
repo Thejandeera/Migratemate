@@ -22,7 +22,7 @@ const TimeColumn = ({ options, value, onChange, label }) => {
                 ref={scrollRef}
             >
                 {/* Selection Highlight Overlay */}
-                <div className="absolute top-1/2 left-0 right-0 h-10 -translate-y-1/2 bg-green-50 pointer-events-none border-y border-green-100 opacity-50"></div>
+                <div className="absolute top-1/2 left-0 right-0 h-10 -translate-y-1/2 bg-[#1a3a1d]/5 pointer-events-none border-y border-[#1a3a1d]/20 opacity-50"></div>
 
                 <div className="h-10 w-full" /> {/* Top Spacer */}
                 {options.map((option) => (
@@ -30,7 +30,7 @@ const TimeColumn = ({ options, value, onChange, label }) => {
                         key={option}
                         onClick={() => onChange(option)}
                         className={`h-10 flex items-center justify-center snap-center cursor-pointer transition-colors ${value === option
-                                ? 'text-green-600 font-bold text-lg'
+                                ? 'text-deep-green font-bold text-lg'
                                 : 'text-gray-400 hover:text-gray-600'
                             }`}
                     >

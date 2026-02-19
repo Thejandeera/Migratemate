@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import Navbar from '../components/Navbar';
+
 import Footer from '../components/Footer';
 import { getServiceById } from '../utils/serviceApi';
 import { createBooking } from '../utils/bookingApi';
@@ -72,25 +72,24 @@ const BookingCard = ({ service }) => {
 
     return (
         <div className="bg-white rounded-3xl border border-gray-100 p-8 shadow-sm lg:sticky lg:top-28">
-            <h3 className="text-xl font-bold text-gray-900 mb-6">Book Service</h3>
+            <h3 className="text-xl font-medium text-neural-dark mb-6">Book Service</h3>
 
             <div className="flex items-baseline gap-2 mb-8 pb-8 border-b border-gray-100">
-                <span className="text-4xl font-extrabold text-[#22C55E] tracking-tight">{priceDisplay}</span>
-                <span className="text-sm font-medium text-gray-500">starting price</span>
+                <span className="text-5xl font-light text-deep-green tracking-tighter">{priceDisplay}</span>
+                <span className="text-sm font-light text-gray-500">starting price</span>
             </div>
 
             <div className="space-y-5">
                 <div>
                     <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wider">Select Date</label>
-                    <div className="relative">
+                    <div>
                         <input
                             type="date"
                             value={bookingDate}
                             onChange={(e) => setBookingDate(e.target.value)}
                             min={new Date().toISOString().split('T')[0]}
-                            className="w-full pl-4 pr-10 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all text-sm font-medium"
+                            className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-deep-green/20 focus:border-deep-green outline-none transition-all text-sm font-medium"
                         />
-                        <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
                     </div>
                 </div>
 
@@ -101,22 +100,22 @@ const BookingCard = ({ service }) => {
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
                         placeholder="Briefly describe what you need..."
-                        className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 outline-none transition-all resize-none text-sm"
+                        className="w-full p-4 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-deep-green/20 focus:border-deep-green outline-none transition-all resize-none text-sm"
                     />
                 </div>
 
                 <button
                     onClick={handleBooking}
                     disabled={isSubmitting}
-                    className={`w-full py-4 text-white font-bold rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 hover:-translate-y-1 ${isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700 shadow-green-200'
+                    className={`w-full py-4 text-white font-bold rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 hover:-translate-y-1 ${isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-deep-green hover:bg-[#2d5a32] shadow-[#1a3a1d]/20'
                         }`}
                 >
                     {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Request Booking'}
                 </button>
 
                 {status === 'success' && (
-                    <div className="bg-green-50 text-green-700 p-4 rounded-xl text-sm font-medium flex items-start gap-3 border border-green-100 animate-in fade-in slide-in-from-top-2">
-                        <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                    <div className="bg-[#1a3a1d]/5 text-deep-green p-4 rounded-xl text-sm font-medium flex items-start gap-3 border border-[#1a3a1d]/10 animate-in fade-in slide-in-from-top-2">
+                        <CheckCircle className="w-5 h-5 text-deep-green flex-shrink-0 mt-0.5" />
                         <div>
                             <p className="font-bold">Booking Sent!</p>
                             <p className="text-xs mt-1">Check your dashboard for updates.</p>
@@ -132,7 +131,7 @@ const BookingCard = ({ service }) => {
                 )}
             </div>
 
-            <div className="mt-6 pt-6 border-t border-gray-100 flex items-center justify-center gap-2 text-xs text-gray-400 font-medium">
+            <div className="mt-6 pt-6 border-t border-gray-100 flex items-center justify-center gap-2 text-xs text-gray-400 font-light">
                 <Shield className="w-3.5 h-3.5" />
                 <span>Secure Booking Protected</span>
             </div>
@@ -175,7 +174,7 @@ const ServiceDetailPage = () => {
 
     if (loading) return (
         <div className="min-h-screen bg-white flex items-center justify-center">
-            <Loader2 className="w-10 h-10 text-green-500 animate-spin" />
+            <Loader2 className="w-10 h-10 text-deep-green animate-spin" />
         </div>
     );
 
@@ -184,7 +183,7 @@ const ServiceDetailPage = () => {
             <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Service Not Found</h2>
             <p className="text-gray-500 mb-6">The service you are looking for may have been removed.</p>
-            <button onClick={() => navigate('/marketplace')} className="px-6 py-2 bg-green-600 text-white rounded-lg font-bold">Go Back</button>
+            <button onClick={() => navigate('/marketplace')} className="px-6 py-2 bg-deep-green text-white rounded-lg font-bold">Go Back</button>
         </div>
     );
 
@@ -192,14 +191,14 @@ const ServiceDetailPage = () => {
     const categoryName = CATEGORY_NAMES[service.category] || service.category;
 
     return (
-        <div className="min-h-screen bg-white font-sans">
-            <Navbar />
+        <div className="min-h-screen bg-gray-50">
+
 
             <main className="pt-24 pb-16">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     {/* Breadcrumb */}
                     <div className="mb-6 flex items-center gap-2 text-sm text-gray-500 font-medium">
-                        <Link to="/marketplace" className="hover:text-green-600 transition-colors">Marketplace</Link>
+                        <Link to="/marketplace" className="hover:text-deep-green transition-colors">Marketplace</Link>
                         <span>/</span>
                         <span className="text-gray-900 truncate max-w-xs">{service.title}</span>
                     </div>
@@ -253,7 +252,7 @@ const ServiceDetailPage = () => {
 
                             {/* Title & Metadata */}
                             <div className="mb-8">
-                                <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mb-4 leading-tight">{service.title}</h1>
+                                <h1 className="text-4xl sm:text-5xl font-light text-neural-dark mb-4 leading-tight tracking-tighter">{service.title}</h1>
 
                                 <div className="flex flex-wrap items-center gap-6 text-sm text-gray-500 font-medium">
                                     <div className="flex items-center gap-2">
@@ -270,18 +269,18 @@ const ServiceDetailPage = () => {
 
                             {/* Description */}
                             <div className="prose prose-lg prose-green max-w-none text-gray-600 mb-10">
-                                <h3 className="text-gray-900 font-bold mb-3">About this Service</h3>
+                                <h3 className="text-neural-dark font-medium mb-3 text-xl">About this Service</h3>
                                 <p>{service.description}</p>
                             </div>
 
                             {/* Features */}
                             {service.features && service.features.length > 0 && (
-                                <div className="mb-10 bg-gray-50 rounded-3xl p-8 border border-gray-100">
-                                    <h3 className="font-bold text-gray-900 mb-4">What's Included</h3>
+                                <div className="mb-10 bg-white rounded-[2rem] p-8 premium-shadow">
+                                    <h3 className="font-medium text-neural-dark mb-4 text-lg">What's Included</h3>
                                     <ul className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                         {service.features.map((feature, i) => (
                                             <li key={i} className="flex items-center gap-3 text-gray-600">
-                                                <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                                                <CheckCircle className="w-5 h-5 text-deep-green flex-shrink-0" />
                                                 <span>{feature}</span>
                                             </li>
                                         ))}
@@ -290,20 +289,20 @@ const ServiceDetailPage = () => {
                             )}
 
                             {/* Provider Info */}
-                            <div className="border border-gray-100 rounded-3xl p-8 flex items-center gap-6">
-                                <div className="w-16 h-16 rounded-full bg-gray-200 overflow-hidden flex-shrink-0">
+                            <div className="glass-card rounded-[2rem] p-8 flex items-center gap-6">
+                                <div className="w-16 h-16 rounded-full bg-gray-50 overflow-hidden flex-shrink-0 border border-white shadow-sm">
                                     {service.providerProfilePicture ? (
                                         <img src={service.providerProfilePicture} alt={service.providerName} className="w-full h-full object-cover" />
                                     ) : (
-                                        <div className="w-full h-full bg-green-100 flex items-center justify-center text-green-700 font-bold text-xl">
+                                        <div className="w-full h-full bg-[#1a3a1d]/5 flex items-center justify-center text-deep-green font-medium text-xl">
                                             {service.providerName?.charAt(0) || 'P'}
                                         </div>
                                     )}
                                 </div>
                                 <div>
-                                    <h4 className="font-bold text-gray-900 text-lg mb-1">{service.providerName}</h4>
-                                    <div className="flex items-center gap-4 text-sm text-gray-500">
-                                        <span className="flex items-center gap-1 text-green-600 font-medium bg-green-50 px-2 py-0.5 rounded-full">
+                                    <h4 className="font-medium text-neural-dark text-lg mb-1">{service.providerName}</h4>
+                                    <div className="flex items-center gap-4 text-sm text-gray-500 font-light">
+                                        <span className="flex items-center gap-1 text-deep-green font-medium bg-[#1a3a1d]/5 px-2 py-0.5 rounded-full">
                                             <Shield className="w-3 h-3" /> Identity Verified
                                         </span>
                                         <span>Member since 2024</span>

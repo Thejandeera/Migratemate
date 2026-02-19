@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Navbar from '../components/Navbar';
+
 import Footer from '../components/Footer';
 import { getUserData, isAuthenticated } from '../utils/auth';
 import { getMyBookings } from '../utils/bookingApi';
@@ -85,24 +85,24 @@ const Dashboard = () => {
             title: "Book Airport Pickup",
             desc: "Safe & verified drivers",
             icon: Car,
-            color: "text-blue-600",
-            bg: "bg-blue-50",
+            color: "text-[#1a3a1d]",
+            bg: "bg-[#1a3a1d]/5",
             link: "/services/transport"
         },
         {
             title: "Find Housing",
-            desc: "Verified rentals & stays",
+            desc: "Verified stays",
             icon: Home,
-            color: "text-emerald-600",
-            bg: "bg-emerald-50",
+            color: "text-[#1a3a1d]",
+            bg: "bg-[#1a3a1d]/5",
             link: "/marketplace"
         },
         {
             title: "Ask AI Assistant",
             desc: "Instant answers 24/7",
             icon: Bot,
-            color: "text-purple-600",
-            bg: "bg-purple-50",
+            color: "text-[#1a3a1d]",
+            bg: "bg-[#1a3a1d]/5",
             link: "#assistant"
         }
     ];
@@ -112,7 +112,7 @@ const Dashboard = () => {
         title: b.serviceTitle,
         date: new Date(b.requestedDate).toLocaleDateString(),
         status: b.status.charAt(0) + b.status.substring(1).toLowerCase(),
-        statusColor: b.status === "ACCEPTED" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700",
+        statusColor: b.status === "ACCEPTED" ? "bg-[#1a3a1d]/10 text-[#1a3a1d]" : "bg-yellow-50 text-yellow-700",
         helper: b.providerName,
         icon: Calendar
     }));
@@ -138,8 +138,16 @@ const Dashboard = () => {
     if (!user) return null;
 
     return (
-        <div className="min-h-screen font-sans">
-            <Navbar />
+        <div className="min-h-screen">
+            {/* Reveal Overlay */}
+            <motion.div
+                initial={{ scaleY: 1 }}
+                animate={{ scaleY: 0 }}
+                transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+                style={{ originY: 0 }}
+                className="fixed inset-0 z-50 bg-[#1a3a1d]"
+            />
+
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 space-y-8">
                 {/* SOS Alert Banner */}
@@ -150,16 +158,16 @@ const Dashboard = () => {
                         className="bg-red-50/90 backdrop-blur-md border border-red-200 rounded-3xl p-6 shadow-lg shadow-red-100 flex flex-col sm:flex-row items-center justify-between gap-6"
                     >
                         <div className="flex items-center gap-4">
-                            <div className="bg-red-100 p-3 rounded-full animate-pulse shadow-sm shadow-red-200">
-                                <AlertCircle className="w-8 h-8 text-red-600" />
+                            <div className="bg-red-50 p-3 rounded-full animate-pulse">
+                                <AlertCircle className="w-6 h-6 text-red-500" />
                             </div>
                             <div>
-                                <h3 className="text-xl font-bold text-neural-dark">Active Emergency Alert</h3>
-                                <p className="text-gray-600 font-medium">
+                                <h3 className="text-lg font-medium text-neural-dark">Active Emergency Alert</h3>
+                                <p className="text-gray-500 font-light">
                                     {sosAlerts.length} person{sosAlerts.length > 1 ? 's' : ''} reported an emergency nearby.
                                 </p>
-                                <div className="mt-2 flex items-center gap-2 text-sm text-red-700 bg-white/50 px-3 py-1 rounded-full w-fit border border-red-100 font-bold">
-                                    <MapPin className="w-4 h-4" />
+                                <div className="mt-2 flex items-center gap-2 text-sm text-red-600 bg-white/50 px-3 py-1 rounded-full w-fit border border-red-50 font-medium">
+                                    <MapPin className="w-3.5 h-3.5" />
                                     {sosAlerts[0].address}
                                 </div>
                             </div>
@@ -175,48 +183,52 @@ const Dashboard = () => {
                 )}
 
                 {/* Hero Section */}
-                <Card className="relative overflow-hidden border-none bg-gradient-to-br from-white/80 to-white/40 p-0">
-                    <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-br from-deep-green/5 to-emerald-500/10 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
+                <motion.div 
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                    className="relative overflow-hidden border-none bg-gradient-to-br from-[#1a3a1d] via-[#244f28] to-[#112613] animate-gradient-xy p-0 shadow-2xl shadow-[#1a3a1d]/20 rounded-[2.5rem] min-h-[300px] flex items-center"
+                >
+                    {/* Ambient Background */}
+                    <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-overlay pointer-events-none"></div>
+                    <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-white/5 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+                    <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-emerald-500/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/3 pointer-events-none"></div>
                     
-                    <div className="relative z-10 p-8 sm:p-12 flex flex-col md:flex-row items-center justify-between gap-8">
-                        <div className="flex items-center gap-8">
-                            <div className="relative group">
-                                <div className="w-24 h-24 rounded-full border-4 border-white shadow-xl overflow-hidden bg-gray-100 group-hover:scale-105 transition-transform duration-300">
-                                    <img
-                                        src={user.avatarUrl || `https://ui-avatars.com/api/?name=${user.firstName || 'User'}&background=random`}
-                                        alt="Profile"
-                                        className="w-full h-full object-cover"
-                                    />
-                                </div>
-                                {user.isVerified && (
-                                    <div className="absolute bottom-1 right-1 bg-deep-green text-white p-1.5 rounded-full border-4 border-white shadow-sm" title="Verified User">
-                                        <Shield className="w-4 h-4 fill-current" />
-                                    </div>
-                                )}
+                    <div className="relative z-10 p-10 sm:p-14 w-full flex flex-col md:flex-row items-start md:items-center justify-between gap-10">
+                        <div className="flex flex-col gap-6 max-w-3xl">
+                            <div className="flex flex-col">
+                                {/* <span className="text-white text-xs font-bold uppercase tracking-widest mb-2">Welcome Back</span> */}
+                                <h1 className="text-5xl sm:text-7xl font-thin text-white tracking-tighter leading-[0.9]">
+                                    Hello, <span className="font-thin text-transparent bg-clip-text bg-gradient-to-r from-white to-white/80">{user.firstName || 'User'}..!</span>
+                                </h1>
                             </div>
-                            <div>
-                                <div className="flex items-center gap-2 mb-1">
-                                    <h1 className="text-3xl sm:text-4xl font-extrabold text-neural-dark tracking-tight">
-                                        Hello, {user.firstName || 'User'}!
-                                    </h1>
-                                    <span className="text-3xl animate-wave origin-bottom-right inline-block">👋</span>
-                                </div>
-                                <p className="text-lg text-gray-500 font-medium">
-                                    Welcome to {user.destinationCountry || 'your new home'}. What's on your mind today?
-                                </p>
-                            </div>
+                            
+                            <p className="text-lg sm:text-2xl text-white/60 font-light tracking-wide max-w-lg leading-relaxed">
+                                You're currently in <span className="text-white font-medium border-b border-white/20">{user.destinationCountry || 'Sri Lanka'}</span>. 
+                                <br/>What would you like to achieve today?
+                            </p>
                         </div>
 
-                        <Button
-                            onClick={() => navigate('/sos')}
-                            variant="outline"
-                            className="border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300 shadow-sm w-full md:w-auto"
-                        >
-                            <AlertCircle className="w-5 h-5 mr-2" />
-                            Emergency SOS
-                        </Button>
+                        {/* Glass SOS Button */}
+                        <div className="w-full md:w-auto mt-4 md:mt-0 ml-auto md:ml-0">
+                             <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => navigate('/sos')}
+                                className="group relative overflow-hidden rounded-full bg-white/10 backdrop-blur-md border border-white/10 p-1 pr-6 flex items-center gap-4 transition-all hover:bg-white/20 hover:border-white/20 hover:shadow-2xl hover:shadow-red-900/20"
+                            >
+                                <div className="w-12 h-12 rounded-full bg-red-500 flex items-center justify-center shadow-lg shadow-red-500/30 group-hover:scale-110 transition-transform duration-300 relative">
+                                    <div className="absolute inset-0 rounded-full bg-red-500 animate-ping opacity-20"></div>
+                                    <AlertCircle className="w-6 h-6 text-white text-bold" />
+                                </div>
+                                <div className="text-left">
+                                    <span className="block text-[10px] text-white/60 font-bold uppercase tracking-wider">Emergency</span>
+                                    <span className="block text-white font-medium tracking-wide">SOS Alert</span>
+                                </div>
+                            </motion.button>
+                        </div>
                     </div>
-                </Card>
+                </motion.div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     {/* Main Content */}
@@ -225,19 +237,19 @@ const Dashboard = () => {
                         {/* Search Bar */}
                         <div className="relative group">
                             <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-                                <Search className="text-gray-400 w-5 h-5 group-focus-within:text-deep-green transition-colors" />
+                                <Search className="text-gray-400 w-5 h-5 group-focus-within:text-[#1a3a1d] transition-colors" />
                             </div>
                             <input
                                 type="text"
                                 placeholder="Search for services, people, or help..."
-                                className="w-full pl-14 pr-6 py-4 bg-white/60 backdrop-blur-md border border-white/60 rounded-full shadow-sm focus:ring-2 focus:ring-deep-green/20 focus:border-deep-green/50 transition-all text-neural-dark font-medium placeholder:text-gray-400"
+                                className="w-full pl-14 pr-6 py-5 bg-white/40 backdrop-blur-xl border border-white/40 rounded-2xl shadow-sm focus:ring-1 focus:ring-gray-300 focus:bg-white/60 transition-all text-neural-dark text-lg font-light placeholder:text-gray-400 placeholder:font-light"
                             />
                         </div>
 
                         {/* Quick Actions */}
                         <div>
                             <h2 className="text-xl font-bold text-neural-dark mb-6 flex items-center gap-2">
-                                <Sparkles className="w-5 h-5 text-deep-green" />
+                                <Sparkles className="w-5 h-5 text-[#1a3a1d]" />
                                 Quick Actions
                             </h2>
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
@@ -251,8 +263,8 @@ const Dashboard = () => {
                                         <div className={`w-14 h-14 ${action.bg} ${action.color} rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-sm`}>
                                             <action.icon className="w-7 h-7" />
                                         </div>
-                                        <h3 className="font-bold text-neural-dark mb-1 text-lg">{action.title}</h3>
-                                        <p className="text-sm text-gray-500 font-medium">{action.desc}</p>
+                                        <h3 className="font-medium text-neural-dark mb-1 text-lg">{action.title}</h3>
+                                        <p className="text-sm text-gray-500 font-light">{action.desc}</p>
                                     </Card>
                                 ))}
                             </div>
@@ -264,8 +276,8 @@ const Dashboard = () => {
                         {/* Recent Activity */}
                         <Card className="p-8 border-none bg-white/60">
                             <div className="flex items-center justify-between mb-8">
-                                <h2 className="text-xl font-bold text-neural-dark">Recent Activity</h2>
-                                <button className="text-sm font-bold text-deep-green hover:text-green-700 flex items-center gap-1 hover:underline decoration-2 underline-offset-4 decoration-deep-green/30">
+                                <h2 className="text-2xl font-light text-neural-dark tracking-tight">Recent Activity</h2>
+                                <button className="text-sm font-medium text-gray-500 hover:text-neural-dark flex items-center gap-1 transition-colors">
                                     View All <ChevronRight className="w-4 h-4" />
                                 </button>
                             </div>
@@ -273,16 +285,16 @@ const Dashboard = () => {
                             <div className="space-y-4">
                                 {loadingBookings ? (
                                     <div className="flex flex-col items-center justify-center py-12 text-gray-400">
-                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-deep-green mb-4"></div>
+                                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1a3a1d] mb-4"></div>
                                         <p className="font-medium">Loading activity...</p>
                                     </div>
                                 ) : activeRequests.length === 0 ? (
-                                    <div className="text-center py-12 bg-white/50 rounded-3xl border border-dashed border-gray-200">
+                                    <div className="text-center py-12 bg-white/50 rounded-3xl border border-dashed border-gray-200/60">
                                         <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
                                             <Calendar className="w-8 h-8 text-gray-300" />
                                         </div>
-                                        <h3 className="text-lg font-bold text-neural-dark">No recent activity</h3>
-                                        <p className="text-gray-500 font-medium mt-1">Your planned journeys and bookings will appear here.</p>
+                                        <h3 className="text-lg font-medium text-neural-dark">No recent activity</h3>
+                                        <p className="text-gray-500 font-light mt-1">Your planned journeys and bookings will appear here.</p>
                                     </div>
                                 ) : (
                                     activeRequests.map((req) => (
@@ -292,10 +304,10 @@ const Dashboard = () => {
                                                     <req.icon className="w-6 h-6" />
                                                 </div>
                                                 <div>
-                                                    <h3 className="font-bold text-neural-dark text-lg">{req.title}</h3>
-                                                    <div className="flex items-center gap-4 mt-1.5 text-sm text-gray-500 font-medium">
+                                                    <h3 className="font-medium text-neural-dark text-lg">{req.title}</h3>
+                                                    <div className="flex items-center gap-4 mt-1.5 text-sm text-gray-500 font-light">
                                                         <span className="flex items-center gap-1.5 bg-white px-2 py-0.5 rounded-md shadow-sm">
-                                                            <Clock className="w-3.5 h-3.5 text-deep-green" /> {req.date}
+                                                            <Clock className="w-3.5 h-3.5 text-[#1a3a1d]" /> {req.date}
                                                         </span>
                                                         {req.helper && (
                                                             <span className="flex items-center gap-1.5">
@@ -319,25 +331,25 @@ const Dashboard = () => {
                     <div className="space-y-8">
                         {/* Profile Summary */}
                         <Card className="p-8 border-none bg-white/60">
-                            <h3 className="font-bold text-neural-dark mb-6 text-lg">My Profile</h3>
+                            <h3 className="font-light text-neural-dark mb-6 text-xl tracking-tight">My Profile</h3>
                             <div className="flex items-center gap-5 mb-8">
                                 <div className="w-16 h-16 rounded-2xl bg-gray-100 overflow-hidden shadow-md">
                                     <img src={user.avatarUrl || `https://ui-avatars.com/api/?name=${user.firstName || 'User'}&background=random`} alt={user.firstName} className="w-full h-full object-cover" />
                                 </div>
                                 <div>
-                                    <div className="font-bold text-neural-dark text-xl">{user.firstName || 'User'}</div>
-                                    <div className="text-sm text-gray-500 font-medium">{user.email || 'email@example.com'}</div>
+                                    <div className="font-medium text-neural-dark text-xl">{user.firstName || 'User'}</div>
+                                    <div className="text-sm text-gray-500 font-light">{user.email || 'email@example.com'}</div>
                                 </div>
                             </div>
 
-                            <div className={`p-5 rounded-2xl border ${user.isVerified ? 'bg-green-50/50 border-green-100' : 'bg-yellow-50/50 border-yellow-100'}`}>
+                            <div className={`p-5 rounded-2xl border ${user.isVerified ? 'bg-[#1a3a1d]/5 border-[#1a3a1d]/10' : 'bg-yellow-50/50 border-yellow-100'}`}>
                                 <div className="flex items-center gap-2 mb-2">
-                                    <Shield className={`w-5 h-5 ${user.isVerified ? 'text-green-600' : 'text-yellow-600'}`} />
-                                    <span className={`font-bold text-sm ${user.isVerified ? 'text-green-700' : 'text-yellow-700'}`}>
+                                    <Shield className={`w-5 h-5 ${user.isVerified ? 'text-[#1a3a1d]' : 'text-yellow-600'}`} />
+                                    <span className={`font-medium text-sm ${user.isVerified ? 'text-[#1a3a1d]' : 'text-yellow-700'}`}>
                                         {user.isVerified ? 'Identity Verified' : 'Verification Pending'}
                                     </span>
                                 </div>
-                                <p className={`text-xs font-medium leading-relaxed ${user.isVerified ? 'text-green-600' : 'text-yellow-600'}`}>
+                                <p className={`text-xs font-light leading-relaxed ${user.isVerified ? 'text-[#1a3a1d]' : 'text-yellow-600'}`}>
                                     {user.isVerified
                                         ? " Your trusted community status is active."
                                         : "Verify your ID to access all features."}
@@ -357,21 +369,21 @@ const Dashboard = () => {
                         {/* Resources */}
                         <Card className="p-8 border-none bg-white/60">
                             <div className="flex items-center gap-2 mb-2">
-                                <BookOpen className="w-5 h-5 text-deep-green" />
-                                <h3 className="font-bold text-neural-dark text-lg">Essential Guides</h3>
+                                <BookOpen className="w-5 h-5 text-[#1a3a1d]" />
+                                <h3 className="font-light text-neural-dark text-xl tracking-tight">Essential Guides</h3>
                             </div>
-                            <p className="text-sm text-gray-500 mb-6 font-medium">Curated for new arrivals in {user.destinationCountry || 'Australia'}.</p>
+                            <p className="text-sm text-gray-500 mb-6 font-light">Curated for new arrivals in {user.destinationCountry || 'Australia'}.</p>
 
                             <div className="space-y-3">
                                 {resources.map((res, idx) => (
                                     <a key={idx} href="#" className="flex items-center gap-4 p-4 rounded-2xl bg-white/50 border border-white/50 hover:bg-white hover:shadow-md transition-all group">
-                                        <div className="bg-neural-bg p-2.5 rounded-xl text-gray-400 group-hover:text-deep-green group-hover:bg-green-50 transition-colors">
+                                        <div className="bg-[#1a3a1d]/5 p-2.5 rounded-xl text-gray-400 group-hover:text-[#1a3a1d] group-hover:bg-[#1a3a1d]/10 transition-colors">
                                             <res.icon className="w-5 h-5" />
                                         </div>
-                                        <span className="text-sm font-bold text-gray-600 group-hover:text-neural-dark transition-colors">
+                                        <span className="text-sm font-medium text-gray-600 group-hover:text-neural-dark transition-colors">
                                             {res.title}
                                         </span>
-                                        <ChevronRight className="w-4 h-4 ml-auto text-gray-300 group-hover:text-deep-green trantision-colors" />
+                                        <ChevronRight className="w-4 h-4 ml-auto text-gray-300 group-hover:text-[#1a3a1d] trantision-colors" />
                                     </a>
                                 ))}
                             </div>

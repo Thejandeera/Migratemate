@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, ArrowLeft, Camera, Upload, Check, Mail, User, Phone, MapPin, Shield, CheckCircle, Loader2, Image as ImageIcon } from 'lucide-react';
 import Button from '../components/ui/Button';
+import migrateIcon from '../assets/migrate-icon.png';
 
 const Signup = () => {
     const navigate = useNavigate();
@@ -214,19 +215,26 @@ const Signup = () => {
     const prevStep = () => setStep(prev => Math.max(prev - 1, 1));
 
     return (
-        <div className="min-h-screen bg-white font-sans flex flex-col lg:flex-row text-gray-900">
+        <div className="min-h-screen bg-white flex flex-col lg:flex-row text-gray-900">
             {/* Left Side - Form */}
             <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 sm:p-12 lg:p-20 relative bg-white min-h-screen">
                 <Link to="/" className="absolute top-8 left-8 flex items-center gap-2 group">
-                    <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center text-white font-semibold text-sm">M</div>
+                    <img
+                        src={migrateIcon}
+                        alt="Logo"
+                        className="w-10 h-10 object-contain"
+                    />
                     <span className="font-semibold text-black tracking-tight text-lg">MigrateMate</span>
                 </Link>
 
                 <div className="max-w-md w-full">
                     <div className="text-center lg:text-left mb-10">
+                        <span className="inline-block py-1 px-3 bg-[#1a3a1d]/10 text-deep-green rounded-full text-xs font-bold uppercase tracking-wider mb-4">
+                            Step {step} of 3
+                        </span>
                         <h1 className="text-4xl md:text-5xl font-semibold text-black tracking-tight mb-4">Create Account</h1>
                         <p className="text-lg text-gray-500 font-normal leading-relaxed">
-                            Join MigrateMate and settle with confidence. Step {step} of 3.
+                            Join MigrateMate and settle with confidence.
                         </p>
                     </div>
 
@@ -247,7 +255,7 @@ const Signup = () => {
                     <AnimatePresence mode='wait'>
                         {step === 1 && (
                             <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     <input name="firstName" value={formData.firstName} onChange={handleChange} placeholder="First Name" className="w-full px-6 py-4 bg-white border border-gray-200 rounded-full focus:ring-2 focus:ring-black/10 focus:border-black outline-none transition-all placeholder:text-gray-400 font-medium text-[15px]" />
                                     <input name="lastName" value={formData.lastName} onChange={handleChange} placeholder="Last Name" className="w-full px-6 py-4 bg-white border border-gray-200 rounded-full focus:ring-2 focus:ring-black/10 focus:border-black outline-none transition-all placeholder:text-gray-400 font-medium text-[15px]" />
                                 </div>
@@ -260,7 +268,7 @@ const Signup = () => {
                                         onChange={handleChange}
                                         disabled={otpVerified}
                                         placeholder="Email Address"
-                                        className={`w-full px-6 py-4 bg-white border border-gray-200 rounded-full focus:ring-2 focus:ring-black/10 focus:border-black outline-none transition-all placeholder:text-gray-400 font-medium text-[15px] ${otpVerified ? 'bg-green-50 text-green-700 border-green-200' : ''}`}
+                                        className={`w-full px-6 py-4 bg-white border border-gray-200 rounded-full focus:ring-2 focus:ring-black/10 focus:border-black outline-none transition-all placeholder:text-gray-400 font-medium text-[15px] ${otpVerified ? 'bg-[#1a3a1d]/5 text-deep-green border-[#1a3a1d]/20' : ''}`}
                                     />
                                     {!otpVerified && !otpSent && (
                                         <button onClick={sendOtp} disabled={otpLoading} className="absolute right-2 top-2 bottom-2 px-5 bg-black text-white rounded-full text-xs font-bold hover:bg-gray-800 transition-all disabled:opacity-50">
@@ -274,19 +282,19 @@ const Signup = () => {
                                         <p className="text-xs font-bold text-gray-500 mb-2 ml-2">Verification Code</p>
                                         <div className="flex gap-2">
                                             <input value={otp} onChange={(e) => setOtp(e.target.value)} placeholder="000000" className="flex-1 px-4 py-2 bg-white border border-gray-200 rounded-full text-center tracking-widest font-mono outline-none text-lg" maxLength={6} />
-                                            <button onClick={verifyOtp} disabled={otpLoading} className="px-5 bg-green-600 text-white rounded-full text-xs font-bold hover:bg-green-700 transition-all">
+                                            <button onClick={verifyOtp} disabled={otpLoading} className="px-5 bg-deep-green text-white rounded-full text-xs font-bold hover:bg-[#2d5a32] transition-all">
                                                 {otpLoading ? <Loader2 className="animate-spin w-3 h-3" /> : 'Confirm'}
                                             </button>
                                         </div>
                                     </div>
                                 )}
-                                {otpVerified && <p className="text-green-600 text-xs font-bold ml-4 flex items-center gap-1"><CheckCircle size={14} /> Email Verified</p>}
+                                {otpVerified && <p className="text-deep-green text-xs font-bold ml-4 flex items-center gap-1"><CheckCircle size={14} /> Email Verified</p>}
 
                                 <input name="password" type="password" value={formData.password} onChange={handleChange} placeholder="Password" className="w-full px-6 py-4 bg-white border border-gray-200 rounded-full focus:ring-2 focus:ring-black/10 focus:border-black outline-none transition-all placeholder:text-gray-400 font-medium text-[15px]" />
                                 
                                 <input name="phone" value={formData.phone} onChange={handleChange} placeholder="Phone Number" className="w-full px-6 py-4 bg-white border border-gray-200 rounded-full focus:ring-2 focus:ring-black/10 focus:border-black outline-none transition-all placeholder:text-gray-400 font-medium text-[15px]" />
                                 
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                      <input name="countryOfOrigin" value={formData.countryOfOrigin} onChange={handleChange} placeholder="Origin Country" className="w-full px-6 py-4 bg-white border border-gray-200 rounded-full focus:ring-2 focus:ring-black/10 focus:border-black outline-none transition-all placeholder:text-gray-400 font-medium text-[15px]" />
                                      <input name="destinationCountry" value={formData.destinationCountry} onChange={handleChange} placeholder="Destination" className="w-full px-6 py-4 bg-white border border-gray-200 rounded-full focus:ring-2 focus:ring-black/10 focus:border-black outline-none transition-all placeholder:text-gray-400 font-medium text-[15px]" />
                                 </div>
@@ -304,9 +312,9 @@ const Signup = () => {
                                 <div className="space-y-4">
                                     <div className="relative group cursor-pointer">
                                         <input type="file" onChange={(e) => handleFileChange(e, 'avatarBase64')} className="absolute inset-0 w-full h-full opacity-0 z-10 cursor-pointer" accept="image/*" />
-                                        <div className={`p-6 rounded-[2rem] border-2 border-dashed flex items-center gap-5 transition-all ${formData.avatarBase64 ? 'bg-green-50 border-green-500' : 'bg-gray-50 border-gray-200 hover:bg-gray-100 hover:border-gray-300'}`}>
+                                        <div className={`p-6 rounded-[2rem] border-2 border-dashed flex items-center gap-5 transition-all ${formData.avatarBase64 ? 'bg-[#1a3a1d]/5 border-deep-green' : 'bg-gray-50 border-gray-200 hover:bg-gray-100 hover:border-gray-300'}`}>
                                             <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center shadow-sm text-black">
-                                                {formData.avatarBase64 ? <CheckCircle className="text-green-600" /> : <ImageIcon />}
+                                                {formData.avatarBase64 ? <CheckCircle className="text-deep-green" /> : <ImageIcon />}
                                             </div>
                                             <div>
                                                 <p className="font-semibold text-black text-lg">Profile Picture</p>
@@ -317,9 +325,9 @@ const Signup = () => {
                                     
                                      <div className="relative group cursor-pointer">
                                         <input type="file" onChange={(e) => handleFileChange(e, 'passportImageBase64')} className="absolute inset-0 w-full h-full opacity-0 z-10 cursor-pointer" accept="image/*" />
-                                        <div className={`p-6 rounded-[2rem] border-2 border-dashed flex items-center gap-5 transition-all ${formData.passportImageBase64 ? 'bg-green-50 border-green-500' : 'bg-gray-50 border-gray-200 hover:bg-gray-100 hover:border-gray-300'}`}>
+                                        <div className={`p-6 rounded-[2rem] border-2 border-dashed flex items-center gap-5 transition-all ${formData.passportImageBase64 ? 'bg-[#1a3a1d]/5 border-deep-green' : 'bg-gray-50 border-gray-200 hover:bg-gray-100 hover:border-gray-300'}`}>
                                             <div className="w-14 h-14 rounded-full bg-white flex items-center justify-center shadow-sm text-black">
-                                                {formData.passportImageBase64 ? <CheckCircle className="text-green-600" /> : <Upload />}
+                                                {formData.passportImageBase64 ? <CheckCircle className="text-deep-green" /> : <Upload />}
                                             </div>
                                             <div>
                                                 <p className="font-semibold text-black text-lg">Passport Image</p>
@@ -387,15 +395,15 @@ const Signup = () => {
 
             {/* Right Side - Features/Illustration (Similar to Login) */}
             <div className="hidden lg:flex w-1/2 bg-[#f4fbf0] justify-center items-center relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-green-200/30 rounded-full blur-[120px] translate-x-1/3 -translate-y-1/3"></div>
+                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#1a3a1d]/5 rounded-full blur-[120px] translate-x-1/3 -translate-y-1/3"></div>
                 <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-200/30 rounded-full blur-[120px] -translate-x-1/3 translate-y-1/3"></div>
                 
                 <div className="relative z-10 max-w-lg text-center">
-                    <img 
-                        src="https://illustrations.popsy.co/green/surr-delivery.svg" 
+                    {/* <img 
+                        src="https://i.pinimg.com/736x/aa/1b/e4/aa1be4f6bea410b3626d7ef883abadee.jpg" 
                         alt="Signup Illustration" 
-                        className="w-full h-auto drop-shadow-2xl mb-8"
-                    />
+                        className="w-full h-auto drop-shadow-2xl mb-8 rounded-3xl object-cover"
+                    /> */}
                     <h2 className="text-4xl font-semibold text-black leading-tight tracking-tight">Join 10,000+ happy migrants <br/>settling in effortlessly.</h2>
                     <div className="flex justify-center gap-3 mt-8">
                          <div className="w-2 h-2 bg-black/20 rounded-full"></div>

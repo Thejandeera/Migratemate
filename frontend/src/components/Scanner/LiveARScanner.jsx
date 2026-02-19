@@ -4,7 +4,7 @@ import * as cocoSsd from "@tensorflow-models/coco-ssd";
 import "@tensorflow/tfjs-backend-webgl";
 import "@tensorflow/tfjs-backend-cpu";
 import Webcam from "react-webcam";
-import Navbar from "../Navbar";
+
 import Footer from "../Footer";
 import { Upload, Camera, Search, X, Image as ImageIcon, Loader2, MapPin, Info, Sparkles, Scan, History, ChevronRight } from "lucide-react";
 import { API_URL } from "../../utils/api";
@@ -30,20 +30,23 @@ const LiveARScanner = () => {
 
     useEffect(() => {
         const loadModel = async () => {
-            try {
-                await tf.setBackend('webgl').catch(() => tf.setBackend('cpu'));
-                await tf.ready();
-                const loadedModel = await cocoSsd.load();
-                setModel(loadedModel);
-                setLoading(false);
-                console.log("AI Model Loaded");
-            } catch (err) {
-                console.error("Failed to load model", err);
-                setLoading(false);
+            if (mode === "camera" && !model && loading) {
+                try {
+                    console.log("Loading AI Model...");
+                    await tf.setBackend('webgl').catch(() => tf.setBackend('cpu'));
+                    await tf.ready();
+                    const loadedModel = await cocoSsd.load();
+                    setModel(loadedModel);
+                    setLoading(false);
+                    console.log("AI Model Loaded");
+                } catch (err) {
+                    console.error("Failed to load model", err);
+                    setLoading(false);
+                }
             }
         };
         loadModel();
-    }, []);
+    }, [mode, model]);
 
     const runCocoCamera = async () => {
         if (
@@ -176,7 +179,7 @@ const LiveARScanner = () => {
         detections.forEach((prediction) => {
             const [x, y, width, height] = prediction['bbox'];
             const text = prediction['class'];
-            const color = '#22C55E';
+            const color = '#1a3a1d';
 
             ctx.strokeStyle = color;
             ctx.font = 'bold 16px Inter, sans-serif';
@@ -234,8 +237,16 @@ const LiveARScanner = () => {
     };
 
     return (
-        <div className="min-h-screen flex flex-col bg-gray-50 text-gray-900 font-sans">
-            <Navbar />
+        <div className="min-h-screen flex flex-col bg-gray-50 text-gray-900">
+            {/* Reveal Overlay */}
+            <motion.div
+                initial={{ scaleY: 1 }}
+                animate={{ scaleY: 0 }}
+                transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+                style={{ originY: 0 }}
+                className="fixed inset-0 z-50 bg-[#1a3a1d]"
+            />
+
 
             <div className="flex-grow pt-24 pb-12 px-4 sm:px-6 relative overflow-hidden">
                 {/* Background ambient light */}
@@ -245,13 +256,13 @@ const LiveARScanner = () => {
                     {/* Header */}
                     <div className="text-center mb-10">
                         <div className="inline-flex items-center gap-2 bg-white border border-gray-200 px-4 py-1.5 rounded-full mb-4 shadow-sm">
-                            <Sparkles className="w-4 h-4 text-green-600" />
+                            <Sparkles className="w-4 h-4 text-deep-green" />
                             <span className="text-xs font-bold uppercase tracking-wider text-gray-600">AI Powered Lens</span>
                         </div>
-                        <h1 className="text-4xl md:text-5xl font-extrabold mb-4 tracking-tight">
-                            Discover the <span className="text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-500">Unseen</span>
+                        <h1 className="text-5xl md:text-7xl font-light text-gray-900 mb-6 tracking-tighter leading-tight">
+                            Discover the <span className="font-normal text-transparent bg-clip-text bg-gradient-to-r from-deep-green to-[#2d5a32]">Unseen</span>
                         </h1>
-                        <p className="text-gray-600 text-lg max-w-xl mx-auto">
+                        <p className="text-gray-500 text-xl font-light max-w-xl mx-auto tracking-wide">
                             Point your camera or upload an image to instantly identify landmarks, objects, and text in real-time.
                         </p>
                     </div>
@@ -286,7 +297,7 @@ const LiveARScanner = () => {
                                 <>
                                     {loading && (
                                         <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-black/90 backdrop-blur-sm">
-                                            <Loader2 className="w-12 h-12 animate-spin mb-4 text-green-500" />
+                                            <Loader2 className="w-12 h-12 animate-spin mb-4 text-deep-green" />
                                             <p className="font-bold text-gray-300">Initializing Neural Networks...</p>
                                         </div>
                                     )}
@@ -304,8 +315,8 @@ const LiveARScanner = () => {
 
                                     {/* HUD Elements */}
                                     <div className="absolute top-4 right-4 z-20 flex flex-col items-end gap-2">
-                                        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full backdrop-blur-md border ${isAnalyzingLive ? 'bg-green-500/20 border-green-500/30 text-green-400' : 'bg-black/40 border-white/10 text-gray-400'}`}>
-                                            <div className={`w-2 h-2 rounded-full ${isAnalyzingLive ? 'bg-green-400 animate-pulse' : 'bg-gray-500'}`} />
+                                        <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full backdrop-blur-md border ${isAnalyzingLive ? 'bg-deep-green border-deep-green text-white' : 'bg-black/40 border-white/10 text-gray-400'}`}>
+                                            <div className={`w-2 h-2 rounded-full ${isAnalyzingLive ? 'bg-deep-green animate-pulse' : 'bg-gray-500'}`} />
                                             <span className="text-xs font-bold uppercase">{isAnalyzingLive ? 'Scanning...' : 'Ready'}</span>
                                         </div>
                                     </div>
@@ -322,7 +333,7 @@ const LiveARScanner = () => {
                                 <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 relative">
                                     {analyzing && (
                                         <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm">
-                                            <Loader2 className="w-12 h-12 animate-spin mb-4 text-green-500" />
+                                            <Loader2 className="w-12 h-12 animate-spin mb-4 text-deep-green" />
                                             <p className="font-bold text-gray-300">Analyzing Image...</p>
                                         </div>
                                     )}
@@ -334,9 +345,9 @@ const LiveARScanner = () => {
                                             </button>
                                         </>
                                     ) : (
-                                        <label className="cursor-pointer group/upload flex flex-col items-center p-12 hover:bg-white rounded-3xl transition-all duration-300 border-2 border-dashed border-gray-200 hover:border-green-500 shadow-sm hover:shadow-md">
+                                        <label className="cursor-pointer group/upload flex flex-col items-center p-12 hover:bg-white rounded-3xl transition-all duration-300 border-2 border-dashed border-gray-200 hover:border-deep-green shadow-sm hover:shadow-md">
                                             <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-6 group-hover/upload:scale-110 transition-transform duration-300 border border-gray-100 shadow-sm">
-                                                <ImageIcon className="w-8 h-8 text-gray-400 group-hover/upload:text-green-600 transition-colors" />
+                                                <ImageIcon className="w-8 h-8 text-gray-400 group-hover/upload:text-deep-green transition-colors" />
                                             </div>
                                             <p className="font-bold text-gray-900 text-xl mb-2">Click to Upload</p>
                                             <p className="text-gray-500 text-sm">Support for JPG, PNG</p>
@@ -360,13 +371,13 @@ const LiveARScanner = () => {
                                         exit={{ opacity: 0, y: -10 }}
                                         className="bg-white rounded-3xl border border-gray-100 overflow-hidden shadow-xl"
                                     >
-                                        <div className="p-1 h-1 bg-gradient-to-r from-green-400 to-emerald-600"></div>
+                                        <div className="p-1 h-1 bg-gradient-to-r from-deep-green to-[#2d5a32]"></div>
                                         <div className="p-6">
                                             <div className="flex items-start justify-between mb-4">
                                                 <h2 className="text-xl font-bold text-gray-900 leading-tight pr-4">
                                                     {(mode === "camera" ? liveArResult.name : uploadArResult.name) || "Object Detected"}
                                                 </h2>
-                                                <div className="bg-green-500/10 text-green-400 p-2 rounded-full">
+                                                <div className="bg-[#1a3a1d]/10 text-deep-green p-2 rounded-full">
                                                     <Sparkles className="w-5 h-5" />
                                                 </div>
                                             </div>
@@ -374,7 +385,7 @@ const LiveARScanner = () => {
                                             {/* Location Tag if available */}
                                             {((mode === "camera" ? liveArResult.location : uploadArResult.location)) && (
                                                 <div className="flex items-center gap-2 text-gray-400 text-sm mb-4 bg-gray-900/50 p-2 rounded-lg w-fit">
-                                                    <MapPin className="w-3.5 h-3.5 text-green-500" />
+                                                    <MapPin className="w-3.5 h-3.5 text-deep-green" />
                                                     {(mode === "camera" ? liveArResult.location : uploadArResult.location)}
                                                 </div>
                                             )}
@@ -403,16 +414,16 @@ const LiveARScanner = () => {
 
                             {/* Detections List (Camera Only) */}
                             {mode === "camera" && detections.length > 0 && (
-                                <div className="bg-gray-800/50 rounded-2xl border border-gray-700/50 p-4">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
-                                        <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Detected Objects</h4>
+                                <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm">
+                                    <div className="flex items-center gap-2 mb-4">
+                                        <div className="w-2 h-2 rounded-full bg-deep-green animate-pulse"></div>
+                                        <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider">Detected Objects</h4>
                                     </div>
                                     <div className="flex flex-wrap gap-2">
                                         {detections.map((det, i) => (
-                                            <span key={i} className="px-2 py-1 bg-gray-700 text-gray-200 text-xs rounded-md border border-gray-600 flex items-center gap-1.5">
+                                            <span key={i} className="pl-3 pr-2 py-1.5 bg-gray-50 text-gray-700 text-xs font-medium rounded-lg border border-gray-200 flex items-center gap-2 shadow-sm transition-all hover:border-deep-green/30 hover:bg-deep-green/5">
                                                 {det.class}
-                                                <span className="text-green-400 text-[10px] font-mono">{Math.round(det.score * 100)}%</span>
+                                                <span className="text-deep-green font-bold text-[10px] font-mono bg-[#1a3a1d]/10 px-1.5 py-0.5 rounded">{Math.round(det.score * 100)}%</span>
                                             </span>
                                         ))}
                                     </div>
@@ -434,7 +445,7 @@ const LiveARScanner = () => {
                                 {history.slice(0, visibleCount).map((item, index) => (
                                     <div key={index} className="bg-white rounded-2xl p-5 hover:shadow-lg border border-gray-100 transition-all group">
                                         <div className="flex justify-between items-start mb-3">
-                                            <h3 className="font-bold text-gray-900 group-hover:text-green-600 transition-colors line-clamp-1">{item.name || "Unknown"}</h3>
+                                            <h3 className="font-bold text-gray-900 group-hover:text-deep-green transition-colors line-clamp-1">{item.name || "Unknown"}</h3>
                                             <span className="text-[10px] text-gray-500 bg-gray-50 px-2 py-1 rounded-full border border-gray-100">{new Date(item.timestamp).toLocaleDateString()}</span>
                                         </div>
 
@@ -451,7 +462,7 @@ const LiveARScanner = () => {
 
                                         <button
                                             onClick={() => toggleExpand(index)}
-                                            className="mt-4 text-green-500 text-xs font-bold hover:text-green-400 flex items-center gap-1"
+                                            className="mt-4 text-deep-green text-xs font-bold hover:text-[#2d5a32] flex items-center gap-1"
                                         >
                                             {expandedId === index ? "Show Less" : "Read More"} <ChevronRight className="w-3 h-3" />
                                         </button>

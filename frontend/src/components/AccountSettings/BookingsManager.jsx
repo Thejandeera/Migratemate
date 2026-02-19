@@ -80,7 +80,7 @@ const BookingsManager = () => {
     if (loading) {
         return (
             <div className="flex flex-col items-center justify-center py-20 bg-white rounded-3xl border border-gray-100 shadow-sm min-h-[400px]">
-                <Loader2 className="w-10 h-10 text-green-600 animate-spin mb-4" />
+                <Loader2 className="w-10 h-10 text-[#1a3a1d] animate-spin mb-4" />
                 <p className="text-gray-500 font-medium">Loading incoming requests...</p>
             </div>
         );
@@ -112,23 +112,23 @@ const BookingsManager = () => {
         <div className="space-y-6 animate-fade-in-up">
             <div className="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight">Booking Requests</h2>
-                    <p className="text-gray-500 mt-1">Manage incoming jobs and meaningful connections</p>
+                    <h2 className="text-3xl font-light text-neural-dark tracking-tight">Booking Requests</h2>
+                    <p className="text-gray-500 mt-1 font-light">Manage incoming jobs and meaningful connections</p>
                 </div>
 
-                <div className="flex p-1 bg-gray-100 rounded-xl">
+                <div className="flex p-1 bg-gray-50/80 rounded-2xl border border-gray-100">
                     {tabs.map(tab => (
                         <button
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
-                            className={`px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${activeTab === tab.id
-                                ? 'bg-white text-gray-900 shadow-sm'
-                                : 'text-gray-500 hover:text-gray-700'
+                            className={`px-6 py-2.5 rounded-xl text-sm font-medium transition-all flex items-center gap-2 ${activeTab === tab.id
+                                ? 'bg-white text-neural-dark shadow-sm ring-1 ring-black/5'
+                                : 'text-gray-500 hover:text-gray-700 hover:bg-white/50'
                                 }`}
                         >
                             {tab.label}
                             {tab.count > 0 && (
-                                <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${activeTab === tab.id ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-600'
+                                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${activeTab === tab.id ? 'bg-neural-dark text-white' : 'bg-gray-200 text-gray-600'
                                     }`}>
                                     {tab.count}
                                 </span>
@@ -162,9 +162,9 @@ const BookingsManager = () => {
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -10 }}
-                                className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition-shadow"
+                                className="glass-card rounded-[2rem] overflow-hidden hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)] transition-all duration-300"
                             >
-                                <div className="p-6 flex flex-col md:flex-row gap-6">
+                                <div className="p-8 flex flex-col md:flex-row gap-8">
                                     {/* User Info & Service Date */}
                                     <div className="flex-shrink-0 flex md:flex-col items-center md:items-start gap-4 md:w-48">
                                         <div className="flex items-center gap-3">
@@ -183,11 +183,11 @@ const BookingsManager = () => {
 
                                         <div className="mt-2 text-sm text-gray-600 space-y-1">
                                             <div className="flex items-center gap-2">
-                                                <Calendar className="w-4 h-4 text-green-600" />
+                                                <Calendar className="w-4 h-4 text-[#1a3a1d]" />
                                                 <span className="font-medium">{new Date(booking.bookingDate).toLocaleDateString()}</span>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <Clock className="w-4 h-4 text-green-600" />
+                                                <Clock className="w-4 h-4 text-[#1a3a1d]" />
                                                 <span>{booking.timeSlot || 'Flexible Time'}</span>
                                             </div>
                                         </div>
@@ -196,11 +196,11 @@ const BookingsManager = () => {
                                     {/* Service Details */}
                                     <div className="flex-1 border-l border-gray-100 pl-0 md:pl-6 pt-4 md:pt-0 border-t md:border-t-0">
                                         <div className="flex justify-between items-start mb-2">
-                                            <h3 className="text-lg font-bold text-gray-900">{booking.serviceTitle}</h3>
-                                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${booking.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
+                                            <h3 className="text-xl font-medium text-neural-dark tracking-tight">{booking.serviceTitle}</h3>
+                                            <span className={`px-3 py-1 rounded-full text-xs font-semibold tracking-wide ${booking.status === 'PENDING' ? 'bg-yellow-50 text-yellow-700 border border-yellow-100' :
                                                 booking.status === 'ACCEPTED' ? 'bg-blue-100 text-blue-700' :
                                                     booking.status === 'IN_PROGRESS' ? 'bg-purple-100 text-purple-700' :
-                                                        booking.status === 'COMPLETED' ? 'bg-green-100 text-green-700' :
+                                                        booking.status === 'COMPLETED' ? 'bg-[#1a3a1d]/10 text-[#1a3a1d]' :
                                                             'bg-red-100 text-red-700'
                                                 }`}>
                                                 {booking.status.replace('_', ' ')}
@@ -219,7 +219,7 @@ const BookingsManager = () => {
                                         )}
 
                                         <div className="flex items-center gap-4">
-                                            <div className="text-lg font-bold text-gray-900">
+                                            <div className="text-2xl font-light text-neural-dark tracking-tight">
                                                 {booking.currency} {booking.totalAmount}
                                             </div>
                                             {['ACCEPTED', 'IN_PROGRESS'].includes(booking.status) && (
@@ -227,7 +227,7 @@ const BookingsManager = () => {
                                                     <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Message Customer">
                                                         <MessageCircle className="w-5 h-5" />
                                                     </button>
-                                                    <button className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition" title="Call Customer">
+                                                    <button className="p-2 text-[#1a3a1d] hover:bg-[#1a3a1d]/5 rounded-lg transition" title="Call Customer">
                                                         <Phone className="w-5 h-5" />
                                                     </button>
                                                 </div>
@@ -241,7 +241,7 @@ const BookingsManager = () => {
                                             <>
                                                 <button
                                                     onClick={() => handleStatusUpdate(booking.id, 'ACCEPTED')}
-                                                    className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition font-bold shadow-md hover:shadow-lg"
+                                                    className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-[#1a3a1d] text-white rounded-xl hover:bg-black transition font-bold shadow-md hover:shadow-lg"
                                                 >
                                                     <Check className="w-4 h-4" />
                                                     Accept
@@ -268,7 +268,7 @@ const BookingsManager = () => {
                                         {booking.status === 'IN_PROGRESS' && (
                                             <button
                                                 onClick={() => handleStatusUpdate(booking.id, 'COMPLETED')}
-                                                className="flex items-center justify-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition font-bold shadow-md"
+                                                className="flex items-center justify-center gap-2 px-4 py-2 bg-[#1a3a1d] text-white rounded-xl hover:bg-black transition font-bold shadow-md"
                                             >
                                                 <Check className="w-4 h-4" />
                                                 Complete

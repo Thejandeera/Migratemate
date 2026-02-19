@@ -4,6 +4,7 @@ import { setAuthData, setUserData } from '../utils/auth';
 import { motion } from 'framer-motion';
 import { Mail, Lock, ArrowRight, Loader2, Github, CheckCircle } from 'lucide-react';
 import Button from '../components/ui/Button';
+import migrateIcon from '../assets/migrate-icon.png';
 
 const Login = () => {
     const navigate = useNavigate();
@@ -87,11 +88,15 @@ const Login = () => {
     };
 
     return (
-        <div className="min-h-screen bg-white font-sans flex text-gray-900">
+        <div className="min-h-screen bg-white flex text-gray-900">
             {/* Left Side - Form */}
             <div className="w-full lg:w-1/2 flex flex-col justify-center items-center p-8 sm:p-12 lg:p-20 relative bg-white">
                 <Link to="/" className="absolute top-8 left-8 flex items-center gap-2 group">
-                    <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center text-white font-semibold text-sm">M</div>
+                    <img
+                        src={migrateIcon}
+                        alt="Logo"
+                        className="w-10 h-10 object-contain"
+                    />
                     <span className="font-semibold text-black tracking-tight text-lg">MigrateMate</span>
                 </Link>
 
@@ -193,7 +198,7 @@ const Login = () => {
 
             {/* Right Side - Illustration */}
             <div className="hidden lg:flex w-1/2 bg-[#f4fbf0] justify-center items-center relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-green-200/30 rounded-full blur-[120px] translate-x-1/3 -translate-y-1/3"></div>
+                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#1a3a1d]/5 rounded-full blur-[120px] translate-x-1/3 -translate-y-1/3"></div>
                 <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-200/30 rounded-full blur-[120px] -translate-x-1/3 translate-y-1/3"></div>
 
                 <div className="relative z-10 max-w-lg text-center">
@@ -204,43 +209,12 @@ const Login = () => {
                         className="relative"
                     >
                          {/* Floating Elements mimicking the reference */}
-                        <motion.div 
-                            animate={{ y: [0, -10, 0] }}
-                            transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-                            className="absolute -left-16 top-10 bg-white p-5 rounded-[2rem] shadow-2xl shadow-green-900/5 flex items-center gap-4 border border-white/50 backdrop-blur-sm"
-                        >
-                             <div className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center text-green-600">
-                                <CheckCircle className="w-6 h-6" />
-                             </div>
-                             <div className="text-left">
-                                <div className="text-xs text-gray-500 font-semibold uppercase tracking-wider">Status</div>
-                                <div className="text-base font-bold text-black">Verified</div>
-                             </div>
-                        </motion.div>
 
-                        <motion.div 
-                            animate={{ y: [0, 10, 0] }}
-                            transition={{ repeat: Infinity, duration: 5, ease: "easeInOut", delay: 1 }}
-                            className="absolute -right-8 bottom-20 bg-white p-5 rounded-[2rem] shadow-2xl shadow-blue-900/5 border border-white/50 backdrop-blur-sm"
-                        >
-                            <div className="flex items-center gap-3 mb-3">
-                                <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden ring-2 ring-white">
-                                     <img src="https://ui-avatars.com/api/?name=Alex&background=random" alt="User" />
-                                </div>
-                                <div>
-                                    <div className="text-sm font-bold text-black">Alex M.</div>
-                                    <div className="text-xs text-gray-500 font-medium">Just joined</div>
-                                </div>
-                            </div>
-                            <div className="h-1.5 w-32 bg-gray-100 rounded-full overflow-hidden">
-                                <div className="h-full w-3/4 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full"></div>
-                            </div>
-                        </motion.div>
 
                         <img 
                             src="https://illustrations.popsy.co/green/working-vacation.svg" 
-                            alt="Illustration" 
-                            className="w-full h-auto drop-shadow-2xl"
+                            alt="Login Illustration" 
+                            className="w-full h-auto drop-shadow-2xl mb-8 rounded-3xl object-cover"
                         />
                     </motion.div>
                     

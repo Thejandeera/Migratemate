@@ -128,7 +128,7 @@ const ProfilePictureUpload = ({ isOpen, onClose, onUpdate }) => {
                         <div
                             className={`
                                 relative border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-colors
-                                ${dragActive ? 'border-green-500 bg-green-50' : 'border-gray-300 hover:border-green-400 hover:bg-gray-50'}
+                                ${dragActive ? 'border-deep-green bg-[#1a3a1d]/5' : 'border-gray-300 hover:border-deep-green/40 hover:bg-[#1a3a1d]/5'}
                             `}
                             onDragEnter={handleDrag}
                             onDragLeave={handleDrag}
@@ -144,7 +144,7 @@ const ProfilePictureUpload = ({ isOpen, onClose, onUpdate }) => {
                                 onChange={handleChange}
                             />
 
-                            <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mb-4">
+                            <div className="w-16 h-16 bg-[#1a3a1d]/10 text-deep-green rounded-full flex items-center justify-center mb-4">
                                 <Upload className="w-8 h-8" />
                             </div>
                             <p className="text-gray-900 font-medium mb-1">Click to upload or drag and drop</p>
@@ -174,7 +174,7 @@ const ProfilePictureUpload = ({ isOpen, onClose, onUpdate }) => {
                                 <button
                                     onClick={handleSubmit}
                                     disabled={loading}
-                                    className="flex-1 py-2.5 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition flex items-center justify-center gap-2 disabled:opacity-70"
+                                    className="flex-1 py-2.5 bg-deep-green text-white font-semibold rounded-xl hover:bg-[#2d5a32] transition flex items-center justify-center gap-2 disabled:opacity-70"
                                 >
                                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
                                     Save Update

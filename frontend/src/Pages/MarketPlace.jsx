@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import PageHeader from '../components/PageHeader';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
-import Navbar from '../components/Navbar';
+
 import Footer from '../components/Footer';
 import { searchServices, getAllServices, getServiceById } from '../utils/serviceApi';
 import {
@@ -25,10 +26,10 @@ import {
 
 // Map backend categories to display names and icons
 const CATEGORY_MAP = {
-    'TRANSPORT': { name: 'Transport', icon: Plane, color: 'text-blue-600', bg: 'bg-blue-50' },
-    'HOUSING': { name: 'Housing', icon: Home, color: 'text-green-600', bg: 'bg-green-50' },
-    'DOCUMENTATION': { name: 'Documentation', icon: FileText, color: 'text-purple-600', bg: 'bg-purple-50' },
-    'CULTURAL_SUPPORT': { name: 'Cultural Support', icon: MessageCircle, color: 'text-pink-600', bg: 'bg-pink-50' },
+    'TRANSPORT': { name: 'Transport', icon: Plane, color: 'text-[#1a3a1d]', bg: 'bg-[#1a3a1d]/5' },
+    'HOUSING': { name: 'Housing', icon: Home, color: 'text-[#1a3a1d]', bg: 'bg-[#1a3a1d]/5' },
+    'DOCUMENTATION': { name: 'Documentation', icon: FileText, color: 'text-[#1a3a1d]', bg: 'bg-[#1a3a1d]/5' },
+    'CULTURAL_SUPPORT': { name: 'Cultural Support', icon: MessageCircle, color: 'text-[#1a3a1d]', bg: 'bg-[#1a3a1d]/5' },
 };
 
 const CATEGORIES = [
@@ -40,6 +41,70 @@ const CATEGORIES = [
 ];
 
 const LOCATIONS = ['All Locations', 'Sydney', 'Melbourne', 'Brisbane', 'Perth', 'Adelaide', 'Online'];
+
+const CustomDropdown = ({ options, value, onChange, label, icon: Icon }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const dropdownRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    return (
+        <div className="relative" ref={dropdownRef}>
+            {label && <h3 className="text-xs font-bold text-gray-400 mb-4 uppercase tracking-wider">{label}</h3>}
+            <button
+                onClick={() => setIsOpen(!isOpen)}
+                className={`w-full flex items-center justify-between px-4 py-4 bg-gray-50 border border-transparent rounded-2xl text-sm font-semibold text-gray-700 hover:bg-gray-100 transition-all outline-none focus:ring-2 focus:ring-[#1a3a1d]/20 ${isOpen ? 'ring-2 ring-[#1a3a1d]/20 bg-white' : ''}`}
+            >
+                <div className="flex items-center gap-3">
+                    {Icon && <Icon className="w-4 h-4 text-gray-400" />}
+                    <span>{value || 'Select Option'}</span>
+                </div>
+                <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
+                        className="absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50 max-h-60 overflow-y-auto"
+                    >
+                        {options.map((option) => (
+                            <button
+                                key={option}
+                                onClick={() => {
+                                    onChange(option);
+                                    setIsOpen(false);
+                                }}
+                                className={`w-full text-left px-4 py-3 text-sm font-medium transition-all flex items-center justify-between ${
+                                    value === option 
+                                    ? 'bg-[#1a3a1d]/5 text-[#1a3a1d]' 
+                                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                                }`}
+                            >
+                                <span className="flex items-center gap-2">
+                                     {/* Optional: Add location icon here if needed, but keeping it simple for now */}
+                                    {option}
+                                </span>
+                                {value === option && <CheckCircle className="w-4 h-4 text-[#1a3a1d]" />}
+                            </button>
+                        ))}
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+};
 
 // Service Card Component
 const ServiceCard = ({ service }) => {
@@ -90,7 +155,7 @@ const ServiceCard = ({ service }) => {
                     </span>
                 </div>
                 <div className="absolute bottom-4 right-4">
-                    <span className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl text-sm font-bold text-neural-dark shadow-lg border border-white/40">
+                    <span className="bg-white/90 backdrop-blur-md px-4 py-2 rounded-2xl text-sm font-medium text-neural-dark shadow-lg border border-white/40">
                         {priceDisplay}
                     </span>
                 </div>
@@ -108,7 +173,7 @@ const ServiceCard = ({ service }) => {
                     </div>
                 </div>
 
-                <h3 className="text-xl font-bold text-neural-dark mb-3 line-clamp-2 leading-tight group-hover:text-deep-green transition-colors">
+                <h3 className="text-xl font-medium text-neural-dark mb-3 line-clamp-2 leading-tight group-hover:text-[#1a3a1d] transition-colors">
                     {title}
                 </h3>
 
@@ -117,14 +182,14 @@ const ServiceCard = ({ service }) => {
                         {providerProfilePicture ? (
                             <img src={providerProfilePicture} alt={providerName} className="w-9 h-9 rounded-full object-cover ring-2 ring-white shadow-sm" />
                         ) : (
-                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-green-100 to-green-50 flex items-center justify-center text-deep-green font-bold text-xs ring-2 ring-white shadow-sm">
+                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#1a3a1d]/10 to-[#1a3a1d]/5 flex items-center justify-center text-[#1a3a1d] font-bold text-xs ring-2 ring-white shadow-sm">
                                 {providerInitial}
                             </div>
                         )}
                         <span className="text-sm font-semibold text-gray-600 truncate max-w-[120px]">{providerName}</span>
                     </div>
                     {isVerified && (
-                        <div className="flex items-center gap-1.5 text-deep-green bg-green-50/80 px-2.5 py-1 rounded-full border border-green-100/50" title="Verified Provider">
+                        <div className="flex items-center gap-1.5 text-[#1a3a1d] bg-[#1a3a1d]/5 px-2.5 py-1 rounded-full border border-[#1a3a1d]/10" title="Verified Provider">
                             <CheckCircle className="w-3.5 h-3.5" />
                             <span className="text-[10px] font-bold uppercase tracking-wider">Verified</span>
                         </div>
@@ -138,16 +203,16 @@ const ServiceCard = ({ service }) => {
 // Filter Sidebar
 const FilterSidebar = ({ selectedCategory, setSelectedCategory, selectedLocation, setSelectedLocation, priceRange, setPriceRange, verifiedOnly, setVerifiedOnly }) => {
     return (
-        <div className="glass-card rounded-[2rem] p-8 sticky top-24">
+        <div className="glass-card rounded-[2rem] p-8">
             <div className="flex items-center justify-between mb-8">
-                <h2 className="text-lg font-semibold text-neural-dark flex items-center gap-2">
+                <h2 className="text-lg font-medium text-neural-dark flex items-center gap-2">
                     <Filter className="w-5 h-5 text-gray-400" />
                     Filters
                 </h2>
                 {(selectedCategory || selectedLocation !== 'All Locations' || verifiedOnly) && (
                     <button
                         onClick={() => { setSelectedCategory(null); setSelectedLocation('All Locations'); setVerifiedOnly(false); setPriceRange(200); }}
-                        className="text-xs font-semibold text-deep-green hover:text-green-800 hover:underline transition-all"
+                        className="text-xs font-semibold text-[#1a3a1d] hover:text-[#1a3a1d]/80 hover:underline transition-all"
                     >
                         Reset All
                     </button>
@@ -164,15 +229,15 @@ const FilterSidebar = ({ selectedCategory, setSelectedCategory, selectedLocation
                                 key={cat.name}
                                 onClick={() => setSelectedCategory(selectedCategory === cat.value ? null : cat.value)}
                                 className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl text-sm transition-all group duration-300 ${selectedCategory === cat.value
-                                        ? 'bg-green-50 text-green-700 font-semibold shadow-inner'
+                                        ? 'bg-[#1a3a1d]/5 text-[#1a3a1d] font-semibold shadow-inner'
                                         : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 font-medium'
                                     }`}
                             >
                                 <div className="flex items-center gap-3">
-                                    <cat.icon className={`w-4 h-4 transition-colors ${selectedCategory === cat.value ? 'text-green-600' : 'text-gray-400 group-hover:text-gray-600'}`} />
+                                    <cat.icon className={`w-4 h-4 transition-colors ${selectedCategory === cat.value ? 'text-[#1a3a1d]' : 'text-gray-400 group-hover:text-gray-600'}`} />
                                     <span>{cat.name}</span>
                                 </div>
-                                {selectedCategory === cat.value && <CheckCircle className="w-4 h-4 text-green-600" />}
+                                {selectedCategory === cat.value && <CheckCircle className="w-4 h-4 text-[#1a3a1d]" />}
                             </button>
                         ))}
                     </div>
@@ -180,26 +245,20 @@ const FilterSidebar = ({ selectedCategory, setSelectedCategory, selectedLocation
 
                 {/* Location */}
                 <div>
-                    <h3 className="text-xs font-bold text-gray-400 mb-4 uppercase tracking-wider">Location</h3>
-                    <div className="relative group">
-                        <select
-                            value={selectedLocation}
-                            onChange={(e) => setSelectedLocation(e.target.value)}
-                            className="w-full pl-4 pr-10 py-4 bg-gray-50 border-none rounded-2xl text-sm font-semibold text-gray-700 focus:ring-2 focus:ring-deep-green/20 outline-none appearance-none cursor-pointer transition-all hover:bg-gray-100"
-                        >
-                            {LOCATIONS.map((loc) => (
-                                <option key={loc} value={loc}>{loc}</option>
-                            ))}
-                        </select>
-                        <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none group-hover:text-gray-600 transition-colors" />
-                    </div>
+                    <CustomDropdown
+                        label="Location"
+                        options={LOCATIONS}
+                        value={selectedLocation}
+                        onChange={setSelectedLocation}
+                        icon={MapPin}
+                    />
                 </div>
 
                 {/* Price Range */}
                 <div>
                     <div className="flex items-center justify-between mb-4">
                         <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Max Price</h3>
-                        <span className="text-sm font-bold text-green-600 bg-green-50 px-2 py-1 rounded-lg">${priceRange}</span>
+                        <span className="text-sm font-bold text-[#1a3a1d] bg-[#1a3a1d]/5 px-2.5 py-1 rounded-lg">${priceRange}</span>
                     </div>
                     <input
                         type="range"
@@ -208,7 +267,7 @@ const FilterSidebar = ({ selectedCategory, setSelectedCategory, selectedLocation
                         step="50"
                         value={priceRange}
                         onChange={(e) => setPriceRange(Number(e.target.value))}
-                        className="w-full h-2 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-deep-green hover:bg-gray-200 transition-colors"
+                        className="w-full h-2 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-[#1a3a1d] hover:bg-gray-200 transition-colors"
                     />
                     <div className="flex justify-between mt-2 text-xs text-gray-400 font-medium">
                         <span>$50</span>
@@ -217,13 +276,13 @@ const FilterSidebar = ({ selectedCategory, setSelectedCategory, selectedLocation
                 </div>
 
                 {/* Verified Toggle */}
-                <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-5 border border-green-100/50">
+                <div className="bg-gradient-to-br from-[#1a3a1d]/5 to-gray-50 rounded-2xl p-5 border border-[#1a3a1d]/10">
                     <label className="flex items-center justify-between cursor-pointer group">
                         <div className="flex items-center gap-3">
-                            <div className="bg-white p-2 rounded-xl shadow-sm text-green-600">
+                            <div className="bg-white p-2 rounded-xl shadow-sm text-[#1a3a1d]">
                                 <CheckCircle className="w-4 h-4" />
                             </div>
-                            <span className="text-sm font-semibold text-gray-900 group-hover:text-green-700 transition-colors">Verified Only</span>
+                            <span className="text-sm font-semibold text-gray-900 group-hover:text-[#1a3a1d] transition-colors">Verified Only</span>
                         </div>
                         <div className="relative">
                             <input
@@ -232,7 +291,7 @@ const FilterSidebar = ({ selectedCategory, setSelectedCategory, selectedLocation
                                 onChange={(e) => setVerifiedOnly(e.target.checked)}
                                 className="sr-only peer"
                             />
-                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500 shadow-inner transition-colors"></div>
+                            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#1a3a1d] shadow-inner transition-colors"></div>
                         </div>
                     </label>
                 </div>
@@ -313,67 +372,30 @@ const MarketPlace = () => {
     }, [fetchServices]);
 
     return (
-        <div className="min-h-screen bg-gray-50/50 font-sans relative">
-            <Navbar />
+        <div className="min-h-screen bg-gray-50">
+
 
             {/* Background Decoration */}
             <div className="fixed inset-0 pointer-events-none z-0">
-                <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-green-100/40 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
+                <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#1a3a1d]/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
                 <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-100/40 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2"></div>
             </div>
 
-            <main className="relative z-10 pt-24 pb-12 px-4 sm:px-6 lg:px-8">
+            <main className="relative z-10 pb-12 px-4 sm:px-6 lg:px-8">
                 {/* Header */}
                  {/* Hero Section */}
-            <div className="relative pt-32 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
-                {/* Dynamic Background Mesh */}
-                <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-                    <div className="absolute top-0 left-1/4 w-96 h-96 bg-green-200 rounded-full mix-blend-multiply filter blur-[128px] opacity-40 animate-blob"></div>
-                    <div className="absolute top-0 right-1/4 w-96 h-96 bg-blue-200 rounded-full mix-blend-multiply filter blur-[128px] opacity-40 animate-blob animation-delay-2000"></div>
-                    <div className="absolute -bottom-32 left-1/3 w-96 h-96 bg-purple-200 rounded-full mix-blend-multiply filter blur-[128px] opacity-40 animate-blob animation-delay-4000"></div>
-                </div>
-
-                <div className="max-w-4xl mx-auto text-center relative z-10">
-                    <motion.div
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/60 backdrop-blur-md border border-white/40 rounded-full text-deep-green text-xs font-bold uppercase tracking-wider mb-8 shadow-sm"
-                    >
-                        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-                        Verified Marketplace
-                    </motion.div>
-                    
-                    <motion.h1
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="text-6xl md:text-7xl font-bold text-neural-dark mb-8 tracking-tight leading-tight"
-                    >
-                        Find Verified <br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-deep-green via-emerald-800 to-deep-green">
-                            Services.
-                        </span>
-                    </motion.h1>
-
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 }}
-                        className="mb-12"
-                    >
-                        <p className="text-xl text-gray-500 font-medium leading-relaxed max-w-2xl mx-auto">
-                            Connect with verified locals for housing, transport, and documentation. <br className="hidden md:block"/> Safe, secure, and curated for your journey.
-                        </p>
-                    </motion.div>
-
+                <PageHeader 
+                    badgeText="Verified Marketplace"
+                    badgeIcon={() => <span className="w-2 h-2 rounded-full bg-[#1a3a1d] animate-pulse mr-2"></span>}
+                    title="Find Verified"
+                    highlightText="Services."
+                    description={<>Connect with verified locals for housing, transport, and documentation. <br className="hidden md:block"/> Safe, secure, and curated for your journey.</>}
+                    blobColor2="bg-gray-200"
+                >
                     {/* Search Bar */}
-                    <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.1 }}
-                        className="max-w-2xl mx-auto relative z-20"
-                    >
+                    <div className="max-w-2xl mx-auto relative z-20 mt-8">
                         <div className="relative group">
-                            <div className="absolute inset-0 bg-green-500 rounded-3xl blur-xl opacity-10 group-hover:opacity-20 transition-opacity duration-500"></div>
+                            <div className="absolute inset-0 bg-[#1a3a1d] rounded-3xl blur-xl opacity-5 group-hover:opacity-10 transition-opacity duration-500"></div>
                             <div className="relative bg-white rounded-[2rem] premium-shadow flex items-center p-2.5 transition-all duration-300 hover:shadow-[0_20px_40px_rgb(0,0,0,0.08)]">
                                 <div className="pl-5 text-gray-400">
                                     <Search className="w-6 h-6" />
@@ -383,16 +405,15 @@ const MarketPlace = () => {
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     placeholder="Search for services..."
-                                    className="w-full px-4 py-4 bg-transparent border-none focus:ring-0 text-neural-dark placeholder-gray-400 text-lg font-medium"
+                                    className="w-full px-4 py-4 bg-transparent border-none focus:ring-0 text-neural-dark placeholder-gray-400 text-lg font-light"
                                 />
-                                <button className="px-8 py-4 bg-neural-dark text-white rounded-[1.5rem] font-bold tracking-tight hover:bg-black transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5">
+                                <button className="px-8 py-4 bg-neural-dark text-white rounded-[1.5rem] font-medium tracking-tight hover:bg-black transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5">
                                     Search
                                 </button>
                             </div>
                         </div>
-                    </motion.div>
-                </div>
-            </div>
+                    </div>
+                </PageHeader>
 
                 <div className="max-w-7xl mx-auto">
                     {/* Mobile Filter Toggle */}
@@ -408,7 +429,7 @@ const MarketPlace = () => {
 
                     <div className="flex flex-col lg:flex-row gap-8">
                         {/* Sidebar */}
-                        <aside className={`lg:w-72 flex-shrink-0 ${showMobileFilters ? 'block' : 'hidden lg:block'}`}>
+                        <aside className={`lg:w-72 flex-shrink-0 sticky top-32 self-start ${showMobileFilters ? 'block' : 'hidden lg:block'}`}>
                             <FilterSidebar
                                 selectedCategory={selectedCategory}
                                 setSelectedCategory={setSelectedCategory}
@@ -425,7 +446,7 @@ const MarketPlace = () => {
                         <div className="flex-1">
                             {loading ? (
                                 <div className="flex flex-col items-center justify-center py-20">
-                                    <Loader2 className="w-10 h-10 text-green-500 animate-spin mb-4" />
+                                    <Loader2 className="w-10 h-10 text-[#1a3a1d] animate-spin mb-4" />
                                     <p className="text-gray-500 font-medium">Finding the best matches...</p>
                                 </div>
                             ) : error ? (
@@ -435,7 +456,7 @@ const MarketPlace = () => {
                                     </div>
                                     <h3 className="text-xl font-semibold text-gray-900 mb-2">Something went wrong</h3>
                                     <p className="text-gray-500 mb-6">{error}</p>
-                                    <button onClick={fetchServices} className="px-6 py-2 bg-deep-green text-white rounded-lg font-semibold hover:bg-emerald-600">Try Again</button>
+                                    <button onClick={fetchServices} className="px-6 py-2 bg-[#1a3a1d] text-white rounded-lg font-semibold hover:bg-black">Try Again</button>
                                 </div>
                             ) : services.length === 0 ? (
                                 <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-gray-200">
@@ -453,35 +474,17 @@ const MarketPlace = () => {
                                 </div>
                             ) : (
                                 <>
-                                    <motion.div 
-                                        initial="hidden"
-                                        animate="visible"
-                                        variants={{
-                                            hidden: { opacity: 0 },
-                                            visible: {
-                                                opacity: 1,
-                                                transition: {
-                                                    staggerChildren: 0.1
-                                                }
-                                            }
-                                        }}
-                                        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6"
-                                    >
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                                         {services.slice(0, visibleCount).map((service) => (
-                                            <motion.div key={service.id} variants={{
-                                                hidden: { opacity: 0, y: 20 },
-                                                visible: { opacity: 1, y: 0 }
-                                            }}>
-                                                <ServiceCard service={service} />
-                                            </motion.div>
+                                            <ServiceCard key={service.id} service={service} />
                                         ))}
-                                    </motion.div>
+                                    </div>
 
                                     {visibleCount < services.length && (
                                         <div className="mt-12 text-center">
                                             <button
                                                 onClick={() => setVisibleCount(prev => prev + 6)}
-                                                className="px-8 py-3 bg-white border border-gray-200 text-gray-700 font-semibold rounded-full shadow-sm hover:shadow-md hover:border-green-500 hover:text-green-600 transition-all text-sm"
+                                                className="px-8 py-3 bg-white border border-gray-200 text-gray-700 font-semibold rounded-full shadow-sm hover:shadow-md hover:border-[#1a3a1d] hover:text-[#1a3a1d] transition-all text-sm"
                                             >
                                                 Load More Results
                                             </button>

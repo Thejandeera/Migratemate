@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import PageHeader from '../components/PageHeader';
 import { Link, useNavigate } from 'react-router-dom';
 import { Search, Users, MapPin, ArrowRight, Loader2, Filter, Globe, MessageCircle } from 'lucide-react';
 import { API_URL } from '../utils/api';
 import { getAuthData, isAuthenticated } from '../utils/auth';
-import Navbar from '../components/Navbar';
+
 import Footer from '../components/Footer';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -54,7 +55,7 @@ const CommunityCard = ({ community, onJoin, isJoined }) => {
                     ) : (
                         <button
                             onClick={() => onJoin(community.id)}
-                            className="bg-deep-green hover:bg-green-900 text-white px-6 py-3 rounded-2xl text-sm font-bold transition-all shadow-lg shadow-green-900/20 hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2"
+                            className="bg-deep-green hover:bg-[#0f2310] text-white px-6 py-3 rounded-2xl text-sm font-bold transition-all shadow-lg shadow-[#1a3a1d]/20 hover:shadow-xl hover:-translate-y-0.5 flex items-center gap-2"
                         >
                             Join <ArrowRight className="w-4 h-4" />
                         </button>
@@ -165,72 +166,50 @@ const Community = () => {
     );
 
     return (
-        <div className="min-h-screen bg-gray-50/50 font-sans relative">
-            <Navbar />
+        <div className="min-h-screen bg-gray-50">
+
 
             {/* Background Decoration */}
             <div className="fixed inset-0 pointer-events-none z-0">
-                <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-green-100/40 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
+                <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#1a3a1d]/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
                 <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-100/40 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2"></div>
             </div>
 
-            <main className="relative z-10 pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-                {/* Header */}
-            <div className="relative pt-32 pb-20 px-4 sm:px-6 lg:px-8 overflow-hidden">
-                 {/* Dynamic Background Mesh */}
-                 <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
-                    <div className="absolute top-0 right-1/4 w-96 h-96 bg-green-200 rounded-full mix-blend-multiply filter blur-[128px] opacity-40 animate-blob"></div>
-                    <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-200 rounded-full mix-blend-multiply filter blur-[128px] opacity-40 animate-blob animation-delay-2000"></div>
-                     <div className="absolute -bottom-32 right-1/3 w-96 h-96 bg-teal-200 rounded-full mix-blend-multiply filter blur-[128px] opacity-40 animate-blob animation-delay-4000"></div>
-                </div>
-
-                <div className="max-w-4xl mx-auto text-center relative z-10">
-                     <motion.div 
-                        initial={{ scale: 0.9, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        className="inline-flex items-center gap-2 px-4 py-1.5 bg-white/60 backdrop-blur-md border border-white/40 rounded-full text-deep-green text-xs font-bold uppercase tracking-wider mb-8 shadow-sm"
-                    >
-                        <Globe className="w-3.5 h-3.5" />
-                        Global Network
-                    </motion.div>
-                    <h1 className="text-6xl md:text-7xl font-bold text-neural-dark mb-8 tracking-tight leading-tight">
-                        Find Your <br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-deep-green via-emerald-800 to-deep-green">
-                            Community.
-                        </span>
-                    </h1>
-                    <p className="text-xl text-gray-500 font-medium leading-relaxed max-w-2xl mx-auto">
-                        Connect with fellow migrants from your home country, share experiences, and build your new support network.
-                    </p>
-                </div>
-            </div>
+            <main className="relative z-10 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+                <PageHeader 
+                    badgeText="Global Network"
+                    badgeIcon={Globe}
+                    title="Find Your"
+                    highlightText="Community."
+                    description="Connect with fellow migrants from your home country, share experiences, and build your new support network."
+                />
 
                 {/* Stats */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
                     <div className="bg-white p-8 rounded-[2rem] premium-shadow hover:shadow-[0_20px_40px_rgb(0,0,0,0.12)] border-none flex items-center justify-between group transition-all duration-500 hover:-translate-y-1">
                         <div>
-                            <p className="text-5xl font-bold text-neural-dark group-hover:text-deep-green transition-colors tracking-tighter">{communities.length}</p>
-                            <p className="text-base font-medium text-gray-500 mt-2">Active Communities</p>
+                            <p className="text-5xl font-light text-neural-dark group-hover:text-deep-green transition-colors tracking-tighter">{communities.length}</p>
+                            <p className="text-base font-light text-gray-500 mt-2">Active Communities</p>
                         </div>
-                        <div className="bg-green-50/50 p-4 rounded-2xl group-hover:bg-deep-green group-hover:text-white transition-all duration-500">
+                        <div className="bg-[#1a3a1d]/5 p-4 rounded-2xl group-hover:bg-deep-green group-hover:text-white transition-all duration-500">
                             <Globe className="w-8 h-8 text-deep-green group-hover:text-white transition-colors" />
                         </div>
                     </div>
                     <div className="bg-white p-8 rounded-[2rem] premium-shadow hover:shadow-[0_20px_40px_rgb(0,0,0,0.12)] border-none flex items-center justify-between group transition-all duration-500 hover:-translate-y-1">
                         <div>
-                            <p className="text-5xl font-bold text-neural-dark group-hover:text-deep-green transition-colors tracking-tighter">{communities.reduce((acc, curr) => acc + (curr.memberCount || 0), 0).toLocaleString()}+</p>
-                            <p className="text-base font-medium text-gray-500 mt-2">Global Members</p>
+                            <p className="text-5xl font-light text-neural-dark group-hover:text-deep-green transition-colors tracking-tighter">{communities.reduce((acc, curr) => acc + (curr.memberCount || 0), 0).toLocaleString()}+</p>
+                            <p className="text-base font-light text-gray-500 mt-2">Global Members</p>
                         </div>
-                        <div className="bg-green-50/50 p-4 rounded-2xl group-hover:bg-deep-green group-hover:text-white transition-all duration-500">
+                        <div className="bg-[#1a3a1d]/5 p-4 rounded-2xl group-hover:bg-deep-green group-hover:text-white transition-all duration-500">
                             <Users className="w-8 h-8 text-deep-green group-hover:text-white transition-colors" />
                         </div>
                     </div>
                     <div className="bg-white p-8 rounded-[2rem] premium-shadow hover:shadow-[0_20px_40px_rgb(0,0,0,0.12)] border-none flex items-center justify-between group transition-all duration-500 hover:-translate-y-1">
                         <div>
-                            <p className="text-5xl font-bold text-neural-dark group-hover:text-deep-green transition-colors tracking-tighter">150+</p>
+                            <p className="text-5xl font-light text-neural-dark group-hover:text-deep-green transition-colors tracking-tighter">150+</p>
                             <p className="text-base font-medium text-gray-500 mt-2">Countries Covered</p>
                         </div>
-                        <div className="bg-green-50/50 p-4 rounded-2xl group-hover:bg-deep-green group-hover:text-white transition-all duration-500">
+                        <div className="bg-[#1a3a1d]/5 p-4 rounded-2xl group-hover:bg-deep-green group-hover:text-white transition-all duration-500">
                             <ArrowRight className="w-8 h-8 text-deep-green group-hover:text-white transition-colors" />
                         </div>
                     </div>
@@ -241,14 +220,14 @@ const Community = () => {
                     <div className="bg-white p-1 rounded-xl shadow-sm border border-gray-200 flex">
                         <button
                             onClick={() => setActiveTab('browse')}
-                            className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'browse' ? 'bg-green-50 text-green-700 shadow-sm' : 'text-gray-500 hover:text-gray-900'
+                            className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'browse' ? 'bg-[#1a3a1d]/5 text-deep-green shadow-sm' : 'text-gray-500 hover:text-gray-900'
                                 }`}
                         >
                             Explore All
                         </button>
                         <button
                             onClick={() => setActiveTab('my')}
-                            className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'my' ? 'bg-green-50 text-green-700 shadow-sm' : 'text-gray-500 hover:text-gray-900'
+                            className={`px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${activeTab === 'my' ? 'bg-[#1a3a1d]/5 text-deep-green shadow-sm' : 'text-gray-500 hover:text-gray-900'
                                 }`}
                         >
                             My Communities
@@ -257,12 +236,12 @@ const Community = () => {
 
                     <div className="relative w-full md:w-96 group">
                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                            <Search className="h-5 w-5 text-gray-400 group-focus-within:text-green-500 transition-colors" />
+                            <Search className="h-5 w-5 text-gray-400 group-focus-within:text-deep-green transition-colors" />
                         </div>
                         <input
                             type="text"
                             placeholder="Search by country or name..."
-                            className="bg-white border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-green-500/20 focus:border-green-500 block w-full pl-11 p-3 shadow-sm transition-all outline-none"
+                            className="bg-white border border-gray-200 text-gray-900 text-sm rounded-xl focus:ring-2 focus:ring-deep-green/20 focus:border-deep-green block w-full pl-11 p-3 shadow-sm transition-all outline-none"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
@@ -272,7 +251,7 @@ const Community = () => {
                 {/* Grid */}
                 {loading ? (
                     <div className="flex flex-col justify-center items-center py-20">
-                        <Loader2 className="w-10 h-10 text-green-600 animate-spin mb-4" />
+                        <Loader2 className="w-10 h-10 text-deep-green animate-spin mb-4" />
                         <p className="text-gray-500 font-medium">Finding communities...</p>
                     </div>
                 ) : (
@@ -299,7 +278,7 @@ const Community = () => {
                                     <p className="text-gray-600 mb-6">Request a new community for your origin and destination countries.</p>
                                     <a
                                         href="mailto:support@migratemate.com?subject=New Community Request"
-                                        className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition-colors shadow-lg shadow-green-200"
+                                        className="inline-flex items-center gap-2 px-6 py-3 bg-deep-green text-white font-bold rounded-xl hover:bg-[#2d5a32] transition-colors shadow-lg shadow-[#1a3a1d]/20"
                                     >
                                         Request Community <ArrowRight className="w-4 h-4" />
                                     </a>

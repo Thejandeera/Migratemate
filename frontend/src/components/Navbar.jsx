@@ -3,16 +3,57 @@ import ReactDOM from 'react-dom';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { clearAuthData, isAuthenticated, getUserData, getAuthData } from '../utils/auth';
 import { API_URL } from '../utils/api';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import { Bell, CheckCheck, Trash2, Box, MessageSquare, Star, Settings, Menu, X, LogOut, LayoutDashboard, User, ScanLine } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import Button from './ui/Button';
+import migrateIcon from '../assets/migrate-icon.png';
+
+// Extracted Components to prevent re-mounting and ensure smooth animation
+const NavLink = ({ to, label, isActive, onClick }) => (
+    <Link
+        to={to}
+        onClick={onClick}
+        className={`relative px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 ${isActive ? 'text-white' : 'text-gray-600 hover:text-neural-dark hover:bg-black/5'}`}
+    >
+        {isActive && (
+            <motion.div
+                layoutId="navbar-indicator"
+                className="absolute inset-0 bg-neural-dark rounded-full shadow-md"
+                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+            />
+        )}
+        <span className="relative z-10">{label}</span>
+    </Link>
+);
+
+const NavIcon = ({ to, icon: Icon, isActive, title, onClick, className }) => (
+    <Link 
+        to={to} 
+        onClick={onClick}
+        className={`relative p-2.5 rounded-full transition-colors duration-200 ${className} ${
+            isActive 
+            ? 'text-white' 
+            : 'text-gray-500 hover:text-neural-dark hover:bg-black/5'
+        }`}
+        title={title}
+    >
+        {isActive && (
+            <motion.div
+                layoutId="navbar-indicator"
+                className="absolute inset-0 bg-neural-dark rounded-full shadow-md"
+                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+            />
+        )}
+        <Icon className="w-5 h-5 relative z-10" />
+    </Link>
+);
 
 const Navbar = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [scrolled, setScrolled] = useState(false);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [isLoggedIn, setIsLoggedIn] = useState(isAuthenticated());
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     // Notification State
@@ -21,7 +62,7 @@ const Navbar = () => {
     const [unreadCount, setUnreadCount] = useState(0);
     const notificationRef = useRef(null);
     const mobileNotificationRef = useRef(null);
-    const [userData, setUserData] = useState(null);
+    const [userData, setUserData] = useState(getUserData());
 
     useEffect(() => {
         const handleScroll = () => {
@@ -45,10 +86,9 @@ const Navbar = () => {
         document.addEventListener('scroll', handleScroll);
 
         const handleClickOutside = (event) => {
-            if (
-                notificationRef.current && !notificationRef.current.contains(event.target) &&
-                mobileNotificationRef.current && !mobileNotificationRef.current.contains(event.target)
-            ) {
+            const isOutsideDesktop = !notificationRef.current || !notificationRef.current.contains(event.target);
+            const isOutsideMobile = !mobileNotificationRef.current || !mobileNotificationRef.current.contains(event.target);
+            if (isOutsideDesktop && isOutsideMobile) {
                 setShowNotifications(false);
             }
         };
@@ -189,7 +229,7 @@ const Navbar = () => {
 
     const getIcon = (type) => {
         switch (type) {
-            case 'GREEN': return <Box className="w-5 h-5 text-green-600" />;
+            case 'GREEN': return <Box className="w-5 h-5 text-deep-green" />;
             case 'RED': return <MessageSquare className="w-5 h-5 text-red-600" />;
             case 'YELLOW': return <Star className="w-5 h-5 text-yellow-500" />;
             case 'GRAY': return <Settings className="w-5 h-5 text-gray-500" />;
@@ -233,7 +273,7 @@ const Navbar = () => {
                                 {notifications.map((notification) => (
                                     <div
                                         key={notification.id}
-                                        className={`relative p-4 hover:bg-white/80 transition-colors group cursor-pointer ${!notification.read ? 'bg-green-50/30' : 'bg-transparent'}`}
+                                        className={`relative p-4 hover:bg-white/80 transition-colors group cursor-pointer ${!notification.read ? 'bg-[#1a3a1d]/5' : 'bg-transparent'}`}
                                         onClick={() => markAsRead(notification.id)}
                                     >
                                         <div className="flex gap-3">
@@ -273,23 +313,8 @@ const Navbar = () => {
         </AnimatePresence>
     );
 
-    const NavLink = ({ to, label, onClick }) => (
-        <Link
-            to={to}
-            onClick={onClick}
-            className={`
-                text-sm font-medium px-4 py-2 rounded-full transition-all duration-300
-                ${location.pathname === to
-                    ? 'bg-neural-dark text-white shadow-md'
-                    : 'text-gray-600 hover:text-neural-dark hover:bg-black/5'
-                }
-            `}
-        >
-            {label}
-        </Link>
-    );
-
     return (
+        <LayoutGroup>
         <nav
             className={`fixed top-4 left-0 right-0 z-[50] flex justify-center transition-all duration-500`}
         >
@@ -299,26 +324,32 @@ const Navbar = () => {
                 rounded-full transition-all duration-500 w-[95%] max-w-5xl
             `}>
                 <Link to="/" className="flex items-center gap-2 group mr-8">
-                    <div className="bg-neural-dark p-1.5 rounded-full shadow-lg group-hover:scale-110 transition-transform duration-300">
-                        <Box className="w-4 h-4 text-white" strokeWidth={2.5} />
-                    </div>
+                    <img
+                        src={migrateIcon}
+                        alt="Logo"
+                        className="w-8 h-8 group-hover:scale-110 transition-transform duration-300 object-contain"
+                    />
                     <span className="text-lg font-semibold text-neural-dark tracking-tight">
                         MigrateMate
                     </span>
                 </Link>
 
                 <div className="hidden lg:flex items-center space-x-1">
-                    <NavLink to="/marketplace" onClick={handleAuthNavigation} label="Marketplace" />
-                    <NavLink to="/community" onClick={handleAuthNavigation} label="Community" />
-                    <NavLink to="/journey-planner" label="Journey" />
-                    <NavLink to="/sos" onClick={handleAuthNavigation} label="SOS" />
+                    <NavLink to="/marketplace" onClick={handleAuthNavigation} label="Marketplace" isActive={location.pathname === '/marketplace'} />
+                    <NavLink to="/community" onClick={handleAuthNavigation} label="Community" isActive={location.pathname === '/community'} />
+                    <NavLink to="/journey-planner" label="Journey" isActive={location.pathname === '/journey-planner'} />
+                    <NavLink to="/sos" onClick={handleAuthNavigation} label="SOS" isActive={location.pathname === '/sos'} />
                 </div>
 
                 <div className="flex items-center gap-2 ml-auto">
                     {/* Scanner Link Icon - Visible on desktop */}
-                     <Link to="/scanner" className="hidden md:flex p-2.5 text-gray-500 hover:text-deep-green hover:bg-green-50 rounded-full transition-all" title="AR Scanner">
-                        <ScanLine className="w-5 h-5" />
-                    </Link>
+                    <NavIcon 
+                        to="/scanner" 
+                        icon={ScanLine} 
+                        isActive={location.pathname === '/scanner'} 
+                        title="AR Scanner" 
+                        className="hidden md:flex hover:text-deep-green hover:bg-[#1a3a1d]/5"
+                    />
 
                     {isLoggedIn && (
                         <div className="relative" ref={notificationRef}>
@@ -337,12 +368,20 @@ const Navbar = () => {
 
                     {isLoggedIn ? (
                         <div className="hidden md:flex items-center gap-2 pl-2 border-l border-gray-200/50">
-                            <Link to="/dashboard" className="p-2.5 text-gray-500 hover:text-neural-dark hover:bg-black/5 rounded-full transition-all" title="Dashboard">
-                                <LayoutDashboard className="w-5 h-5" />
-                            </Link>
-                            <Link to="/profile" className="p-2.5 text-gray-500 hover:text-neural-dark hover:bg-black/5 rounded-full transition-all" title="Profile">
-                                <User className="w-5 h-5" />
-                            </Link>
+                            <NavIcon 
+                                to="/dashboard" 
+                                icon={LayoutDashboard} 
+                                isActive={location.pathname === '/dashboard'} 
+                                title="Dashboard"
+                                className="hover:text-neural-dark hover:bg-black/5"
+                            />
+                            <NavIcon 
+                                to="/profile" 
+                                icon={User} 
+                                isActive={location.pathname === '/profile'} 
+                                title="Profile"
+                                className="hover:text-neural-dark hover:bg-black/5"
+                            />
                             <button onClick={handleLogout} className="p-2.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-full transition-all" title="Logout">
                                 <LogOut className="w-5 h-5" />
                             </button>
@@ -409,6 +448,7 @@ const Navbar = () => {
                 )}
             </AnimatePresence>
         </nav>
+        </LayoutGroup>
     );
 };
 
