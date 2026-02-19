@@ -135,7 +135,7 @@ const AssistantChat = () => {
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: 0, opacity: 0 }}
                         onClick={() => setIsOpen(true)}
-                        className="fixed bottom-6 right-6 p-4 bg-gradient-to-tr from-deep-green to-[#2d5a32] text-white rounded-full shadow-lg shadow-[#1a3a1d]/20 hover:shadow-xl hover:shadow-[#1a3a1d]/30 hover:scale-110 active:scale-95 transition-all duration-300 z-50 group"
+                        className="fixed bottom-6 right-6 p-4 bg-gradient-to-tr from-deep-green to-[#2d5a32] text-white rounded-full shadow-lg shadow-[#1a3a1d]/20 hover:shadow-xl hover:shadow-[#1a3a1d]/30 hover:scale-110 active:scale-95 transition-all duration-300 z-40 group"
                     >
                         <Bot className="w-7 h-7" />
                         <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse" />
@@ -151,7 +151,7 @@ const AssistantChat = () => {
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.9, y: 20 }}
                         transition={{ type: "spring", bounce: 0.25 }}
-                        className="fixed bottom-0 right-0 w-full h-full sm:bottom-6 sm:right-6 sm:w-[400px] sm:h-[600px] bg-white sm:rounded-3xl shadow-2xl border border-gray-100 flex flex-col z-50 overflow-hidden"
+                        className="fixed bottom-0 right-0 w-full h-full sm:bottom-6 sm:right-6 sm:w-[400px] sm:h-[600px] bg-white sm:rounded-3xl shadow-2xl border border-gray-100 flex flex-col z-40 overflow-hidden"
                     >
                         {/* Header */}
                         <div className="bg-gradient-to-r from-deep-green to-[#2d5a32] p-4 shadow-md relative overflow-hidden">

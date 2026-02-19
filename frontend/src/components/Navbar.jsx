@@ -4,7 +4,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { clearAuthData, isAuthenticated, getUserData, getAuthData } from '../utils/auth';
 import { API_URL } from '../utils/api';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
-import { Bell, CheckCheck, Trash2, Box, MessageSquare, Star, Settings, Menu, X, LogOut, LayoutDashboard, User, ScanLine } from 'lucide-react';
+import { Bell, CheckCheck, Trash2, Box, MessageSquare, Star, Settings, Menu, X, LogOut, LayoutDashboard, User, ScanLine, Home, Store, Users, Compass, AlertTriangle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import Button from './ui/Button';
 import migrateIcon from '../assets/migrate-icon.png';
@@ -417,33 +417,115 @@ const Navbar = () => {
             <AnimatePresence>
                 {mobileMenuOpen && (
                     <motion.div
-                        initial={{ opacity: 0, backdropFilter: "blur(0px)" }}
-                        animate={{ opacity: 1, backdropFilter: "blur(10px)" }}
-                        exit={{ opacity: 0, backdropFilter: "blur(0px)" }}
-                        className="fixed inset-0 z-[40] bg-white/60 pt-32 px-6"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="fixed inset-0 z-[45] bg-black/20 backdrop-blur-sm"
+                        onClick={() => setMobileMenuOpen(false)}
+                    />
+                )}
+            </AnimatePresence>
+            <AnimatePresence>
+                {mobileMenuOpen && (
+                    <motion.div
+                        initial={{ opacity: 0, x: '100%' }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: '100%' }}
+                        transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+                        className="fixed top-0 right-0 bottom-0 z-[60] w-[85%] max-w-sm bg-white shadow-2xl flex flex-col"
                     >
-                         <div className="flex flex-col items-center gap-6 text-center max-w-sm mx-auto">
-                            <Link to="/" onClick={() => setMobileMenuOpen(false)} className="text-2xl font-semibold text-neural-dark">Home</Link>
-                            <Link to="/marketplace" onClick={(e) => { handleAuthNavigation(e); setMobileMenuOpen(false); }} className="text-2xl font-semibold text-gray-500 hover:text-neural-dark">Marketplace</Link>
-                            <Link to="/community" onClick={(e) => { handleAuthNavigation(e); setMobileMenuOpen(false); }} className="text-2xl font-semibold text-gray-500 hover:text-neural-dark">Community</Link>
-                            <Link to="/journey-planner" onClick={() => setMobileMenuOpen(false)} className="text-2xl font-semibold text-gray-500 hover:text-neural-dark">Journey</Link>
-                            <Link to="/sos" onClick={(e) => { handleAuthNavigation(e); setMobileMenuOpen(false); }} className="text-2xl font-semibold text-gray-500 hover:text-neural-dark">SOS</Link>
-                             
-                             <div className="w-16 h-1 bg-gray-200 rounded-full my-4"></div>
+                        {/* Header */}
+                        <div className="flex items-center justify-between p-6 border-b border-gray-100">
+                            <div className="flex items-center gap-3">
+                                <img src={migrateIcon} alt="Logo" className="w-8 h-8 object-contain" />
+                                <span className="text-lg font-semibold text-neural-dark tracking-tight">MigrateMate</span>
+                            </div>
+                            <button
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="p-2 rounded-full hover:bg-gray-100 transition-colors text-gray-500"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
 
+                        {/* Nav Links */}
+                        <div className="flex-1 overflow-y-auto p-4 space-y-1">
+                            {[
+                                { to: '/', label: 'Home', icon: Home, auth: false },
+                                { to: '/marketplace', label: 'Marketplace', icon: Store, auth: true },
+                                { to: '/community', label: 'Community', icon: Users, auth: true },
+                                { to: '/journey-planner', label: 'Journey Planner', icon: Compass, auth: false },
+                                { to: '/scanner', label: 'Scanner', icon: ScanLine, auth: true },
+                                { to: '/sos', label: 'SOS Emergency', icon: AlertTriangle, auth: true, danger: true },
+                            ].map((item, idx) => (
+                                <motion.div
+                                    key={item.to}
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: idx * 0.05 }}
+                                >
+                                    <Link
+                                        to={item.to}
+                                        onClick={(e) => {
+                                            if (item.auth) handleAuthNavigation(e);
+                                            setMobileMenuOpen(false);
+                                        }}
+                                        className={`flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all group ${
+                                            location.pathname === item.to
+                                                ? 'bg-neural-dark text-white'
+                                                : item.danger
+                                                    ? 'text-red-600 hover:bg-red-50'
+                                                    : 'text-gray-700 hover:bg-gray-50'
+                                        }`}
+                                    >
+                                        <div className={`p-2 rounded-xl ${
+                                            location.pathname === item.to 
+                                                ? 'bg-white/20'
+                                                : item.danger ? 'bg-red-50' : 'bg-gray-100 group-hover:bg-gray-200'
+                                        } transition-colors`}>
+                                            <item.icon className="w-5 h-5" />
+                                        </div>
+                                        <span className="text-[15px] font-semibold">{item.label}</span>
+                                    </Link>
+                                </motion.div>
+                            ))}
+                        </div>
+
+                        {/* Footer Actions */}
+                        <div className="p-4 border-t border-gray-100 space-y-3">
                             {isLoggedIn ? (
                                 <>
-                                    <Link to="/dashboard" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium text-neural-dark">Dashboard</Link>
-                                    <Link to="/profile" onClick={() => setMobileMenuOpen(false)} className="text-lg font-medium text-neural-dark">Profile</Link>
-                                    <button onClick={() => { handleLogout(); setMobileMenuOpen(false); }} className="text-lg font-medium text-red-500">Sign Out</button>
+                                    <div className="flex gap-2">
+                                        <Link
+                                            to="/dashboard"
+                                            onClick={() => setMobileMenuOpen(false)}
+                                            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gray-50 text-neural-dark font-semibold rounded-2xl hover:bg-gray-100 transition-colors text-sm"
+                                        >
+                                            <LayoutDashboard className="w-4 h-4" /> Dashboard
+                                        </Link>
+                                        <Link
+                                            to="/profile"
+                                            onClick={() => setMobileMenuOpen(false)}
+                                            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gray-50 text-neural-dark font-semibold rounded-2xl hover:bg-gray-100 transition-colors text-sm"
+                                        >
+                                            <User className="w-4 h-4" /> Profile
+                                        </Link>
+                                    </div>
+                                    <button
+                                        onClick={() => { handleLogout(); setMobileMenuOpen(false); }}
+                                        className="w-full flex items-center justify-center gap-2 px-4 py-3 text-red-500 font-semibold rounded-2xl hover:bg-red-50 transition-colors text-sm"
+                                    >
+                                        <LogOut className="w-4 h-4" /> Sign Out
+                                    </button>
                                 </>
                             ) : (
-                                <div className="flex flex-col gap-4 w-full">
+                                <div className="flex flex-col gap-2">
                                     <Button variant="outline" onClick={() => { navigate('/login'); setMobileMenuOpen(false); }} className="w-full justify-center font-semibold">Log In</Button>
                                     <Button variant="primary" onClick={() => { navigate('/signup'); setMobileMenuOpen(false); }} className="w-full justify-center font-semibold">Sign Up</Button>
                                 </div>
                             )}
-                         </div>
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>
