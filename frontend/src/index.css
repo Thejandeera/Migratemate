@@ -22,6 +22,17 @@
     body {
         @apply bg-[#F5F5F7] text-[#1D1D1F] antialiased; /* Apple Gray bg, new dark text */
         font-family: var(--font-jakarta);
+        user-select: none;
+        cursor: default;
+    }
+
+    /* Allow text selection and cursor in inputs */
+    input, textarea, [contenteditable="true"], select, pre, code {
+        user-select: text;
+        cursor: text;
+    }
+    button, a, [role="button"] {
+        cursor: pointer;
     }
 
     /* Custom Scrollbar */
