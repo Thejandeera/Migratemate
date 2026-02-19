@@ -206,7 +206,7 @@ const LandingPage = () => {
 
                 {/* CTA */}
                 <section className="pb-32 px-4 sm:px-6">
-                    <div className="max-w-5xl mx-auto bg-neural-dark rounded-[3rem] p-12 md:p-24 text-center relative overflow-hidden shadow-2xl">
+                    <div className="max-w-5xl mx-auto bg-deep-green rounded-[3rem] p-12 md:p-24 text-center relative overflow-hidden shadow-2xl">
                         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-deep-green rounded-full blur-[120px] opacity-40 translate-x-1/3 -translate-y-1/3"></div>
                         <div className="relative z-10">
                             <h2 className="text-4xl md:text-6xl font-semibold text-white mb-8 tracking-tight">Ready to start your <br/> new chapter?</h2>
